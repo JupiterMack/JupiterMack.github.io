@@ -4,27 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ozeye - AI Consulting Experts</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script>
-        window.addEventListener('scroll', function() {
-            const header = document.querySelector('header');
-            if (window.scrollY > 50) {
-                header.classList.add('collapsed');
-            } else {
-                header.classList.remove('collapsed');
-            }
-        });
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
         <div class="container">
             <div class="logo">
-                <img src="ozeye_logo_draft3.png" alt="Ozeye Logo" class="logo-image">
-                <img src="ozeye_logo_draft4.png" alt="Ozeye Logo" class="collapsed-logo">
+                <img src="ozeye_logo_draft3.png" alt="Logo" class="logo-image">
             </div>
-            <nav>
+            
+            <div class="hamburger-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+
+            <nav class="desktop-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+
+            <nav class="mobile-nav">
                 <ul>
                     <li><a href="index.html">Home</a></li>
                     <li><a href="services.html">Services</a></li>
@@ -100,7 +105,7 @@
                 <div id="contact-card" class="card">
                 <h3>Ready to transform your business with AI? Let's talk.</h3>
                 <p>Email: info@ozeye.com</p>
-                <p>Phone: (123) 456-7890</p>
+                <p>Phone: (646) 937-0807</p>
                 <a href="contact.html" class="btn">Contact Us</a>
             </div>
         </section>
@@ -109,5 +114,6 @@
     <footer>
         <p>&copy; 2024 Ozeye. All rights reserved.</p>
     </footer>
+    <script src="script.js"></script>
 </body>
 </html>

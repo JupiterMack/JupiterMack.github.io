@@ -1,4 +1,3 @@
-
 class TextScramble {
     constructor(el, autoInit = true) {
         this.el = el;
@@ -97,6 +96,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const scrambleElements = document.querySelectorAll('[data-scramble]');
     const cyclingElement = document.querySelector('[data-cycling]');
     
+    // Initialize hamburger menu functionality
+    const hamburger = document.querySelector('.hamburger');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    
+    if (hamburger && mobileMenu) {
+        hamburger.addEventListener('click', function() {
+            this.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            document.body.classList.toggle('menu-open');
+        });
+        
+        // Close mobile menu when a link is clicked
+        const mobileLinks = document.querySelectorAll('.mobile-menu a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                document.body.classList.remove('menu-open');
+            });
+        });
+        
+        // Set active class for current page
+        const currentLocation = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-links a, .mobile-menu a');
+        
+        navLinks.forEach(link => {
+            const linkPath = link.getAttribute('href');
+            if (currentLocation.includes(linkPath) || 
+                (currentLocation === '/' && linkPath === 'index.html')) {
+                link.classList.add('active');
+            }
+        });
+    }
+    
     // Initial scramble texts
     scrambleElements.forEach((element, index) => {
         setTimeout(() => {
@@ -106,9 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fade in elements
     setTimeout(() => {
-        header.style.opacity = '1';
-        buttonContainer.style.opacity = '1';
-        bottomLeftContent.style.opacity = '1';
+        if (header) header.style.opacity = '1';
+        if (buttonContainer) buttonContainer.style.opacity = '1';
+        if (bottomLeftContent) bottomLeftContent.style.opacity = '1';
     }, 1000);
 
     // Handle cycling text with more reliable cycling
@@ -131,18 +164,21 @@ document.addEventListener('DOMContentLoaded', function() {
             nextCycleText();
         }, 1500);
     }
+    
     handleScrollAnimations();
-});
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize circular progress
-    document.querySelectorAll('.progress-bar').forEach(circle => {
-        const value = circle.dataset.value;
-        circle.style.setProperty('--value', value);
-    });
+    
+    // Initialize any progress bars or charts if they exist
+    if (document.querySelectorAll('.progress-bar').length > 0) {
+        document.querySelectorAll('.progress-bar').forEach(circle => {
+            const value = circle.dataset.value;
+            circle.style.setProperty('--value', value);
+        });
+    }
 
-    // Initialize bars
-    document.querySelectorAll('.bar').forEach(bar => {
-        const value = bar.dataset.value;
-        bar.style.setProperty('--value', value);
-    });
+    if (document.querySelectorAll('.bar').length > 0) {
+        document.querySelectorAll('.bar').forEach(bar => {
+            const value = bar.dataset.value;
+            bar.style.setProperty('--value', value);
+        });
+    }
 });

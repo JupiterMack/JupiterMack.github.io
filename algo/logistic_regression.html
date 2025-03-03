@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Logistic Regression Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+        <span style="font-size: 18px;">←</span> Return to Algorithms
+    </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Logistic Regression Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-2/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <div class="w-full h-[600px] relative" id="visualization-container">
+                    <svg id="visualization" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                </div>
+                <div class="mt-2 flex justify-between items-center text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+                        <span>Class 1</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+                        <span>Class 0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel -->
+            <div class="w-full lg:w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                
+                <div class="space-y-6">
+                    <!-- Data Generation -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Data</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="num-points" class="mr-2">Number of Points:</label>
+                                <input type="number" id="num-points" min="10" max="200" value="50" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Algorithm Parameters -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Algorithm Parameters</h3>
+                        <div class="flex flex-col gap-2">
+                            <div>
+                                <label for="learning-rate" class="block mb-1">Learning Rate:</label>
+                                <input type="range" id="learning-rate" min="0.001" max="0.5" step="0.001" value="0.1" class="w-full">
+                                <div class="flex justify-between text-sm">
+                                    <span>0.001</span>
+                                    <span id="learning-rate-value">0.1</span>
+                                    <span>0.5</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="max-iterations" class="block mb-1">Max Iterations:</label>
+                                <input type="number" id="max-iterations" min="10" max="1000" value="100" class="w-full px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Playback Controls -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Playback</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex space-x-2">
+                                <button id="reset" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-medium py-2 px-4 rounded transition flex-1">Reset</button>
+                                <button id="step" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step</button>
+                                <button id="play" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition flex-1">Play</button>
+                            </div>
+                            <div>
+                                <label for="animation-speed" class="block mb-1">Animation Speed:</label>
+                                <input type="range" id="animation-speed" min="0.5" max="5" step="0.1" value="1" class="w-full">
+                                <div class="flex justify-between text-sm">
+                                    <span>Slow</span>
+                                    <span id="animation-speed-value">1x</span>
+                                    <span>Fast</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status and Info -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Status</h3>
+                        <div class="p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                            <div class="flex justify-between mb-1">
+                                <span>Iteration:</span>
+                                <span id="current-iteration">0 / 100</span>
+                            </div>
+                            <div class="flex justify-between mb-1">
+                                <span>Cost:</span>
+                                <span id="current-cost">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Accuracy:</span>
+                                <span id="current-accuracy">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Visualization Options -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="show-contours" class="w-4 h-4" checked>
+                            <label for="show-contours">Show Probability Contours</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cost Function Visualization -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#5D5CDE] dark:text-[#3498db]">Cost Over Iterations</h2>
+            <div class="w-full h-[200px]">
+                <svg id="cost-visualization" class="w-full h-full" viewBox="0 0 1000 200"></svg>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Logistic Regression Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>Step 1:</strong> Start with data points classified into two classes (blue for class 1, red for class 0).</p>
+                <p><strong>Step 2:</strong> Initialize model parameters (weights and bias) that define a decision boundary.</p>
+                <p><strong>Step 3:</strong> Calculate the predicted probability using the sigmoid function: P(y=1) = 1/(1+e^(-z)), where z = w₀ + w₁x₁ + w₂x₂.</p>
+                <p><strong>Step 4:</strong> Compute the cost function (binary cross-entropy loss), which measures the model's performance.</p>
+                <p><strong>Step 5:</strong> Use gradient descent to update the parameters to reduce the cost.</p>
+                <p><strong>Step 6:</strong> Repeat steps 3-5 until convergence or reaching maximum iterations.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const svg = document.getElementById('visualization');
+        const costSvg = document.getElementById('cost-visualization');
+        const generateDataBtn = document.getElementById('generate-data');
+        const learningRateInput = document.getElementById('learning-rate');
+        const learningRateValue = document.getElementById('learning-rate-value');
+        const maxIterationsInput = document.getElementById('max-iterations');
+        const numPointsInput = document.getElementById('num-points');
+        const resetBtn = document.getElementById('reset');
+        const stepBtn = document.getElementById('step');
+        const playBtn = document.getElementById('play');
+        const animationSpeedInput = document.getElementById('animation-speed');
+        const animationSpeedValue = document.getElementById('animation-speed-value');
+        const currentIterationEl = document.getElementById('current-iteration');
+        const currentCostEl = document.getElementById('current-cost');
+        const currentAccuracyEl = document.getElementById('current-accuracy');
+        const showContoursCheckbox = document.getElementById('show-contours');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 600;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Cost visualization constants
+        const COST_HEIGHT = 200;
+        const COST_MARGIN = 30;
+        const COST_PLOT_HEIGHT = COST_HEIGHT - 2 * COST_MARGIN;
+        
+        // Colors
+        const CLASS_0_COLOR = '#EF4444'; // Red
+        const CLASS_1_COLOR = '#3B82F6'; // Blue
+        const DECISION_BOUNDARY_COLOR = '#5D5CDE'; // Purple
+        const CONTOUR_COLORS = [
+            'rgba(239, 68, 68, 0.8)', // Red with high opacity
+            'rgba(239, 68, 68, 0.5)', 
+            'rgba(239, 68, 68, 0.2)',
+            'rgba(226, 232, 240, 0.2)', // Light gray
+            'rgba(59, 130, 246, 0.2)',
+            'rgba(59, 130, 246, 0.5)',
+            'rgba(59, 130, 246, 0.8)' // Blue with high opacity
+        ];
+        
+        // Data and model parameters
+        let data = [];
+        let weights = [0, 0, 0]; // w0 (bias), w1, w2
+        let costs = [];
+        let iterations = [];
+        let currentIteration = 0;
+        let maxIterations = 100;
+        let learningRate = 0.1;
+        let animationSpeed = 1;
+        let animationInterval = null;
+        let accuracyHistory = [];
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            svg.innerHTML = '';
+            costSvg.innerHTML = '';
+            
+            // Add background for main visualization
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            svg.appendChild(background);
+            
+            // Add grid lines for main visualization
+            for (let i = 0; i <= 10; i++) {
+                const xPos = MARGIN + (PLOT_WIDTH / 10) * i;
+                const yPos = MARGIN + (PLOT_HEIGHT / 10) * i;
+                
+                // Vertical grid line
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', MARGIN);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', HEIGHT - MARGIN);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? '#374151' : '#e2e8f0');
+                vLine.setAttribute('stroke-width', '1');
+                svg.appendChild(vLine);
+                
+                // Horizontal grid line
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', MARGIN);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', WIDTH - MARGIN);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? '#374151' : '#e2e8f0');
+                hLine.setAttribute('stroke-width', '1');
+                svg.appendChild(hLine);
+            }
+            
+            // Add axes for main visualization
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', MARGIN);
+            xAxis.setAttribute('y1', HEIGHT - MARGIN);
+            xAxis.setAttribute('x2', WIDTH - MARGIN);
+            xAxis.setAttribute('y2', HEIGHT - MARGIN);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? '#d1d5db' : '#1f2937');
+            xAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', MARGIN);
+            yAxis.setAttribute('y1', MARGIN);
+            yAxis.setAttribute('x2', MARGIN);
+            yAxis.setAttribute('y2', HEIGHT - MARGIN);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? '#d1d5db' : '#1f2937');
+            yAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(yAxis);
+            
+            // Add axis labels for main visualization
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', WIDTH / 2);
+            xLabel.setAttribute('y', HEIGHT - 10);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#d1d5db' : '#1f2937');
+            xLabel.textContent = 'Feature X₁';
+            svg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', 15);
+            yLabel.setAttribute('y', HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, 15, ${HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#d1d5db' : '#1f2937');
+            yLabel.textContent = 'Feature X₂';
+            svg.appendChild(yLabel);
+            
+            // Add background for cost visualization
+            const costBackground = document.createElementNS(svgNS, 'rect');
+            costBackground.setAttribute('width', WIDTH);
+            costBackground.setAttribute('height', COST_HEIGHT);
+            costBackground.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            costSvg.appendChild(costBackground);
+            
+            // Add axes for cost visualization
+            const costXAxis = document.createElementNS(svgNS, 'line');
+            costXAxis.setAttribute('x1', COST_MARGIN);
+            costXAxis.setAttribute('y1', COST_HEIGHT - COST_MARGIN);
+            costXAxis.setAttribute('x2', WIDTH - COST_MARGIN);
+            costXAxis.setAttribute('y2', COST_HEIGHT - COST_MARGIN);
+            costXAxis.setAttribute('stroke', document.body.classList.contains('dark') ? '#d1d5db' : '#1f2937');
+            costXAxis.setAttribute('stroke-width', '2');
+            costSvg.appendChild(costXAxis);
+            
+            const costYAxis = document.createElementNS(svgNS, 'line');
+            costYAxis.setAttribute('x1', COST_MARGIN);
+            costYAxis.setAttribute('y1', COST_MARGIN);
+            costYAxis.setAttribute('x2', COST_MARGIN);
+            costYAxis.setAttribute('y2', COST_HEIGHT - COST_MARGIN);
+            costYAxis.setAttribute('stroke', document.body.classList.contains('dark') ? '#d1d5db' : '#1f2937');
+            costYAxis.setAttribute('stroke-width', '2');
+            costSvg.appendChild(costYAxis);
+            
+            // Add axis labels for cost visualization
+            const costXLabel = document.createElementNS(svgNS, 'text');
+            costXLabel.setAttribute('x', WIDTH / 2);
+            costXLabel.setAttribute('y', COST_HEIGHT - 5);
+            costXLabel.setAttribute('text-anchor', 'middle');
+            costXLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#d1d5db' : '#1f2937');
+            costXLabel.textContent = 'Iterations';
+            costSvg.appendChild(costXLabel);
+            
+            const costYLabel = document.createElementNS(svgNS, 'text');
+            costYLabel.setAttribute('x', 15);
+            costYLabel.setAttribute('y', COST_HEIGHT / 2);
+            costYLabel.setAttribute('text-anchor', 'middle');
+            costYLabel.setAttribute('transform', `rotate(-90, 15, ${COST_HEIGHT / 2})`);
+            costYLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#d1d5db' : '#1f2937');
+            costYLabel.textContent = 'Cost';
+            costSvg.appendChild(costYLabel);
+        }
+        
+        // Generate synthetic data for binary classification
+        function generateData() {
+            const numPoints = parseInt(numPointsInput.value);
+            data = [];
+            
+            // Generate two clusters
+            for (let i = 0; i < numPoints; i++) {
+                let x1, x2, y;
+                
+                if (Math.random() < 0.5) {
+                    // Cluster 1 (Class 0)
+                    x1 = Math.random() * 3 + 1;
+                    x2 = Math.random() * 3 + 1;
+                    y = 0;
+                } else {
+                    // Cluster 2 (Class 1)
+                    x1 = Math.random() * 3 + 4;
+                    x2 = Math.random() * 3 + 4;
+                    y = 1;
+                }
+                
+                // Add some noise to make it more realistic
+                x1 += (Math.random() - 0.5) * 2;
+                x2 += (Math.random() - 0.5) * 2;
+                
+                // Ensure x1 and x2 are within a reasonable range (0-10)
+                x1 = Math.max(0, Math.min(10, x1));
+                x2 = Math.max(0, Math.min(10, x2));
+                
+                data.push({ x1, x2, y });
+            }
+            
+            // Reset model and visualizations
+            resetModel();
+            visualizeData();
+            updateCostPlot();
+        }
+        
+        // Reset the model parameters
+        function resetModel() {
+            weights = [0, 0, 0]; // Initialize weights to zeros
+            costs = [];
+            iterations = [];
+            accuracyHistory = [];
+            currentIteration = 0;
+            maxIterations = parseInt(maxIterationsInput.value);
+            
+            stopAnimation();
+            
+            // Update UI
+            currentIterationEl.textContent = `0 / ${maxIterations}`;
+            currentCostEl.textContent = '-';
+            currentAccuracyEl.textContent = '-';
+            
+            // Visualize initial decision boundary
+            visualizeDecisionBoundary();
+            // Visualize probability contours
+            if (showContoursCheckbox.checked) {
+                visualizeProbabilityContours();
+            } else {
+                removeContours();
+            }
+        }
+        
+        // Map data coordinates to SVG coordinates
+        function mapX(x) {
+            return MARGIN + (x / 10) * PLOT_WIDTH;
+        }
+        
+        function mapY(y) {
+            return HEIGHT - MARGIN - (y / 10) * PLOT_HEIGHT;
+        }
+        
+        // Visualize the data points
+        function visualizeData() {
+            // Remove existing data points and contours
+            const existingPoints = svg.querySelectorAll('.data-point');
+            existingPoints.forEach(point => point.remove());
+            
+            // Add new data points
+            data.forEach((point, index) => {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', mapX(point.x1));
+                circle.setAttribute('cy', mapY(point.x2));
+                circle.setAttribute('r', '6');
+                circle.setAttribute('fill', point.y === 1 ? CLASS_1_COLOR : CLASS_0_COLOR);
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                svg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(20),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 500
+            });
+        }
+        
+        // Visualize the decision boundary
+        function visualizeDecisionBoundary() {
+            // Remove existing decision boundary
+            const existingBoundary = svg.querySelector('.decision-boundary');
+            if (existingBoundary) {
+                existingBoundary.remove();
+            }
+            
+            // Calculate two points on the decision boundary
+            // The decision boundary is w0 + w1*x1 + w2*x2 = 0
+            // So x2 = (-w0 - w1*x1) / w2
+            
+            let x1_1 = 0;
+            let x1_2 = 10;
+            let x2_1, x2_2;
+            
+            if (weights[2] === 0) {
+                // Handle the case where w2 is zero (vertical line)
+                if (weights[1] === 0) {
+                    // If both w1 and w2 are zero, we can't draw a line
+                    return;
+                }
+                x1_1 = x1_2 = -weights[0] / weights[1];
+                x2_1 = 0;
+                x2_2 = 10;
+            } else {
+                x2_1 = (-weights[0] - weights[1] * x1_1) / weights[2];
+                x2_2 = (-weights[0] - weights[1] * x1_2) / weights[2];
+            }
+            
+            // Create line element
+            const line = document.createElementNS(svgNS, 'line');
+            line.setAttribute('x1', mapX(x1_1));
+            line.setAttribute('y1', mapY(x2_1));
+            line.setAttribute('x2', mapX(x1_2));
+            line.setAttribute('y2', mapY(x2_2));
+            line.setAttribute('stroke', DECISION_BOUNDARY_COLOR);
+            line.setAttribute('stroke-width', '3');
+            line.setAttribute('class', 'decision-boundary');
+            
+            svg.appendChild(line);
+            
+            // Animate the decision boundary
+            anime({
+                targets: '.decision-boundary',
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 400,
+                delay: 100
+            });
+        }
+        
+        // Visualize probability contours
+        function visualizeProbabilityContours() {
+            // Remove existing contours
+            removeContours();
+            
+            // If weights are all zeros, don't draw contours
+            if (weights[0] === 0 && weights[1] === 0 && weights[2] === 0) {
+                return;
+            }
+            
+            // Create a group for contours
+            const contourGroup = document.createElementNS(svgNS, 'g');
+            contourGroup.setAttribute('class', 'contour-group');
+            svg.appendChild(contourGroup);
+            
+            // Define contour values from 0.1 to 0.9
+            const contourValues = [0.1, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9];
+            
+            // Create contours for each probability value
+            contourValues.forEach((prob, index) => {
+                // The contour for probability p is where:
+                // w0 + w1*x1 + w2*x2 = log(p/(1-p))
+                // So x2 = (log(p/(1-p)) - w0 - w1*x1) / w2
+                
+                const logit = Math.log(prob / (1 - prob));
+                let x1_1 = 0;
+                let x1_2 = 10;
+                let x2_1, x2_2;
+                
+                if (weights[2] === 0) {
+                    // Handle the case where w2 is zero (vertical line)
+                    if (weights[1] === 0) {
+                        // If both w1 and w2 are zero, we can't draw a line
+                        return;
+                    }
+                    x1_1 = x1_2 = (logit - weights[0]) / weights[1];
+                    x2_1 = 0;
+                    x2_2 = 10;
+                } else {
+                    x2_1 = (logit - weights[0] - weights[1] * x1_1) / weights[2];
+                    x2_2 = (logit - weights[0] - weights[1] * x1_2) / weights[2];
+                }
+                
+                // Create line element for contour
+                const contourLine = document.createElementNS(svgNS, 'line');
+                contourLine.setAttribute('x1', mapX(x1_1));
+                contourLine.setAttribute('y1', mapY(x2_1));
+                contourLine.setAttribute('x2', mapX(x1_2));
+                contourLine.setAttribute('y2', mapY(x2_2));
+                contourLine.setAttribute('stroke', CONTOUR_COLORS[index]);
+                contourLine.setAttribute('stroke-width', '2');
+                contourLine.setAttribute('stroke-dasharray', '5,5');
+                contourLine.setAttribute('class', 'contour-line');
+                
+                contourGroup.appendChild(contourLine);
+            });
+            
+            // Animate the contours
+            anime({
+                targets: '.contour-line',
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 1000,
+                delay: anime.stagger(150)
+            });
+        }
+        
+        // Remove contours
+        function removeContours() {
+            const existingContours = svg.querySelector('.contour-group');
+            if (existingContours) {
+                existingContours.remove();
+            }
+        }
+        
+        // Update the cost plot
+        function updateCostPlot() {
+            // Remove existing cost path
+            const existingPath = costSvg.querySelector('.cost-path');
+            if (existingPath) {
+                existingPath.remove();
+            }
+            
+            // If no costs yet, return
+            if (costs.length === 0) {
+                return;
+            }
+            
+            // Find max cost for scaling
+            const maxCost = Math.max(...costs) * 1.1;
+            
+            // Create path data
+            let pathData = '';
+            costs.forEach((cost, i) => {
+                const x = COST_MARGIN + (i / (maxIterations - 1)) * (WIDTH - 2 * COST_MARGIN);
+                const y = COST_HEIGHT - COST_MARGIN - (cost / maxCost) * COST_PLOT_HEIGHT;
+                
+                if (i === 0) {
+                    pathData += `M ${x},${y}`;
+                } else {
+                    pathData += ` L ${x},${y}`;
+                }
+            });
+            
+            // Create path element
+            const path = document.createElementNS(svgNS, 'path');
+            path.setAttribute('d', pathData);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke', DECISION_BOUNDARY_COLOR);
+            path.setAttribute('stroke-width', '3');
+            path.setAttribute('class', 'cost-path');
+            
+            costSvg.appendChild(path);
+            
+            // Animate the cost path
+            anime({
+                targets: '.cost-path',
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+            
+            // Add current iteration marker
+            const currentMarker = costSvg.querySelector('.current-marker');
+            if (currentMarker) {
+                currentMarker.remove();
+            }
+            
+            if (currentIteration > 0) {
+                const x = COST_MARGIN + ((currentIteration - 1) / (maxIterations - 1)) * (WIDTH - 2 * COST_MARGIN);
+                const y = COST_HEIGHT - COST_MARGIN - (costs[costs.length - 1] / maxCost) * COST_PLOT_HEIGHT;
+                
+                const marker = document.createElementNS(svgNS, 'circle');
+                marker.setAttribute('cx', x);
+                marker.setAttribute('cy', y);
+                marker.setAttribute('r', '6');
+                marker.setAttribute('fill', '#EF4444');
+                marker.setAttribute('class', 'current-marker');
+                
+                costSvg.appendChild(marker);
+                
+                // Animate the marker
+                anime({
+                    targets: '.current-marker',
+                    r: [0, 6],
+                    opacity: [0, 1],
+                    easing: 'easeOutElastic(1, .5)',
+                    duration: 1000
+                });
+            }
+        }
+        
+        // Highlight misclassified points
+        function highlightMisclassifiedPoints() {
+            data.forEach((point, index) => {
+                const prediction = predictClass(point.x1, point.x2);
+                const circle = svg.querySelector(`.data-point[data-index="${index}"]`);
+                
+                if (prediction !== point.y) {
+                    // Misclassified point
+                    circle.setAttribute('stroke', '#FCD34D'); // Yellow
+                    circle.setAttribute('stroke-width', '3');
+                    
+                    // Add pulse animation
+                    anime({
+                        targets: circle,
+                        r: [6, 9, 6],
+                        duration: 1000,
+                        easing: 'easeInOutSine',
+                        loop: 1
+                    });
+                } else {
+                    // Correctly classified point
+                    circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                    circle.setAttribute('stroke-width', '1');
+                }
+            });
+        }
+        
+        // Sigmoid function
+        function sigmoid(z) {
+            return 1 / (1 + Math.exp(-z));
+        }
+        
+        // Calculate predicted probabilities
+        function predict(x1, x2) {
+            const z = weights[0] + weights[1] * x1 + weights[2] * x2;
+            return sigmoid(z);
+        }
+        
+        // Calculate binary class predictions (0 or 1)
+        function predictClass(x1, x2) {
+            return predict(x1, x2) > 0.5 ? 1 : 0;
+        }
+        
+        // Calculate the cost function (binary cross-entropy)
+        function calculateCost() {
+            let cost = 0;
+            
+            for (const point of data) {
+                const { x1, x2, y } = point;
+                const prediction = predict(x1, x2);
+                
+                // Binary cross-entropy
+                if (prediction === 0) {
+                    cost += y === 1 ? Infinity : 0;
+                } else if (prediction === 1) {
+                    cost += y === 0 ? Infinity : 0;
+                } else {
+                    cost += -y * Math.log(prediction) - (1 - y) * Math.log(1 - prediction);
+                }
+            }
+            
+            return cost / data.length;
+        }
+        
+        // Calculate the accuracy
+        function calculateAccuracy() {
+            let correct = 0;
+            
+            for (const point of data) {
+                const { x1, x2, y } = point;
+                const prediction = predictClass(x1, x2);
+                
+                if (prediction === y) {
+                    correct++;
+                }
+            }
+            
+            return correct / data.length;
+        }
+        
+        // Perform one step of gradient descent
+        function gradientDescentStep() {
+            if (currentIteration >= maxIterations) {
+                stopAnimation();
+                return;
+            }
+            
+            currentIteration++;
+            
+            // Calculate gradients
+            let gradients = [0, 0, 0];
+            
+            for (const point of data) {
+                const { x1, x2, y } = point;
+                const prediction = predict(x1, x2);
+                const error = prediction - y;
+                
+                gradients[0] += error;
+                gradients[1] += error * x1;
+                gradients[2] += error * x2;
+            }
+            
+            // Normalize gradients
+            for (let i = 0; i < gradients.length; i++) {
+                gradients[i] /= data.length;
+            }
+            
+            // Update weights
+            for (let i = 0; i < weights.length; i++) {
+                weights[i] -= learningRate * gradients[i];
+            }
+            
+            // Calculate and store cost
+            const cost = calculateCost();
+            costs.push(cost);
+            iterations.push(currentIteration);
+            
+            // Calculate accuracy
+            const accuracy = calculateAccuracy();
+            accuracyHistory.push(accuracy);
+            
+            // Update UI
+            currentIterationEl.textContent = `${currentIteration} / ${maxIterations}`;
+            currentCostEl.textContent = cost.toFixed(4);
+            currentAccuracyEl.textContent = `${(accuracy * 100).toFixed(1)}%`;
+            
+            // Update visualizations
+            visualizeDecisionBoundary();
+            if (showContoursCheckbox.checked) {
+                visualizeProbabilityContours();
+            }
+            updateCostPlot();
+            highlightMisclassifiedPoints();
+        }
+        
+        // Start animation
+        function startAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+            
+            playBtn.textContent = 'Pause';
+            playBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            playBtn.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+            
+            const interval = 1000 / animationSpeed;
+            animationInterval = setInterval(() => {
+                gradientDescentStep();
+                
+                if (currentIteration >= maxIterations) {
+                    stopAnimation();
+                }
+            }, interval);
+        }
+        
+        // Stop animation
+        function stopAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            
+            playBtn.textContent = 'Play';
+            playBtn.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
+            playBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        
+        resetBtn.addEventListener('click', resetModel);
+        
+        stepBtn.addEventListener('click', () => {
+            stopAnimation();
+            gradientDescentStep();
+        });
+        
+        playBtn.addEventListener('click', () => {
+            if (animationInterval) {
+                stopAnimation();
+            } else {
+                startAnimation();
+            }
+        });
+        
+        learningRateInput.addEventListener('input', () => {
+            learningRate = parseFloat(learningRateInput.value);
+            learningRateValue.textContent = learningRate.toFixed(3);
+        });
+        
+        maxIterationsInput.addEventListener('change', () => {
+            maxIterations = parseInt(maxIterationsInput.value);
+            resetModel();
+        });
+        
+        animationSpeedInput.addEventListener('input', () => {
+            animationSpeed = parseFloat(animationSpeedInput.value);
+            animationSpeedValue.textContent = `${animationSpeed.toFixed(1)}x`;
+            
+            if (animationInterval) {
+                stopAnimation();
+                startAnimation();
+            }
+        });
+        
+        showContoursCheckbox.addEventListener('change', () => {
+            if (showContoursCheckbox.checked) {
+                visualizeProbabilityContours();
+            } else {
+                removeContours();
+            }
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

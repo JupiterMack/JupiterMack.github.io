@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive DBSCAN Clustering Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">DBSCAN Clustering Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-2/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <div class="w-full h-[600px] relative" id="visualization-container">
+                    <svg id="visualization" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                </div>
+                <div class="mt-2 flex flex-wrap justify-between items-center text-sm gap-4">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+                        <span>Core Points</span>
+                        
+                        <span class="inline-block w-3 h-3 rounded-full bg-green-500 ml-4"></span>
+                        <span>Border Points</span>
+                        
+                        <span class="inline-block w-3 h-3 rounded-full bg-gray-400 ml-4"></span>
+                        <span>Noise Points</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-red-500"></span>
+                        <span>Connections</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel -->
+            <div class="w-full lg:w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                
+                <div class="space-y-6">
+                    <!-- Data Generation -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="num-points" class="mr-2">Number of Points:</label>
+                                <input type="number" id="num-points" min="50" max="500" value="200" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="data-distribution" class="mr-2">Distribution:</label>
+                                <select id="data-distribution" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="blobs" selected>Gaussian Blobs</option>
+                                    <option value="circles">Concentric Circles</option>
+                                    <option value="moons">Two Moons</option>
+                                    <option value="varying-density">Varying Density</option>
+                                    <option value="noisy">Noisy Clusters</option>
+                                    <option value="anisotropic">Anisotropic Clusters</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="cluster-count" class="mr-2">True Clusters:</label>
+                                <select id="cluster-count" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="2">2</option>
+                                    <option value="3" selected>3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="cluster-separation" class="mr-2">Cluster Separation:</label>
+                                <input type="range" id="cluster-separation" min="1" max="10" step="0.5" value="5" class="w-40">
+                                <span id="separation-value" class="text-sm">5.0</span>
+                            </div>
+                            
+                            <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                        </div>
+                    </div>
+                    
+                    <!-- DBSCAN Parameters -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">DBSCAN Parameters</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="eps-value" class="mr-2">Epsilon (ε):</label>
+                                <input type="range" id="eps-value" min="0.1" max="2" step="0.05" value="0.5" class="w-40">
+                                <span id="eps-display" class="text-sm">0.5</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="min-points" class="mr-2">Min Points:</label>
+                                <input type="number" id="min-points" min="2" max="20" value="5" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            
+                            <div class="flex space-x-2 mt-2">
+                                <button id="run-dbscan" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Run DBSCAN</button>
+                                <button id="step-dbscan" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step Through</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Visualization Options -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-eps-circles" class="w-4 h-4" checked>
+                                <label for="show-eps-circles">Show Epsilon Radius</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-connections" class="w-4 h-4" checked>
+                                <label for="show-connections">Show Connections</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-true-clusters" class="w-4 h-4">
+                                <label for="show-true-clusters">Show True Clusters</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Algorithm Status -->
+                    <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h3 class="text-lg font-medium mb-2">Algorithm Stats</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>Number of Clusters Found:</span>
+                                <span id="num-clusters">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Core Points:</span>
+                                <span id="core-points-count">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Border Points:</span>
+                                <span id="border-points-count">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Noise Points:</span>
+                                <span id="noise-points-count">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Status:</span>
+                                <span id="algorithm-status-text">Not Started</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Parameter Sensitivity Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Parameter Sensitivity Analysis</h2>
+            <div class="w-full h-[200px]">
+                <svg id="parameter-analysis" class="w-full h-full" viewBox="0 0 1000 200"></svg>
+            </div>
+            <div class="mt-4 text-center">
+                <button id="run-sensitivity-analysis" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Run Parameter Sensitivity Analysis</button>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How DBSCAN Clustering Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>DBSCAN</strong> (Density-Based Spatial Clustering of Applications with Noise) is an algorithm that groups together points that are closely packed, while marking points in low-density regions as outliers.</p>
+                
+                <p><strong>The Algorithm:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Core Points:</strong> Find all points that have at least minPts neighbors within distance ε (epsilon)</li>
+                    <li><strong>Cluster Formation:</strong> Expand clusters from core points by recursively adding all density-connected points</li>
+                    <li><strong>Border Points:</strong> Points that are within ε of a core point but don't have enough neighbors themselves</li>
+                    <li><strong>Noise Points:</strong> Points that are neither core nor border points</li>
+                </ol>
+                
+                <p><strong>Key Advantages:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Does not require specifying the number of clusters in advance</li>
+                    <li>Can find arbitrarily shaped clusters</li>
+                    <li>Robust to outliers</li>
+                    <li>Only has two parameters: ε and minPts</li>
+                </ul>
+                
+                <p><strong>Limitations:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Struggles with clusters of varying densities</li>
+                    <li>Sensitive to parameter choices</li>
+                    <li>Not effective when clusters are very close</li>
+                    <li>Can be computationally intensive for large datasets</li>
+                </ul>
+                
+                <p><strong>Parameter Selection:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>ε (Epsilon):</strong> The radius within which to search for neighbors</li>
+                    <li><strong>minPts:</strong> Typically 2×dimensions is recommended (e.g., 4 for 2D data)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const svg = document.getElementById('visualization');
+        const sensitivitySvg = document.getElementById('parameter-analysis');
+        const generateDataBtn = document.getElementById('generate-data');
+        const runDbscanBtn = document.getElementById('run-dbscan');
+        const stepDbscanBtn = document.getElementById('step-dbscan');
+        const runSensitivityBtn = document.getElementById('run-sensitivity-analysis');
+        const numPointsInput = document.getElementById('num-points');
+        const dataDistributionSelect = document.getElementById('data-distribution');
+        const clusterCountSelect = document.getElementById('cluster-count');
+        const clusterSeparationInput = document.getElementById('cluster-separation');
+        const separationValueDisplay = document.getElementById('separation-value');
+        const epsValueInput = document.getElementById('eps-value');
+        const epsDisplay = document.getElementById('eps-display');
+        const minPointsInput = document.getElementById('min-points');
+        const showEpsCirclesCheckbox = document.getElementById('show-eps-circles');
+        const showConnectionsCheckbox = document.getElementById('show-connections');
+        const showTrueClustersCheckbox = document.getElementById('show-true-clusters');
+        const numClustersDisplay = document.getElementById('num-clusters');
+        const corePointsCountDisplay = document.getElementById('core-points-count');
+        const borderPointsCountDisplay = document.getElementById('border-points-count');
+        const noisePointsCountDisplay = document.getElementById('noise-points-count');
+        const algorithmStatusDisplay = document.getElementById('algorithm-status-text');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 600;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Data visualization constants
+        const DATA_WIDTH = WIDTH - MARGIN * 2;
+        const DATA_HEIGHT = HEIGHT - MARGIN * 2;
+        const DATA_X = MARGIN;
+        const DATA_Y = MARGIN;
+        
+        // Sensitivity analysis visualization constants
+        const SENS_HEIGHT = 200;
+        const SENS_MARGIN = 30;
+        const SENS_WIDTH = WIDTH - 2 * SENS_MARGIN;
+        const SENS_PLOT_HEIGHT = SENS_HEIGHT - 2 * SENS_MARGIN;
+        
+        // Data range
+        const X_MIN = 0;
+        const X_MAX = 10;
+        const Y_MIN = 0;
+        const Y_MAX = 10;
+        
+        // Colors
+        const CORE_POINT_COLOR = '#3B82F6'; // Blue
+        const BORDER_POINT_COLOR = '#10B981'; // Green
+        const NOISE_POINT_COLOR = '#9CA3AF'; // Gray
+        const CONNECTION_COLOR = '#EF4444'; // Red
+        const EPSILON_CIRCLE_COLOR = 'rgba(147, 197, 253, 0.2)'; // Light blue with opacity
+        const TRUE_CLUSTER_COLORS = [
+            'rgba(239, 68, 68, 0.15)', // Red with opacity
+            'rgba(59, 130, 246, 0.15)', // Blue with opacity
+            'rgba(16, 185, 129, 0.15)', // Green with opacity
+            'rgba(139, 92, 246, 0.15)', // Purple with opacity
+            'rgba(245, 158, 11, 0.15)', // Amber with opacity
+            'rgba(236, 72, 153, 0.15)', // Pink with opacity
+            'rgba(99, 102, 241, 0.15)'  // Indigo with opacity
+        ];
+        const CLUSTER_COLORS = [
+            '#EF4444', // Red
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#8B5CF6', // Purple
+            '#F59E0B', // Amber
+            '#EC4899', // Pink
+            '#6366F1'  // Indigo
+        ];
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and algorithm parameters
+        let data = [];
+        let trueClusters = [];
+        let pointTypes = []; // 'core', 'border', 'noise'
+        let clusterAssignments = [];
+        let epsilon = 0.5;
+        let minPoints = 5;
+        let clusterSeparation = 5.0;
+        let clusterCount = 3;
+        let neighborLists = [];
+        let visitedPoints = [];
+        let currentProcessingPoint = -1;
+        let currentClusterId = 0;
+        let stepByStepState = {
+            phase: 'not-started', // 'identifying-core-points', 'expanding-clusters', 'complete'
+            corePointIndex: 0,
+            queue: [],
+            currentCluster: 0
+        };
+        let animationInProgress = false;
+        let sensitivityResults = [];
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            svg.innerHTML = '';
+            sensitivitySvg.innerHTML = '';
+            
+            // Add background for main visualization
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            svg.appendChild(background);
+            
+            // Add grid lines
+            const numVerticalLines = 10;
+            const numHorizontalLines = 10;
+            const verticalSpacing = DATA_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = DATA_X + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                svg.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', DATA_X);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', DATA_X + DATA_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                svg.appendChild(hLine);
+            }
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', DATA_X);
+            xAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT);
+            xAxis.setAttribute('x2', DATA_X + DATA_WIDTH);
+            xAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', DATA_X);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', DATA_X);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 30);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Feature X₁';
+            svg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', DATA_X - 30);
+            yLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, ${DATA_X - 30}, ${DATA_Y + DATA_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Feature X₂';
+            svg.appendChild(yLabel);
+            
+            // Add x-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const x = mapX(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', DATA_Y + DATA_HEIGHT);
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', DATA_Y + DATA_HEIGHT + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Add y-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const y = mapY(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', DATA_X);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', DATA_X - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', DATA_X - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Initialize sensitivity analysis visualization
+            initSensitivitySVG();
+        }
+        
+        // Initialize the sensitivity analysis visualization
+        function initSensitivitySVG() {
+            // Clear existing SVG
+            sensitivitySvg.innerHTML = '';
+            
+            // Add background
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', SENS_HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            sensitivitySvg.appendChild(background);
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', SENS_MARGIN);
+            xAxis.setAttribute('y1', SENS_HEIGHT - SENS_MARGIN);
+            xAxis.setAttribute('x2', WIDTH - SENS_MARGIN);
+            xAxis.setAttribute('y2', SENS_HEIGHT - SENS_MARGIN);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            sensitivitySvg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', SENS_MARGIN);
+            yAxis.setAttribute('y1', SENS_MARGIN);
+            yAxis.setAttribute('x2', SENS_MARGIN);
+            yAxis.setAttribute('y2', SENS_HEIGHT - SENS_MARGIN);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            sensitivitySvg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', WIDTH / 2);
+            xLabel.setAttribute('y', SENS_HEIGHT - 5);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Epsilon (ε) Value';
+            sensitivitySvg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', 15);
+            yLabel.setAttribute('y', SENS_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, 15, ${SENS_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Number of Clusters';
+            sensitivitySvg.appendChild(yLabel);
+            
+            // Add title
+            const title = document.createElementNS(svgNS, 'text');
+            title.setAttribute('x', WIDTH / 2);
+            title.setAttribute('y', SENS_MARGIN / 2);
+            title.setAttribute('text-anchor', 'middle');
+            title.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            title.setAttribute('font-weight', 'bold');
+            title.textContent = 'Number of Clusters vs. Epsilon Value';
+            sensitivitySvg.appendChild(title);
+            
+            // Add placeholder text when no data is available
+            const placeholderText = document.createElementNS(svgNS, 'text');
+            placeholderText.setAttribute('x', WIDTH / 2);
+            placeholderText.setAttribute('y', SENS_HEIGHT / 2);
+            placeholderText.setAttribute('text-anchor', 'middle');
+            placeholderText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            placeholderText.setAttribute('font-style', 'italic');
+            placeholderText.setAttribute('class', 'sensitivity-placeholder');
+            placeholderText.textContent = 'Run sensitivity analysis to see how epsilon affects clustering';
+            sensitivitySvg.appendChild(placeholderText);
+        }
+        
+        // Generate synthetic data for clustering
+        function generateData() {
+            const numPoints = parseInt(numPointsInput.value);
+            const distribution = dataDistributionSelect.value;
+            clusterCount = parseInt(clusterCountSelect.value);
+            clusterSeparation = parseFloat(clusterSeparationInput.value);
+            
+            // Update separation display
+            separationValueDisplay.textContent = clusterSeparation.toFixed(1);
+            
+            // Reset algorithm state
+            pointTypes = Array(numPoints).fill('');
+            clusterAssignments = Array(numPoints).fill(-1);
+            neighborLists = [];
+            visitedPoints = [];
+            currentProcessingPoint = -1;
+            currentClusterId = 0;
+            stepByStepState = {
+                phase: 'not-started',
+                corePointIndex: 0,
+                queue: [],
+                currentCluster: 0
+            };
+            
+            // Update UI
+            resetAlgorithmStatus();
+            
+            // Clear data
+            data = [];
+            trueClusters = [];
+            
+            // Generate data based on selected distribution
+            switch (distribution) {
+                case 'blobs':
+                    generateGaussianBlobs(numPoints, clusterCount, clusterSeparation);
+                    break;
+                case 'circles':
+                    generateConcentricCircles(numPoints, clusterCount, clusterSeparation);
+                    break;
+                case 'moons':
+                    generateTwoMoons(numPoints, clusterSeparation);
+                    break;
+                case 'varying-density':
+                    generateVaryingDensity(numPoints, clusterCount, clusterSeparation);
+                    break;
+                case 'noisy':
+                    generateNoisyClusters(numPoints, clusterCount, clusterSeparation);
+                    break;
+                case 'anisotropic':
+                    generateAnisotropicClusters(numPoints, clusterCount, clusterSeparation);
+                    break;
+                default:
+                    generateGaussianBlobs(numPoints, clusterCount, clusterSeparation);
+            }
+            
+            // Visualize data
+            visualizeData();
+            
+            // Show true clusters if option is checked
+            if (showTrueClustersCheckbox.checked) {
+                visualizeTrueClusters();
+            }
+        }
+        
+        // Generate Gaussian blob clusters
+        function generateGaussianBlobs(numPoints, numClusters, separation) {
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const stdDev = 0.5 / (separation * 0.4); // Adjust cluster spread based on separation
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate point with Gaussian distribution around center
+                    const x = center.x + randomNormal() * stdDev;
+                    const y = center.y + randomNormal() * stdDev;
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const stdDev = 0.5 / (separation * 0.4);
+                
+                const x = center.x + randomNormal() * stdDev;
+                const y = center.y + randomNormal() * stdDev;
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate concentric circles
+        function generateConcentricCircles(numPoints, numCircles, separation) {
+            // Calculate points per circle
+            const pointsPerCircle = Math.floor(numPoints / numCircles);
+            
+            // Center of all circles
+            const centerX = 5;
+            const centerY = 5;
+            
+            // Generate points on each circle
+            for (let i = 0; i < numCircles; i++) {
+                // Calculate radius for this circle
+                const radius = 1 + i * (separation * 0.3);
+                
+                for (let j = 0; j < pointsPerCircle; j++) {
+                    // Generate angle around circle
+                    const angle = Math.random() * 2 * Math.PI;
+                    
+                    // Add some noise to the radius
+                    const noisyRadius = radius + (Math.random() * 0.2 - 0.1) * (11 - separation) * 0.1;
+                    
+                    // Convert to Cartesian coordinates
+                    const x = centerX + noisyRadius * Math.cos(angle);
+                    const y = centerY + noisyRadius * Math.sin(angle);
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const circleIndex = Math.floor(Math.random() * numCircles);
+                const radius = 1 + circleIndex * (separation * 0.3);
+                const angle = Math.random() * 2 * Math.PI;
+                const noisyRadius = radius + (Math.random() * 0.2 - 0.1) * (11 - separation) * 0.1;
+                
+                const x = centerX + noisyRadius * Math.cos(angle);
+                const y = centerY + noisyRadius * Math.sin(angle);
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(circleIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate two moons pattern
+        function generateTwoMoons(numPoints, separation) {
+            // Calculate points per moon
+            const pointsPerMoon = Math.floor(numPoints / 2);
+            
+            // Parameters
+            const r = 3; // Radius
+            const width = 1.5; // Width of the moon shape
+            const verticalSep = separation * 0.3; // Vertical separation between moons
+            
+            // First moon
+            for (let i = 0; i < pointsPerMoon; i++) {
+                const angle = Math.PI * Math.random();
+                const radiusNoise = (Math.random() * 0.5 - 0.25) * (11 - separation) * 0.05;
+                
+                const x = 5 + (r + radiusNoise) * Math.cos(angle);
+                const y = 5 + (r + radiusNoise) * Math.sin(angle);
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(0);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+            
+            // Second moon
+            for (let i = 0; i < pointsPerMoon; i++) {
+                const angle = Math.PI * Math.random() + Math.PI;
+                const radiusNoise = (Math.random() * 0.5 - 0.25) * (11 - separation) * 0.05;
+                
+                const x = 5 + (r + radiusNoise) * Math.cos(angle);
+                const y = 5 + (r + radiusNoise) * Math.sin(angle) + verticalSep;
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(1);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const moonIndex = Math.floor(Math.random() * 2);
+                
+                if (moonIndex === 0) {
+                    const angle = Math.PI * Math.random();
+                    const radiusNoise = (Math.random() * 0.5 - 0.25) * (11 - separation) * 0.05;
+                    
+                    const x = 5 + (r + radiusNoise) * Math.cos(angle);
+                    const y = 5 + (r + radiusNoise) * Math.sin(angle);
+                    
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(0);
+                    } else {
+                        i--;
+                    }
+                } else {
+                    const angle = Math.PI * Math.random() + Math.PI;
+                    const radiusNoise = (Math.random() * 0.5 - 0.25) * (11 - separation) * 0.05;
+                    
+                    const x = 5 + (r + radiusNoise) * Math.cos(angle);
+                    const y = 5 + (r + radiusNoise) * Math.sin(angle) + verticalSep;
+                    
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(1);
+                    } else {
+                        i--;
+                    }
+                }
+            }
+        }
+        
+        // Generate clusters with varying density
+        function generateVaryingDensity(numPoints, numClusters, separation) {
+            // Calculate total points distribution based on densities
+            const densities = [];
+            let totalDensity = 0;
+            
+            // Create varying densities
+            for (let i = 0; i < numClusters; i++) {
+                // Exponentially decrease density
+                const density = Math.pow(0.5, i);
+                densities.push(density);
+                totalDensity += density;
+            }
+            
+            // Normalize densities to sum to 1
+            for (let i = 0; i < numClusters; i++) {
+                densities[i] /= totalDensity;
+            }
+            
+            // Calculate points per cluster
+            const pointsPerCluster = [];
+            for (let i = 0; i < numClusters; i++) {
+                pointsPerCluster.push(Math.floor(numPoints * densities[i]));
+            }
+            
+            // Adjust for rounding errors
+            let sum = pointsPerCluster.reduce((a, b) => a + b, 0);
+            pointsPerCluster[0] += (numPoints - sum);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const count = pointsPerCluster[i];
+                
+                // Adjust spread based on density (denser clusters have smaller spread)
+                const stdDev = 0.5 / (separation * 0.4) * (Math.pow(1.5, i));
+                
+                for (let j = 0; j < count; j++) {
+                    // Generate point with Gaussian distribution around center
+                    const x = center.x + randomNormal() * stdDev;
+                    const y = center.y + randomNormal() * stdDev;
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+        }
+        
+        // Generate clusters with added noise points
+        function generateNoisyClusters(numPoints, numClusters, separation) {
+            // Determine how many points will be noise
+            const noiseRatio = 0.2; // 20% noise
+            const numNoisePoints = Math.floor(numPoints * noiseRatio);
+            const numClusterPoints = numPoints - numNoisePoints;
+            
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numClusterPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const stdDev = 0.5 / (separation * 0.4);
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate point with Gaussian distribution around center
+                    const x = center.x + randomNormal() * stdDev;
+                    const y = center.y + randomNormal() * stdDev;
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Generate noise points uniformly across the space
+            for (let i = 0; i < numNoisePoints; i++) {
+                const x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                const y = Math.random() * (Y_MAX - Y_MIN) + Y_MIN;
+                
+                data.push({ x, y });
+                trueClusters.push(-1); // -1 indicates noise
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const stdDev = 0.5 / (separation * 0.4);
+                
+                const x = center.x + randomNormal() * stdDev;
+                const y = center.y + randomNormal() * stdDev;
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate anisotropic (elongated) clusters
+        function generateAnisotropicClusters(numPoints, numClusters, separation) {
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            const clusterAngles = [];
+            
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+                
+                // Give each cluster a random orientation
+                clusterAngles.push(Math.random() * Math.PI);
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const angle = clusterAngles[i];
+                
+                // Create covariance matrix for elongated clusters
+                const stdDevMajor = 1.0 / (separation * 0.4); // Major axis
+                const stdDevMinor = stdDevMajor * 0.2; // Minor axis (much smaller)
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate point with anisotropic distribution
+                    const u1 = randomNormal() * stdDevMajor;
+                    const u2 = randomNormal() * stdDevMinor;
+                    
+                    // Rotate point
+                    const x = center.x + u1 * Math.cos(angle) - u2 * Math.sin(angle);
+                    const y = center.y + u1 * Math.sin(angle) + u2 * Math.cos(angle);
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const angle = clusterAngles[clusterIndex];
+                
+                const stdDevMajor = 1.0 / (separation * 0.4);
+                const stdDevMinor = stdDevMajor * 0.2;
+                
+                const u1 = randomNormal() * stdDevMajor;
+                const u2 = randomNormal() * stdDevMinor;
+                
+                const x = center.x + u1 * Math.cos(angle) - u2 * Math.sin(angle);
+                const y = center.y + u1 * Math.sin(angle) + u2 * Math.cos(angle);
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate a random normal (Gaussian) number using Box-Muller transform
+        function randomNormal() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random(); // Exclude 0
+            while (v === 0) v = Math.random(); // Exclude 0
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+        
+        // Map data coordinates to SVG coordinates
+        function mapX(x) {
+            return DATA_X + ((x - X_MIN) / (X_MAX - X_MIN)) * DATA_WIDTH;
+        }
+        
+        function mapY(y) {
+            return DATA_Y + DATA_HEIGHT - ((y - Y_MIN) / (Y_MAX - Y_MIN)) * DATA_HEIGHT;
+        }
+        
+        // Map sensitivity analysis coordinates
+        function mapSensX(eps, minEps, maxEps) {
+            return SENS_MARGIN + ((eps - minEps) / (maxEps - minEps)) * SENS_WIDTH;
+        }
+        
+        function mapSensY(count, maxCount) {
+            return SENS_HEIGHT - SENS_MARGIN - (count / maxCount) * SENS_PLOT_HEIGHT;
+        }
+        
+        // Visualize the data points
+        function visualizeData() {
+            // Remove existing data points and connections
+            clearVisualization();
+            
+            // Add new data points
+            data.forEach((point, index) => {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', mapX(point.x));
+                circle.setAttribute('cy', mapY(point.y));
+                circle.setAttribute('r', '4');
+                circle.setAttribute('fill', '#718096'); // Default gray
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                svg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(5),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Clear visualization elements
+        function clearVisualization() {
+            // Remove data points
+            const existingPoints = svg.querySelectorAll('.data-point');
+            existingPoints.forEach(point => point.remove());
+            
+            // Remove epsilon circles
+            const existingEpsCircles = svg.querySelectorAll('.epsilon-circle');
+            existingEpsCircles.forEach(circle => circle.remove());
+            
+            // Remove connections
+            const existingConnections = svg.querySelectorAll('.connection');
+            existingConnections.forEach(connection => connection.remove());
+            
+            // Remove true clusters
+            const existingTrueClusters = svg.querySelectorAll('.true-cluster');
+            existingTrueClusters.forEach(tc => tc.remove());
+        }
+        
+        // Visualize true clusters
+        function visualizeTrueClusters() {
+            // Clear existing true cluster visualizations
+            const existingTrueClusters = svg.querySelectorAll('.true-cluster');
+            existingTrueClusters.forEach(tc => tc.remove());
+            
+            // Create groups for each true cluster
+            const clusterGroups = {};
+            
+            // Group points by true cluster
+            for (let i = 0; i < data.length; i++) {
+                const clusterIndex = trueClusters[i];
+                if (clusterIndex >= 0) { // Skip noise points
+                    if (!clusterGroups[clusterIndex]) {
+                        clusterGroups[clusterIndex] = [];
+                    }
+                    clusterGroups[clusterIndex].push(data[i]);
+                }
+            }
+            
+            // Draw convex hull or ellipses for each cluster
+            for (const clusterIndex in clusterGroups) {
+                const points = clusterGroups[clusterIndex];
+                
+                // Draw ellipse approximation of cluster
+                const { centerX, centerY, radiusX, radiusY, angle } = calculateEllipseParams(points);
+                
+                // Create the ellipse
+                const ellipse = document.createElementNS(svgNS, 'ellipse');
+                ellipse.setAttribute('cx', mapX(centerX));
+                ellipse.setAttribute('cy', mapY(centerY));
+                ellipse.setAttribute('rx', radiusX * DATA_WIDTH / (X_MAX - X_MIN));
+                ellipse.setAttribute('ry', radiusY * DATA_HEIGHT / (Y_MAX - Y_MIN));
+                ellipse.setAttribute('transform', `rotate(${angle * 180 / Math.PI}, ${mapX(centerX)}, ${mapY(centerY)})`);
+                ellipse.setAttribute('fill', TRUE_CLUSTER_COLORS[clusterIndex % TRUE_CLUSTER_COLORS.length]);
+                ellipse.setAttribute('class', 'true-cluster');
+                
+                // Add animation
+                ellipse.style.opacity = '0';
+                
+                // Add to SVG (before data points for proper layering)
+                const firstDataPoint = svg.querySelector('.data-point');
+                if (firstDataPoint) {
+                    svg.insertBefore(ellipse, firstDataPoint);
+                } else {
+                    svg.appendChild(ellipse);
+                }
+            }
+            
+            // Animate the true clusters
+            anime({
+                targets: '.true-cluster',
+                opacity: 1,
+                easing: 'easeInOutSine',
+                duration: 800
+            });
+        }
+        
+        // Calculate parameters for an ellipse approximating a cluster of points
+        function calculateEllipseParams(points) {
+            // Calculate center
+            let sumX = 0, sumY = 0;
+            for (const point of points) {
+                sumX += point.x;
+                sumY += point.y;
+            }
+            const centerX = sumX / points.length;
+            const centerY = sumY / points.length;
+            
+            // Calculate covariance matrix
+            let sumXX = 0, sumXY = 0, sumYY = 0;
+            for (const point of points) {
+                const dx = point.x - centerX;
+                const dy = point.y - centerY;
+                sumXX += dx * dx;
+                sumXY += dx * dy;
+                sumYY += dy * dy;
+            }
+            
+            // Normalize by number of points
+            const covXX = sumXX / points.length;
+            const covXY = sumXY / points.length;
+            const covYY = sumYY / points.length;
+            
+            // Calculate eigenvalues and eigenvectors of covariance matrix
+            const trace = covXX + covYY;
+            const det = covXX * covYY - covXY * covXY;
+            
+            // Calculate eigenvalues
+            const lambda1 = trace / 2 + Math.sqrt(Math.pow(trace / 2, 2) - det);
+            const lambda2 = trace / 2 - Math.sqrt(Math.pow(trace / 2, 2) - det);
+            
+            // Calculate semi-major and semi-minor axes (scale for coverage)
+            const radiusX = Math.sqrt(lambda1) * 2.45;
+            const radiusY = Math.sqrt(lambda2) * 2.45;
+            
+            // Calculate orientation angle
+            let angle = 0;
+            if (covXY !== 0) {
+                angle = Math.atan2(lambda1 - covXX, covXY);
+            }
+            
+            return { centerX, centerY, radiusX, radiusY, angle };
+        }
+        
+        // Reset algorithm status display
+        function resetAlgorithmStatus() {
+            numClustersDisplay.textContent = '0';
+            corePointsCountDisplay.textContent = '0';
+            borderPointsCountDisplay.textContent = '0';
+            noisePointsCountDisplay.textContent = '0';
+            algorithmStatusDisplay.textContent = 'Not Started';
+        }
+        
+        // Run full DBSCAN algorithm
+        async function runDBSCAN() {
+            if (data.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during processing
+            runDbscanBtn.disabled = true;
+            stepDbscanBtn.disabled = true;
+            
+            // Get parameters from UI
+            epsilon = parseFloat(epsValueInput.value);
+            minPoints = parseInt(minPointsInput.value);
+            
+            // Reset algorithm state
+            pointTypes = Array(data.length).fill('');
+            clusterAssignments = Array(data.length).fill(-1);
+            neighborLists = [];
+            visitedPoints = Array(data.length).fill(false);
+            currentProcessingPoint = -1;
+            currentClusterId = 0;
+            
+            // Phase 1: Find all neighbors for each point
+            initializeNeighborLists();
+            
+            // Phase 2: Identify core points
+            identifyCorePoints();
+            
+            // Phase 3: Expand clusters from core points
+            for (let i = 0; i < data.length; i++) {
+                if (pointTypes[i] === 'core' && clusterAssignments[i] === -1) {
+                    currentClusterId++;
+                    await expandCluster(i, currentClusterId);
+                }
+            }
+            
+            // Count point types
+            const pointTypeCounts = countPointTypes();
+            
+            // Update UI
+            numClustersDisplay.textContent = currentClusterId;
+            corePointsCountDisplay.textContent = pointTypeCounts.core;
+            borderPointsCountDisplay.textContent = pointTypeCounts.border;
+            noisePointsCountDisplay.textContent = pointTypeCounts.noise;
+            algorithmStatusDisplay.textContent = 'Complete';
+            
+            // Update visualization
+            updateVisualization();
+            
+            // Re-enable buttons
+            runDbscanBtn.disabled = false;
+            stepDbscanBtn.disabled = false;
+        }
+        
+        // Step through DBSCAN algorithm
+        async function stepDBSCAN() {
+            if (data.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during processing
+            runDbscanBtn.disabled = true;
+            stepDbscanBtn.disabled = true;
+            
+            // Execute next step based on current state
+            switch (stepByStepState.phase) {
+                case 'not-started':
+                    // Initialize algorithm
+                    epsilon = parseFloat(epsValueInput.value);
+                    minPoints = parseInt(minPointsInput.value);
+                    
+                    // Reset algorithm state
+                    pointTypes = Array(data.length).fill('');
+                    clusterAssignments = Array(data.length).fill(-1);
+                    neighborLists = [];
+                    visitedPoints = Array(data.length).fill(false);
+                    currentProcessingPoint = -1;
+                    currentClusterId = 0;
+                    
+                    // Find all neighbors for each point
+                    initializeNeighborLists();
+                    
+                    // Update state
+                    stepByStepState.phase = 'identifying-core-points';
+                    stepByStepState.corePointIndex = 0;
+                    
+                    // Update status
+                    algorithmStatusDisplay.textContent = 'Finding Core Points...';
+                    break;
+                    
+                case 'identifying-core-points':
+                    // Process the next batch of points for core point identification
+                    const batchSize = 10; // Process 10 points at a time
+                    let startIdx = stepByStepState.corePointIndex;
+                    let endIdx = Math.min(startIdx + batchSize, data.length);
+                    
+                    // Identify core points in this batch
+                    for (let i = startIdx; i < endIdx; i++) {
+                        if (neighborLists[i].length >= minPoints) {
+                            pointTypes[i] = 'core';
+                        }
+                    }
+                    
+                    // Update visualization for this batch
+                    for (let i = startIdx; i < endIdx; i++) {
+                        updatePointVisualization(i);
+                    }
+                    
+                    // Update state
+                    stepByStepState.corePointIndex = endIdx;
+                    
+                    // If all points are processed, move to next phase
+                    if (endIdx >= data.length) {
+                        // Identify border and noise points
+                        identifyBorderAndNoisePoints();
+                        
+                        // Update all points visualization
+                        for (let i = 0; i < data.length; i++) {
+                            updatePointVisualization(i);
+                        }
+                        
+                        // Update state
+                        stepByStepState.phase = 'expanding-clusters';
+                        stepByStepState.currentCluster = 0;
+                        stepByStepState.queue = [];
+                        
+                        // Find the first core point to start expansion
+                        for (let i = 0; i < data.length; i++) {
+                            if (pointTypes[i] === 'core' && clusterAssignments[i] === -1) {
+                                stepByStepState.currentCluster = 1;
+                                clusterAssignments[i] = 1;
+                                stepByStepState.queue = [...neighborLists[i]];
+                                visitedPoints[i] = true;
+                                currentProcessingPoint = i;
+                                break;
+                            }
+                        }
+                        
+                        // Update visualization
+                        updateVisualization();
+                        
+                        // Update status
+                        algorithmStatusDisplay.textContent = 'Expanding Clusters...';
+                    }
+                    break;
+                    
+                case 'expanding-clusters':
+                    // Process expansion of current cluster
+                    if (stepByStepState.queue.length > 0) {
+                        // Get next point from queue
+                        const pointIdx = stepByStepState.queue.shift();
+                        
+                        // If not already visited
+                        if (!visitedPoints[pointIdx]) {
+                            visitedPoints[pointIdx] = true;
+                            
+                            // Assign to current cluster
+                            clusterAssignments[pointIdx] = stepByStepState.currentCluster;
+                            
+                            // If this is a core point, add its neighbors to the queue
+                            if (pointTypes[pointIdx] === 'core') {
+                                stepByStepState.queue.push(...neighborLists[pointIdx]);
+                            }
+                            
+                            // Update visualization
+                            updatePointVisualization(pointIdx);
+                        }
+                        
+                    } else {
+                        // Current cluster expansion complete, find next core point
+                        let foundNewCluster = false;
+                        
+                        for (let i = 0; i < data.length; i++) {
+                            if (pointTypes[i] === 'core' && clusterAssignments[i] === -1) {
+                                // Start new cluster
+                                stepByStepState.currentCluster++;
+                                clusterAssignments[i] = stepByStepState.currentCluster;
+                                stepByStepState.queue = [...neighborLists[i]];
+                                visitedPoints[i] = true;
+                                currentProcessingPoint = i;
+                                foundNewCluster = true;
+                                
+                                // Update visualization
+                                updatePointVisualization(i);
+                                break;
+                            }
+                        }
+                        
+                        // If no more core points to process, we're done
+                        if (!foundNewCluster) {
+                            // All clusters expanded
+                            stepByStepState.phase = 'complete';
+                            
+                            // Count point types
+                            const pointTypeCounts = countPointTypes();
+                            
+                            // Update UI
+                            numClustersDisplay.textContent = stepByStepState.currentCluster;
+                            corePointsCountDisplay.textContent = pointTypeCounts.core;
+                            borderPointsCountDisplay.textContent = pointTypeCounts.border;
+                            noisePointsCountDisplay.textContent = pointTypeCounts.noise;
+                            algorithmStatusDisplay.textContent = 'Complete';
+                            
+                            // Final visualization update
+                            updateVisualization();
+                        }
+                    }
+                    break;
+                    
+                case 'complete':
+                    // Algorithm is complete, nothing to do
+                    algorithmStatusDisplay.textContent = 'Algorithm Complete';
+                    break;
+            }
+            
+            // Re-enable buttons
+            runDbscanBtn.disabled = false;
+            stepDbscanBtn.disabled = false;
+        }
+        
+        // Initialize neighbor lists for all points
+        function initializeNeighborLists() {
+            neighborLists = [];
+            
+            // Calculate neighbors for each point
+            for (let i = 0; i < data.length; i++) {
+                const neighbors = [];
+                
+                for (let j = 0; j < data.length; j++) {
+                    if (i !== j) {
+                        const distance = calculateDistance(data[i], data[j]);
+                        if (distance <= epsilon) {
+                            neighbors.push(j);
+                        }
+                    }
+                }
+                
+                neighborLists.push(neighbors);
+            }
+        }
+        
+        // Identify core points
+        function identifyCorePoints() {
+            for (let i = 0; i < data.length; i++) {
+                if (neighborLists[i].length >= minPoints - 1) { // -1 because we don't include the point itself
+                    pointTypes[i] = 'core';
+                }
+            }
+        }
+        
+        // Identify border and noise points
+        function identifyBorderAndNoisePoints() {
+            for (let i = 0; i < data.length; i++) {
+                if (pointTypes[i] !== 'core') {
+                    // Check if this point is a neighbor of any core point
+                    let isBorder = false;
+                    
+                    for (let j = 0; j < data.length; j++) {
+                        if (pointTypes[j] === 'core' && neighborLists[j].includes(i)) {
+                            isBorder = true;
+                            break;
+                        }
+                    }
+                    
+                    pointTypes[i] = isBorder ? 'border' : 'noise';
+                }
+            }
+        }
+        
+        // Expand cluster from core point
+        async function expandCluster(pointIndex, clusterId) {
+            // Assign to cluster
+            clusterAssignments[pointIndex] = clusterId;
+            
+            // Mark as visited
+            visitedPoints[pointIndex] = true;
+            
+            // Use a queue for breadth-first expansion
+            const queue = [...neighborLists[pointIndex]];
+            
+            while (queue.length > 0) {
+                const currentPoint = queue.shift();
+                
+                // If not already visited
+                if (!visitedPoints[currentPoint]) {
+                    visitedPoints[currentPoint] = true;
+                    
+                    // Assign to current cluster
+                    clusterAssignments[currentPoint] = clusterId;
+                    
+                    // If this is a core point, add its neighbors to the queue
+                    if (pointTypes[currentPoint] === 'core') {
+                        queue.push(...neighborLists[currentPoint]);
+                    }
+                }
+            }
+        }
+        
+        // Count point types
+        function countPointTypes() {
+            let core = 0, border = 0, noise = 0;
+            
+            for (const type of pointTypes) {
+                if (type === 'core') core++;
+                else if (type === 'border') border++;
+                else if (type === 'noise') noise++;
+            }
+            
+            return { core, border, noise };
+        }
+        
+        // Update visualization based on current state
+        function updateVisualization() {
+            // Update all points
+            for (let i = 0; i < data.length; i++) {
+                updatePointVisualization(i);
+            }
+            
+            // Show epsilon circles if enabled
+            if (showEpsCirclesCheckbox.checked) {
+                visualizeEpsilonCircles();
+            }
+            
+            // Show connections if enabled
+            if (showConnectionsCheckbox.checked) {
+                visualizeConnections();
+            }
+        }
+        
+        // Update visualization for a single point
+        function updatePointVisualization(pointIndex) {
+            const point = svg.querySelector(`.data-point[data-index="${pointIndex}"]`);
+            if (!point) return;
+            
+            // Set color based on point type
+            if (pointTypes[pointIndex] === 'core') {
+                point.setAttribute('fill', CORE_POINT_COLOR);
+                point.setAttribute('r', '5'); // Larger for core points
+            } else if (pointTypes[pointIndex] === 'border') {
+                point.setAttribute('fill', BORDER_POINT_COLOR);
+                point.setAttribute('r', '4');
+            } else if (pointTypes[pointIndex] === 'noise') {
+                point.setAttribute('fill', NOISE_POINT_COLOR);
+                point.setAttribute('r', '3'); // Smaller for noise points
+            }
+            
+            // Add cluster information
+            point.setAttribute('data-cluster', clusterAssignments[pointIndex]);
+            
+            // If assigned to a cluster, add stroke color
+            if (clusterAssignments[pointIndex] > 0) {
+                const clusterColor = CLUSTER_COLORS[(clusterAssignments[pointIndex] - 1) % CLUSTER_COLORS.length];
+                point.setAttribute('stroke', clusterColor);
+                point.setAttribute('stroke-width', '2');
+            }
+        }
+        
+        // Visualize epsilon circles
+        function visualizeEpsilonCircles() {
+            // Remove existing epsilon circles
+            const existingCircles = svg.querySelectorAll('.epsilon-circle');
+            existingCircles.forEach(circle => circle.remove());
+            
+            // Create one circle per point
+            data.forEach((point, index) => {
+                // Only draw for core or border points
+                if (pointTypes[index] === 'core' || pointTypes[index] === 'border') {
+                    const epsCircle = document.createElementNS(svgNS, 'circle');
+                    epsCircle.setAttribute('cx', mapX(point.x));
+                    epsCircle.setAttribute('cy', mapY(point.y));
+                    epsCircle.setAttribute('r', epsilon * DATA_WIDTH / (X_MAX - X_MIN));
+                    epsCircle.setAttribute('fill', EPSILON_CIRCLE_COLOR);
+                    epsCircle.setAttribute('class', 'epsilon-circle');
+                    epsCircle.setAttribute('data-index', index);
+                    
+                    // Add animation
+                    epsCircle.style.opacity = '0';
+                    
+                    // Add to SVG (before points for proper layering)
+                    const firstPoint = svg.querySelector('.data-point');
+                    if (firstPoint) {
+                        svg.insertBefore(epsCircle, firstPoint);
+                    } else {
+                        svg.appendChild(epsCircle);
+                    }
+                }
+            });
+            
+            // Animate epsilon circles
+            anime({
+                targets: '.epsilon-circle',
+                opacity: 0.5,
+                delay: anime.stagger(5),
+                easing: 'easeInOutSine',
+                duration: 500
+            });
+        }
+        
+        // Visualize connections between points in the same cluster
+        function visualizeConnections() {
+            // Remove existing connections
+            const existingConnections = svg.querySelectorAll('.connection');
+            existingConnections.forEach(connection => connection.remove());
+            
+            // Create connections for each cluster
+            for (let clusterId = 1; clusterId <= currentClusterId; clusterId++) {
+                const clusterPoints = [];
+                
+                // Get all points in this cluster
+                for (let i = 0; i < data.length; i++) {
+                    if (clusterAssignments[i] === clusterId) {
+                        clusterPoints.push(i);
+                    }
+                }
+                
+                // Create connections between core points and their neighbors in the same cluster
+                for (let i = 0; i < clusterPoints.length; i++) {
+                    const pointIndex = clusterPoints[i];
+                    
+                    if (pointTypes[pointIndex] === 'core') {
+                        for (const neighborIndex of neighborLists[pointIndex]) {
+                            if (clusterAssignments[neighborIndex] === clusterId && pointIndex < neighborIndex) {
+                                // Create connection line
+                                const connection = document.createElementNS(svgNS, 'line');
+                                connection.setAttribute('x1', mapX(data[pointIndex].x));
+                                connection.setAttribute('y1', mapY(data[pointIndex].y));
+                                connection.setAttribute('x2', mapX(data[neighborIndex].x));
+                                connection.setAttribute('y2', mapY(data[neighborIndex].y));
+                                connection.setAttribute('stroke', CONNECTION_COLOR);
+                                connection.setAttribute('stroke-width', '1');
+                                connection.setAttribute('class', 'connection');
+                                
+                                // Add animation
+                                connection.style.opacity = '0';
+                                
+                                // Add to SVG (before points for proper layering)
+                                const firstPoint = svg.querySelector('.data-point');
+                                if (firstPoint) {
+                                    svg.insertBefore(connection, firstPoint);
+                                } else {
+                                    svg.appendChild(connection);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Animate connections
+            anime({
+                targets: '.connection',
+                opacity: 0.5,
+                delay: anime.stagger(5),
+                easing: 'easeInOutSine',
+                duration: 500
+            });
+        }
+        
+        // Calculate distance between two points
+        function calculateDistance(pointA, pointB) {
+            const dx = pointA.x - pointB.x;
+            const dy = pointA.y - pointB.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // Run parameter sensitivity analysis
+        async function runSensitivityAnalysis() {
+            if (data.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during analysis
+            runSensitivityBtn.disabled = true;
+            
+            // Clear existing sensitivity data
+            sensitivityResults = [];
+            
+            // Remove placeholder text
+            const placeholder = sensitivitySvg.querySelector('.sensitivity-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Remove existing visualization elements
+            const existingCurve = sensitivitySvg.querySelector('.sensitivity-curve');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            const existingPoints = sensitivitySvg.querySelectorAll('.sensitivity-point');
+            existingPoints.forEach(p => p.remove());
+            
+            // Get min points value from UI
+            minPoints = parseInt(minPointsInput.value);
+            
+            // Run DBSCAN with different epsilon values
+            const epsilonValues = [];
+            for (let eps = 0.1; eps <= 2.0; eps += 0.1) {
+                epsilonValues.push(parseFloat(eps.toFixed(1)));
+            }
+            
+            // Initialize progress bar
+            addProgressBar(sensitivitySvg, epsilonValues.length);
+            
+            // Run DBSCAN for each epsilon value
+            for (let i = 0; i < epsilonValues.length; i++) {
+                const eps = epsilonValues[i];
+                
+                // Reset algorithm state
+                epsilon = eps;
+                pointTypes = Array(data.length).fill('');
+                clusterAssignments = Array(data.length).fill(-1);
+                neighborLists = [];
+                visitedPoints = Array(data.length).fill(false);
+                currentClusterId = 0;
+                
+                // Run algorithm
+                initializeNeighborLists();
+                identifyCorePoints();
+                identifyBorderAndNoisePoints();
+                
+                for (let j = 0; j < data.length; j++) {
+                    if (pointTypes[j] === 'core' && clusterAssignments[j] === -1) {
+                        currentClusterId++;
+                        await expandCluster(j, currentClusterId);
+                    }
+                }
+                
+                // Store result
+                sensitivityResults.push({
+                    epsilon: eps,
+                    numClusters: currentClusterId,
+                    numCorePoints: pointTypes.filter(t => t === 'core').length,
+                    numBorderPoints: pointTypes.filter(t => t === 'border').length,
+                    numNoisePoints: pointTypes.filter(t => t === 'noise').length
+                });
+                
+                // Update progress bar
+                updateProgressBar(i + 1, epsilonValues.length);
+                
+                // Add a small delay to show progress
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            // Remove progress bar
+            removeProgressBar();
+            
+            // Visualize results
+            visualizeSensitivityResults();
+            
+            // Re-enable buttons
+            runSensitivityBtn.disabled = false;
+        }
+        
+        // Add progress bar to sensitivity analysis
+        function addProgressBar(svgElement, totalSteps) {
+            // Add progress bar container
+            const progressContainer = document.createElementNS(svgNS, 'rect');
+            progressContainer.setAttribute('x', SENS_MARGIN);
+            progressContainer.setAttribute('y', SENS_HEIGHT / 2 - 10);
+            progressContainer.setAttribute('width', SENS_WIDTH);
+            progressContainer.setAttribute('height', 20);
+            progressContainer.setAttribute('fill', document.body.classList.contains('dark') ? '#4B5563' : '#E5E7EB');
+            progressContainer.setAttribute('class', 'progress-container');
+            svgElement.appendChild(progressContainer);
+            
+            // Add progress bar
+            const progressBar = document.createElementNS(svgNS, 'rect');
+            progressBar.setAttribute('x', SENS_MARGIN);
+            progressBar.setAttribute('y', SENS_HEIGHT / 2 - 10);
+            progressBar.setAttribute('width', 0);
+            progressBar.setAttribute('height', 20);
+            progressBar.setAttribute('fill', CLUSTER_COLORS[0]);
+            progressBar.setAttribute('class', 'progress-bar');
+            svgElement.appendChild(progressBar);
+            
+            // Add progress text
+            const progressText = document.createElementNS(svgNS, 'text');
+            progressText.setAttribute('x', WIDTH / 2);
+            progressText.setAttribute('y', SENS_HEIGHT / 2 + 5);
+            progressText.setAttribute('text-anchor', 'middle');
+            progressText.setAttribute('fill', document.body.classList.contains('dark') ? '#FFFFFF' : '#000000');
+            progressText.setAttribute('class', 'progress-text');
+            progressText.textContent = 'Running Sensitivity Analysis: 0%';
+            svgElement.appendChild(progressText);
+        }
+        
+        // Update progress bar
+        function updateProgressBar(currentStep, totalSteps) {
+            const progressBar = sensitivitySvg.querySelector('.progress-bar');
+            const progressText = sensitivitySvg.querySelector('.progress-text');
+            
+            if (progressBar && progressText) {
+                const progress = currentStep / totalSteps;
+                progressBar.setAttribute('width', SENS_WIDTH * progress);
+                progressText.textContent = `Running Sensitivity Analysis: ${Math.round(progress * 100)}%`;
+            }
+        }
+        
+        // Remove progress bar
+        function removeProgressBar() {
+            const progressContainer = sensitivitySvg.querySelector('.progress-container');
+            const progressBar = sensitivitySvg.querySelector('.progress-bar');
+            const progressText = sensitivitySvg.querySelector('.progress-text');
+            
+            if (progressContainer) progressContainer.remove();
+            if (progressBar) progressBar.remove();
+            if (progressText) progressText.remove();
+        }
+        
+        // Visualize sensitivity analysis results
+        function visualizeSensitivityResults() {
+            // Clear existing visualization
+            const existingCurve = sensitivitySvg.querySelector('.sensitivity-curve');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            const existingPoints = sensitivitySvg.querySelectorAll('.sensitivity-point');
+            existingPoints.forEach(p => p.remove());
+            
+            const existingLabels = sensitivitySvg.querySelectorAll('.sensitivity-label');
+            existingLabels.forEach(l => l.remove());
+            
+            // Calculate min and max values for scaling
+            const epsilonValues = sensitivityResults.map(r => r.epsilon);
+            const minEpsilon = Math.min(...epsilonValues);
+            const maxEpsilon = Math.max(...epsilonValues);
+            
+            const clusterCounts = sensitivityResults.map(r => r.numClusters);
+            const maxClusters = Math.max(...clusterCounts);
+            
+            // Add x-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const eps = minEpsilon + (i / 10) * (maxEpsilon - minEpsilon);
+                const x = mapSensX(eps, minEpsilon, maxEpsilon);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', SENS_HEIGHT - SENS_MARGIN);
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', SENS_HEIGHT - SENS_MARGIN + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                tickLine.setAttribute('class', 'sensitivity-label');
+                sensitivitySvg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', SENS_HEIGHT - SENS_MARGIN + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '10');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.setAttribute('class', 'sensitivity-label');
+                tickLabel.textContent = eps.toFixed(1);
+                sensitivitySvg.appendChild(tickLabel);
+            }
+            
+            // Add y-axis ticks and labels
+            for (let i = 0; i <= 5; i++) {
+                const count = Math.round(i * maxClusters / 5);
+                const y = mapSensY(count, maxClusters);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', SENS_MARGIN);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', SENS_MARGIN - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                tickLine.setAttribute('class', 'sensitivity-label');
+                sensitivitySvg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', SENS_MARGIN - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '10');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.setAttribute('class', 'sensitivity-label');
+                tickLabel.textContent = count.toString();
+                sensitivitySvg.appendChild(tickLabel);
+            }
+            
+            // Create path for the curve
+            let pathData = '';
+            for (let i = 0; i < sensitivityResults.length; i++) {
+                const result = sensitivityResults[i];
+                const x = mapSensX(result.epsilon, minEpsilon, maxEpsilon);
+                const y = mapSensY(result.numClusters, maxClusters);
+                
+                if (i === 0) {
+                    pathData = `M ${x} ${y}`;
+                } else {
+                    pathData += ` L ${x} ${y}`;
+                }
+                
+                // Add point
+                const point = document.createElementNS(svgNS, 'circle');
+                point.setAttribute('cx', x);
+                point.setAttribute('cy', y);
+                point.setAttribute('r', '3');
+                point.setAttribute('fill', CLUSTER_COLORS[0]);
+                point.setAttribute('class', 'sensitivity-point');
+                point.setAttribute('data-index', i);
+                
+                // Add tooltip
+                const title = document.createElementNS(svgNS, 'title');
+                title.textContent = `Epsilon: ${result.epsilon}\nClusters: ${result.numClusters}\nCore Points: ${result.numCorePoints}\nBorder Points: ${result.numBorderPoints}\nNoise Points: ${result.numNoisePoints}`;
+                point.appendChild(title);
+                
+                sensitivitySvg.appendChild(point);
+            }
+            
+            // Add the curve
+            const curve = document.createElementNS(svgNS, 'path');
+            curve.setAttribute('d', pathData);
+            curve.setAttribute('fill', 'none');
+            curve.setAttribute('stroke', CLUSTER_COLORS[0]);
+            curve.setAttribute('stroke-width', '2');
+            curve.setAttribute('class', 'sensitivity-curve');
+            
+            // Add to SVG (before points for proper layering)
+            const firstPoint = sensitivitySvg.querySelector('.sensitivity-point');
+            if (firstPoint) {
+                sensitivitySvg.insertBefore(curve, firstPoint);
+            } else {
+                sensitivitySvg.appendChild(curve);
+            }
+            
+            // Animate curve and points
+            anime({
+                targets: '.sensitivity-curve',
+                opacity: [0, 1],
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 1500
+            });
+            
+            anime({
+                targets: '.sensitivity-point',
+                opacity: [0, 1],
+                scale: [0, 1],
+                delay: anime.stagger(50),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+            
+            // Find optimal epsilon point
+            const optimalEpsilon = findOptimalEpsilon();
+            
+            // Highlight optimal point
+            const optimalIndex = sensitivityResults.findIndex(r => r.epsilon === optimalEpsilon);
+            if (optimalIndex !== -1) {
+                const optimalPoint = sensitivitySvg.querySelector(`.sensitivity-point[data-index="${optimalIndex}"]`);
+                if (optimalPoint) {
+                    optimalPoint.setAttribute('r', '5');
+                    optimalPoint.setAttribute('fill', '#FCD34D'); // Yellow
+                    optimalPoint.setAttribute('stroke', '#000000');
+                    optimalPoint.setAttribute('stroke-width', '1');
+                }
+                
+                // Add label for optimal point
+                const result = sensitivityResults[optimalIndex];
+                const x = mapSensX(result.epsilon, minEpsilon, maxEpsilon);
+                const y = mapSensY(result.numClusters, maxClusters);
+                
+                const optimalLabel = document.createElementNS(svgNS, 'text');
+                optimalLabel.setAttribute('x', x);
+                optimalLabel.setAttribute('y', y - 10);
+                optimalLabel.setAttribute('text-anchor', 'middle');
+                optimalLabel.setAttribute('font-size', '12');
+                optimalLabel.setAttribute('font-weight', 'bold');
+                optimalLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                optimalLabel.setAttribute('class', 'sensitivity-label');
+                optimalLabel.textContent = `Optimal ε: ${optimalEpsilon}`;
+                sensitivitySvg.appendChild(optimalLabel);
+                
+                // Update epsilon input to optimal value
+                epsValueInput.value = optimalEpsilon;
+                epsDisplay.textContent = optimalEpsilon;
+            }
+        }
+        
+        // Find optimal epsilon value (where number of clusters stabilizes)
+        function findOptimalEpsilon() {
+            // A simple way to find the "elbow point" in the sensitivity curve
+            // where adding more epsilon stops producing many new clusters
+            
+            // Calculate the second derivative of the curve
+            const secondDerivatives = [];
+            
+            for (let i = 1; i < sensitivityResults.length - 1; i++) {
+                const prev = sensitivityResults[i - 1].numClusters;
+                const curr = sensitivityResults[i].numClusters;
+                const next = sensitivityResults[i + 1].numClusters;
+                
+                const firstDerivLeft = prev - curr;
+                const firstDerivRight = curr - next;
+                const secondDeriv = firstDerivLeft - firstDerivRight;
+                
+                secondDerivatives.push({
+                    epsilon: sensitivityResults[i].epsilon,
+                    value: secondDeriv
+                });
+            }
+            
+            // Find maximum second derivative (point of maximum curvature)
+            let maxSecondDeriv = -Infinity;
+            let optimalEpsilon = 0.5; // Default
+            
+            for (const deriv of secondDerivatives) {
+                if (deriv.value > maxSecondDeriv) {
+                    maxSecondDeriv = deriv.value;
+                    optimalEpsilon = deriv.epsilon;
+                }
+            }
+            
+            return optimalEpsilon;
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        runDbscanBtn.addEventListener('click', runDBSCAN);
+        stepDbscanBtn.addEventListener('click', stepDBSCAN);
+        runSensitivityBtn.addEventListener('click', runSensitivityAnalysis);
+        
+        epsValueInput.addEventListener('input', () => {
+            epsilon = parseFloat(epsValueInput.value);
+            epsDisplay.textContent = epsilon.toFixed(2);
+        });
+        
+        clusterSeparationInput.addEventListener('input', () => {
+            clusterSeparation = parseFloat(clusterSeparationInput.value);
+            separationValueDisplay.textContent = clusterSeparation.toFixed(1);
+        });
+        
+        showEpsCirclesCheckbox.addEventListener('change', () => {
+            if (showEpsCirclesCheckbox.checked && pointTypes.some(t => t !== '')) {
+                visualizeEpsilonCircles();
+            } else {
+                const existingCircles = svg.querySelectorAll('.epsilon-circle');
+                existingCircles.forEach(circle => circle.remove());
+            }
+        });
+        
+        showConnectionsCheckbox.addEventListener('change', () => {
+            if (showConnectionsCheckbox.checked && clusterAssignments.some(c => c !== -1)) {
+                visualizeConnections();
+            } else {
+                const existingConnections = svg.querySelectorAll('.connection');
+                existingConnections.forEach(connection => connection.remove());
+            }
+        });
+        
+        showTrueClustersCheckbox.addEventListener('change', () => {
+            if (showTrueClustersCheckbox.checked) {
+                visualizeTrueClusters();
+            } else {
+                const existingTrueClusters = svg.querySelectorAll('.true-cluster');
+                existingTrueClusters.forEach(tc => tc.remove());
+            }
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

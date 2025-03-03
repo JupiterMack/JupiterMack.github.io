@@ -1,0 +1,3484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Policy Gradient Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Policy Gradient Reinforcement Learning</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Environment and Network Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- Grid World Environment -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Grid World Environment</h2>
+                    <div class="w-full h-[400px] flex justify-center items-center relative" id="grid-world-container">
+                        <canvas id="grid-world-canvas" width="400" height="400" class="border border-gray-300 dark:border-gray-600"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Agent learning to navigate through the environment to reach a goal</span>
+                    </div>
+                    
+                    <!-- Environment Legend -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-4">
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-blue-500 rounded-sm mr-2"></div>
+                            <span>Agent</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-green-500 rounded-sm mr-2"></div>
+                            <span>Goal</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-red-500 rounded-sm mr-2"></div>
+                            <span>Trap</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-gray-700 dark:bg-gray-500 rounded-sm mr-2"></div>
+                            <span>Wall</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-gradient-to-r from-purple-300 to-purple-500 rounded-sm mr-2"></div>
+                            <span>Action Probability</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Networks Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db] flex justify-between items-center">
+                        <span>Neural Network Models</span>
+                        <div class="flex space-x-2">
+                            <button id="toggle-action-probs" class="text-sm px-2 py-1 bg-[#3498db] text-white rounded">
+                                Action Probs
+                            </button>
+                            <button id="toggle-state-values" class="text-sm px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">
+                                State Values
+                            </button>
+                        </div>
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h3 class="text-base font-medium mb-2 text-center">Policy Network (Actor)</h3>
+                            <div class="w-full h-[200px] relative" id="policy-network-container">
+                                <svg id="policy-network-svg" class="w-full h-full"></svg>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-medium mb-2 text-center">Value Network (Critic)</h3>
+                            <div class="w-full h-[200px] relative" id="value-network-container">
+                                <svg id="value-network-svg" class="w-full h-full"></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4" id="action-probabilities-container">
+                        <h3 class="text-base font-medium mb-2">Action Probabilities</h3>
+                        <div class="w-full h-[100px]">
+                            <canvas id="action-probs-chart" width="400" height="100"></canvas>
+                        </div>
+                    </div>
+                    <div class="mt-4 hidden" id="state-values-container">
+                        <h3 class="text-base font-medium mb-2">State Value Function</h3>
+                        <div class="grid grid-cols-5 gap-1 p-2 border border-gray-200 dark:border-gray-700 rounded" id="state-values-grid">
+                            <!-- State values will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Multi-Chart Display -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Training Metrics</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h3 class="text-base font-medium mb-2 text-center">Episode Rewards</h3>
+                            <div class="w-full h-[200px]">
+                                <canvas id="rewards-chart" class="w-full h-full"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-medium mb-2 text-center">Losses & Entropy</h3>
+                            <div class="w-full h-[200px]">
+                                <canvas id="losses-chart" class="w-full h-full"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel and Model Information -->
+            <div class="w-full lg:w-2/5">
+                <!-- Controls Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Environment Setup -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Environment Setup</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="grid-size" class="mr-2">Grid Size:</label>
+                                    <select id="grid-size" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="4">4×4</option>
+                                        <option value="5" selected>5×5</option>
+                                        <option value="6">6×6</option>
+                                        <option value="8">8×8</option>
+                                        <option value="10">10×10</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="environment-type" class="mr-2">Environment Type:</label>
+                                    <select id="environment-type" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="empty" selected>Empty Room</option>
+                                        <option value="maze">Simple Maze</option>
+                                        <option value="obstacles">Random Obstacles</option>
+                                        <option value="cliff">Cliff Walking</option>
+                                        <option value="ice">Slippery Ice (Stochastic)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="edit-mode" class="w-4 h-4">
+                                    <label for="edit-mode">Edit Environment</label>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="wall-tool" value="wall" class="w-4 h-4" checked>
+                                        <label for="wall-tool">Wall</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="start-tool" value="start" class="w-4 h-4">
+                                        <label for="start-tool">Start</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="goal-tool" value="goal" class="w-4 h-4">
+                                        <label for="goal-tool">Goal</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="trap-tool" value="trap" class="w-4 h-4">
+                                        <label for="trap-tool">Trap</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="erase-tool" value="erase" class="w-4 h-4">
+                                        <label for="erase-tool">Erase</label>
+                                    </div>
+                                </div>
+                                
+                                <button id="reset-environment" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Reset Environment</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Selection -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Algorithm</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="algorithm-type" class="mr-2">Algorithm Type:</label>
+                                    <select id="algorithm-type" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="reinforce" selected>REINFORCE</option>
+                                        <option value="actor-critic">Actor-Critic</option>
+                                        <option value="ppo">PPO (Simplified)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Policy Network Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Policy Network Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <!-- Network Architecture -->
+                                <div class="flex items-center justify-between">
+                                    <label for="policy-architecture" class="mr-2">Policy Architecture:</label>
+                                    <select id="policy-architecture" class="w-32 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="small">Small (32)</option>
+                                        <option value="medium" selected>Medium (64)</option>
+                                        <option value="large">Large (128,64)</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Hyperparameters -->
+                                <div class="flex items-center justify-between">
+                                    <label for="policy-learning-rate" class="mr-2">Learning Rate:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="policy-learning-rate" min="0.0001" max="0.01" step="0.0001" value="0.005" class="w-32">
+                                        <span id="policy-learning-rate-value" class="ml-2 w-16 text-sm">0.0050</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="discount-factor" class="mr-2">Discount Factor (γ):</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="discount-factor" min="0.8" max="0.999" step="0.001" value="0.99" class="w-32">
+                                        <span id="discount-factor-value" class="ml-2 w-12 text-sm">0.99</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="entropy-coefficient" class="mr-2">Entropy Coefficient:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="entropy-coefficient" min="0" max="0.1" step="0.001" value="0.01" class="w-32">
+                                        <span id="entropy-coefficient-value" class="ml-2 w-12 text-sm">0.01</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Value Network Parameters (for Actor-Critic) -->
+                        <div id="value-network-params">
+                            <h3 class="text-lg font-medium mb-2">Value Network Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <!-- Network Architecture -->
+                                <div class="flex items-center justify-between">
+                                    <label for="value-architecture" class="mr-2">Value Architecture:</label>
+                                    <select id="value-architecture" class="w-32 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="small">Small (32)</option>
+                                        <option value="medium" selected>Medium (64)</option>
+                                        <option value="large">Large (128,64)</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Hyperparameters -->
+                                <div class="flex items-center justify-between">
+                                    <label for="value-learning-rate" class="mr-2">Learning Rate:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="value-learning-rate" min="0.0001" max="0.01" step="0.0001" value="0.001" class="w-32">
+                                        <span id="value-learning-rate-value" class="ml-2 w-16 text-sm">0.0010</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="vf-coef" class="mr-2">Value Loss Coefficient:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="vf-coef" min="0.1" max="1" step="0.01" value="0.5" class="w-32">
+                                        <span id="vf-coef-value" class="ml-2 w-12 text-sm">0.50</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between ppo-only">
+                                    <label for="clip-ratio" class="mr-2">PPO Clip Ratio:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="clip-ratio" min="0.1" max="0.3" step="0.01" value="0.2" class="w-32">
+                                        <span id="clip-ratio-value" class="ml-2 w-12 text-sm">0.20</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Training Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Training Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="max-episodes" class="mr-2">Training Episodes:</label>
+                                    <input type="number" id="max-episodes" min="10" max="5000" value="200" class="w-24 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="batch-size" class="mr-2">Batch Size:</label>
+                                    <select id="batch-size" class="w-24 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="1">1 (Online)</option>
+                                        <option value="4">4</option>
+                                        <option value="8" selected>8</option>
+                                        <option value="16">16</option>
+                                        <option value="32">32</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-2">
+                                    <button id="run-training" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Train</button>
+                                    <button id="step-training" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step</button>
+                                    <button id="reset-training" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition flex-1">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visualization Options -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-action-probs" class="w-4 h-4" checked>
+                                    <label for="show-action-probs">Show Action Probabilities</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-policy-arrows" class="w-4 h-4" checked>
+                                    <label for="show-policy-arrows">Show Policy Arrows</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-trajectories" class="w-4 h-4">
+                                    <label for="show-trajectories">Show Past Trajectories</label>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label for="animation-speed" class="mr-2">Animation Speed:</label>
+                                    <input type="range" id="animation-speed" min="1" max="100" step="1" value="50" class="w-32">
+                                </div>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <button id="run-agent" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition flex-1">Run Agent</button>
+                                    <button id="collect-trajectory" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition flex-1">Collect Trajectory</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Status -->
+                        <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <h3 class="text-lg font-medium mb-2">Status</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Episode:</span>
+                                    <span id="current-episode">0/0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Total Episodes:</span>
+                                    <span id="total-episodes">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Total Steps:</span>
+                                    <span id="total-steps">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Policy Loss:</span>
+                                    <span id="policy-loss">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Value Loss:</span>
+                                    <span id="value-loss">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Entropy:</span>
+                                    <span id="entropy-value">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Episode Reward:</span>
+                                    <span id="episode-reward">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Status:</span>
+                                    <span id="algorithm-status-text">Not Started</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trajectory Information Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db] flex justify-between items-center">
+                        <span>Trajectory Information</span>
+                        <button id="toggle-trajectory-info" class="text-sm px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">
+                            Show Details
+                        </button>
+                    </h2>
+                    <div id="trajectory-info-container" class="hidden">
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="text-base font-medium mb-1">Current Trajectory</h3>
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded">
+                                    <div class="flex justify-between text-sm">
+                                        <span>Length: <span id="trajectory-length">0</span> steps</span>
+                                        <span>Return: <span id="trajectory-return">0.00</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="trajectory-visualization" class="space-y-2">
+                                <h3 class="text-base font-medium mb-1">Trajectory Steps</h3>
+                                <div class="max-h-48 overflow-y-auto" id="trajectory-steps-container">
+                                    <!-- Trajectory steps will be populated here -->
+                                    <div class="text-center text-gray-500 dark:text-gray-400">No trajectory data available</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-medium mb-1">Action Distribution</h3>
+                                <div class="w-full h-[120px]">
+                                    <canvas id="action-distribution-chart" width="400" height="120"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Policy Gradient Methods Work</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>Policy Gradient Methods</strong> are a class of reinforcement learning algorithms that directly optimize the policy function by performing gradient ascent on the expected return. Unlike value-based methods (like Q-learning), policy gradient methods directly parameterize and learn the policy, making them well-suited for continuous action spaces and stochastic policies.</p>
+                
+                <p><strong>Key Algorithms:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>
+                        <strong>REINFORCE (Monte Carlo Policy Gradient):</strong> The most basic policy gradient algorithm that uses complete episode returns to update the policy. The core update is based on the likelihood ratio policy gradient:
+                        <div class="p-2 bg-gray-100 dark:bg-gray-700 rounded my-1 text-center">
+                            ∇<sub>θ</sub>J(θ) = E<sub>τ~p(τ|θ)</sub>[∑<sub>t</sub> ∇<sub>θ</sub>log π<sub>θ</sub>(a<sub>t</sub>|s<sub>t</sub>) · R<sub>t</sub>]
+                        </div>
+                        where τ is a trajectory, θ are the policy parameters, π<sub>θ</sub> is the policy, and R<sub>t</sub> is the return at time t.
+                    </li>
+                    <li>
+                        <strong>Actor-Critic:</strong> Combines policy gradient with value function approximation to reduce variance. The critic (value network) estimates the value function, while the actor (policy network) learns the policy using advantage estimates:
+                        <div class="p-2 bg-gray-100 dark:bg-gray-700 rounded my-1 text-center">
+                            ∇<sub>θ</sub>J(θ) = E<sub>τ~p(τ|θ)</sub>[∑<sub>t</sub> ∇<sub>θ</sub>log π<sub>θ</sub>(a<sub>t</sub>|s<sub>t</sub>) · A<sub>t</sub>]
+                        </div>
+                        where A<sub>t</sub> is the advantage estimate, typically calculated as r<sub>t</sub> + γV(s<sub>t+1</sub>) - V(s<sub>t</sub>).
+                    </li>
+                    <li>
+                        <strong>Proximal Policy Optimization (PPO):</strong> A family of policy gradient methods that use a clipped objective function to ensure policy updates aren't too large, improving stability:
+                        <div class="p-2 bg-gray-100 dark:bg-gray-700 rounded my-1 text-center">
+                            L<sup>CLIP</sup>(θ) = E<sub>t</sub>[min(r<sub>t</sub>(θ)A<sub>t</sub>, clip(r<sub>t</sub>(θ), 1-ε, 1+ε)A<sub>t</sub>)]
+                        </div>
+                        where r<sub>t</sub>(θ) is the probability ratio between the new and old policy.
+                    </li>
+                </ul>
+                
+                <p><strong>Key Components:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Policy Network (Actor):</strong> Neural network that maps states to action probabilities, defining the agent's behavior</li>
+                    <li><strong>Value Network (Critic):</strong> In actor-critic methods, estimates the value function to reduce variance in policy updates</li>
+                    <li><strong>Trajectory Collection:</strong> Sample actions from the policy and collect state-action-reward sequences</li>
+                    <li><strong>Return Calculation:</strong> Compute discounted returns for each step in the trajectory</li>
+                    <li><strong>Policy Gradient Update:</strong> Update policy parameters to increase probability of actions that led to high returns</li>
+                    <li><strong>Entropy Regularization:</strong> Encourage exploration by adding an entropy bonus to the objective</li>
+                </ol>
+                
+                <p><strong>Advantages of Policy Gradient Methods:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Naturally handle continuous action spaces</li>
+                    <li>Can learn stochastic policies, which are important for exploration and games with hidden information</li>
+                    <li>Policy updates are more stable with appropriate optimization techniques</li>
+                    <li>Can directly optimize for the objective of interest</li>
+                    <li>Convergence properties are often better understood theoretically</li>
+                </ul>
+                
+                <p><strong>Challenges and Solutions:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>High Variance:</strong> REINFORCE suffers from high variance in gradient estimates. Actor-critic methods reduce variance through value function bootstrapping.</li>
+                    <li><strong>Sample Efficiency:</strong> Policy gradient methods can be sample-inefficient. Solutions include importance sampling and off-policy learning.</li>
+                    <li><strong>Step Size Selection:</strong> The policy update can be sensitive to step size. Trust region methods like PPO constrain update sizes.</li>
+                    <li><strong>Credit Assignment:</strong> It can be difficult to attribute rewards to specific actions. Techniques like reward shaping and advantage functions help.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const gridWorldCanvas = document.getElementById('grid-world-canvas');
+        const policyNetworkSvg = document.getElementById('policy-network-svg');
+        const valueNetworkSvg = document.getElementById('value-network-svg');
+        const actionProbsChart = document.getElementById('action-probs-chart');
+        const rewardsChart = document.getElementById('rewards-chart');
+        const lossesChart = document.getElementById('losses-chart');
+        const actionDistributionChart = document.getElementById('action-distribution-chart');
+        const stateValuesGrid = document.getElementById('state-values-grid');
+        
+        const gridSizeSelect = document.getElementById('grid-size');
+        const environmentTypeSelect = document.getElementById('environment-type');
+        const editModeCheckbox = document.getElementById('edit-mode');
+        const editTools = document.querySelectorAll('input[name="edit-tool"]');
+        const resetEnvironmentBtn = document.getElementById('reset-environment');
+        
+        const algorithmTypeSelect = document.getElementById('algorithm-type');
+        const policyArchitectureSelect = document.getElementById('policy-architecture');
+        const policyLearningRateInput = document.getElementById('policy-learning-rate');
+        const policyLearningRateValue = document.getElementById('policy-learning-rate-value');
+        const discountFactorInput = document.getElementById('discount-factor');
+        const discountFactorValue = document.getElementById('discount-factor-value');
+        const entropyCoefInput = document.getElementById('entropy-coefficient');
+        const entropyCoefValue = document.getElementById('entropy-coefficient-value');
+        
+        const valueNetworkParams = document.getElementById('value-network-params');
+        const valueArchitectureSelect = document.getElementById('value-architecture');
+        const valueLearningRateInput = document.getElementById('value-learning-rate');
+        const valueLearningRateValue = document.getElementById('value-learning-rate-value');
+        const vfCoefInput = document.getElementById('vf-coef');
+        const vfCoefValue = document.getElementById('vf-coef-value');
+        const clipRatioInput = document.getElementById('clip-ratio');
+        const clipRatioValue = document.getElementById('clip-ratio-value');
+        
+        const maxEpisodesInput = document.getElementById('max-episodes');
+        const batchSizeSelect = document.getElementById('batch-size');
+        
+        const runTrainingBtn = document.getElementById('run-training');
+        const stepTrainingBtn = document.getElementById('step-training');
+        const resetTrainingBtn = document.getElementById('reset-training');
+        
+        const showActionProbsCheckbox = document.getElementById('show-action-probs');
+        const showPolicyArrowsCheckbox = document.getElementById('show-policy-arrows');
+        const showTrajectoriesCheckbox = document.getElementById('show-trajectories');
+        const animationSpeedInput = document.getElementById('animation-speed');
+        
+        const runAgentBtn = document.getElementById('run-agent');
+        const collectTrajectoryBtn = document.getElementById('collect-trajectory');
+        
+        const currentEpisodeDisplay = document.getElementById('current-episode');
+        const totalEpisodesDisplay = document.getElementById('total-episodes');
+        const totalStepsDisplay = document.getElementById('total-steps');
+        const policyLossDisplay = document.getElementById('policy-loss');
+        const valueLossDisplay = document.getElementById('value-loss');
+        const entropyValueDisplay = document.getElementById('entropy-value');
+        const episodeRewardDisplay = document.getElementById('episode-reward');
+        const algorithmStatusDisplay = document.getElementById('algorithm-status-text');
+        
+        const toggleActionProbsBtn = document.getElementById('toggle-action-probs');
+        const toggleStateValuesBtn = document.getElementById('toggle-state-values');
+        const actionProbabilitiesContainer = document.getElementById('action-probabilities-container');
+        const stateValuesContainer = document.getElementById('state-values-container');
+        
+        const toggleTrajectoryInfoBtn = document.getElementById('toggle-trajectory-info');
+        const trajectoryInfoContainer = document.getElementById('trajectory-info-container');
+        const trajectoryLengthDisplay = document.getElementById('trajectory-length');
+        const trajectoryReturnDisplay = document.getElementById('trajectory-return');
+        const trajectoryStepsContainer = document.getElementById('trajectory-steps-container');
+        
+        // Canvas context
+        const ctx = gridWorldCanvas.getContext('2d');
+        
+        // Colors
+        const COLORS = {
+            empty: { light: '#f8fafc', dark: '#1F2937' },
+            agent: { light: '#3B82F6', dark: '#3B82F6' }, // Blue
+            goal: { light: '#10B981', dark: '#10B981' },  // Green
+            trap: { light: '#EF4444', dark: '#EF4444' },  // Red
+            wall: { light: '#4B5563', dark: '#9CA3AF' },  // Gray
+            start: { light: '#8B5CF6', dark: '#8B5CF6' }, // Purple
+            text: { light: '#1F2937', dark: '#F3F4F6' },
+            arrow: { light: '#000000', dark: '#FFFFFF' },
+            grid: { light: '#E2E8F0', dark: '#374151' },
+            probabilities: { light: '#8B5CF6', dark: '#A78BFA' }, // Purple for probabilities
+            trajectory: { light: '#FBBF24', dark: '#FBBF24' }, // Amber for trajectories
+            neuron: { light: '#60A5FA', dark: '#60A5FA' }, // Blue
+            activeNeuron: { light: '#F97316', dark: '#F97316' }, // Orange
+            connection: { light: '#9CA3AF', dark: '#6B7280' }, // Gray
+            activeConnection: { light: '#F59E0B', dark: '#F59E0B' }, // Amber
+            policyNeuron: { light: '#8B5CF6', dark: '#A78BFA' }, // Purple for policy network
+            valueNeuron: { light: '#10B981', dark: '#34D399' }  // Green for value network
+        };
+        
+        // Algorithm parameters
+        let policyLearningRate = 0.005;    // Learning rate for policy network
+        let valueLearningRate = 0.001;     // Learning rate for value network
+        let discountFactor = 0.99;         // γ (gamma) discount factor
+        let entropyCoef = 0.01;            // Entropy regularization coefficient
+        let vfCoef = 0.5;                  // Value function loss coefficient
+        let clipRatio = 0.2;               // PPO clip ratio (epsilon)
+        let batchSize = 8;                 // Batch size for updates
+        let maxEpisodes = 200;             // Maximum training episodes
+        
+        // Environment and grid parameters
+        let gridSize = 5;
+        let cellSize = gridWorldCanvas.width / gridSize;
+        let environment = [];
+        let startPosition = { x: 0, y: 0 };
+        let agentPosition = { x: 0, y: 0 };
+        let goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+        let stateCount = gridSize * gridSize;
+        let actionCount = 4; // Up, Right, Down, Left
+        
+        // Algorithm state
+        let policyNetwork = null;          // Policy network (actor)
+        let valueNetwork = null;           // Value network (critic)
+        let policyOptimizer = null;        // Optimizer for policy
+        let valueOptimizer = null;         // Optimizer for value
+        let algorithmType = 'reinforce';   // Current algorithm type
+        let currentEpisode = 0;            // Current episode
+        let totalEpisodes = 0;             // Total episodes processed
+        let totalSteps = 0;                // Total steps across all episodes
+        let episodeReward = 0;             // Current episode reward
+        let episodeSteps = 0;              // Current episode steps
+        let episodeRewards = [];           // Rewards for each episode
+        let policyLosses = [];             // Policy loss values
+        let valueLosses = [];              // Value loss values
+        let entropyValues = [];            // Entropy values
+        let trajectories = [];             // Collected trajectories
+        let currentTrajectory = [];        // Current trajectory being collected
+        let isTraining = false;            // Flag for training state
+        let isRunningAgent = false;        // Flag for running the trained agent
+        let isCollectingTrajectory = false;// Flag for collecting trajectory
+        let animationSpeed = 50;           // Animation speed for visualization
+        let stepByStepMode = false;        // Flag for step-by-step execution
+        let editMode = false;              // Flag for environment editing
+        let currentTool = 'wall';          // Current editing tool
+        let policyNetworkLayerSizes = [];  // Sizes of policy network layers
+        let valueNetworkLayerSizes = [];   // Sizes of value network layers
+        let currentPolicyActivations = []; // Current activations in policy network
+        let currentValueActivations = [];  // Current activations in value network
+        let currentActionProbs = [];       // Current action probabilities
+        let stateValues = [];              // Current state values
+        let showingActionProbs = true;     // Flag for showing action probabilities
+        let lastPolicyLoss = 0;            // Last policy loss
+        let lastValueLoss = 0;             // Last value loss
+        let lastEntropy = 0;               // Last entropy value
+        
+        // Rewards
+        const REWARDS = {
+            step: -0.01,  // Small negative reward for each step
+            goal: 1.0,    // Positive reward for reaching the goal
+            trap: -1.0,   // Negative reward for falling into a trap
+            wall: -0.1    // Negative reward for hitting a wall
+        };
+        
+        // Action mapping (0: Up, 1: Right, 2: Down, 3: Left)
+        const ACTIONS = [
+            { dx: 0, dy: -1 }, // Up
+            { dx: 1, dy: 0 },  // Right
+            { dx: 0, dy: 1 },  // Down
+            { dx: -1, dy: 0 }  // Left
+        ];
+        
+        // Action names for display
+        const ACTION_NAMES = ['Up', 'Right', 'Down', 'Left'];
+        
+        // Charts
+        let actionProbsChartInstance;
+        let rewardsChartInstance;
+        let lossesChartInstance;
+        let actionDistributionChartInstance;
+        
+        // Initialize application
+        function initializeApp() {
+            // Enable TensorFlow.js
+            tf.setBackend('webgl');
+            
+            // Set up the grid
+            resetEnvironment();
+            
+            // Initialize model
+            resetModel();
+            
+            // Initialize charts
+            initializeCharts();
+            
+            // Set initial parameter values
+            updatePolicyLearningRateDisplay();
+            updateValueLearningRateDisplay();
+            updateDiscountFactorDisplay();
+            updateEntropyCoefDisplay();
+            updateVfCoefDisplay();
+            updateClipRatioDisplay();
+            
+            // Add event listeners
+            addEventListeners();
+            
+            // Set initial UI state
+            updateAlgorithmUI();
+            
+            // Render the initial state
+            render();
+            
+            // Draw network visualizations
+            drawPolicyNetworkVisualization();
+            drawValueNetworkVisualization();
+        }
+        
+        // Initialize charts
+        function initializeCharts() {
+            const isDarkMode = document.body.classList.contains('dark');
+            const textColor = isDarkMode ? '#D1D5DB' : '#1F2937';
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            // Action probabilities chart
+            const actionProbsCtx = actionProbsChart.getContext('2d');
+            if (actionProbsChartInstance) {
+                actionProbsChartInstance.destroy();
+            }
+            
+            actionProbsChartInstance = new Chart(actionProbsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ACTION_NAMES,
+                    datasets: [{
+                        label: 'Probability',
+                        data: [0.25, 0.25, 0.25, 0.25], // Initial equal probabilities
+                        backgroundColor: [
+                            'rgba(139, 92, 246, 0.6)',
+                            'rgba(139, 92, 246, 0.6)',
+                            'rgba(139, 92, 246, 0.6)',
+                            'rgba(139, 92, 246, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(139, 92, 246, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Probability',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Episode rewards chart
+            const rewardsCtx = rewardsChart.getContext('2d');
+            if (rewardsChartInstance) {
+                rewardsChartInstance.destroy();
+            }
+            
+            rewardsChartInstance = new Chart(rewardsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Episode Reward',
+                        data: [],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Reward',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Episode',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Losses chart
+            const lossesCtx = lossesChart.getContext('2d');
+            if (lossesChartInstance) {
+                lossesChartInstance.destroy();
+            }
+            
+            lossesChartInstance = new Chart(lossesCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Policy Loss',
+                            data: [],
+                            borderColor: '#F59E0B',
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Value Loss',
+                            data: [],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Entropy',
+                            data: [],
+                            borderColor: '#8B5CF6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            tension: 0.1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Loss',
+                                color: textColor
+                            },
+                            position: 'left',
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        y1: {
+                            title: {
+                                display: true,
+                                text: 'Entropy',
+                                color: textColor
+                            },
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Update',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Action distribution chart
+            const actionDistCtx = actionDistributionChart.getContext('2d');
+            if (actionDistributionChartInstance) {
+                actionDistributionChartInstance.destroy();
+            }
+            
+            actionDistributionChartInstance = new Chart(actionDistCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ACTION_NAMES,
+                    datasets: [{
+                        data: [0, 0, 0, 0], // Initial values
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',  // Blue
+                            'rgba(16, 185, 129, 0.7)',  // Green
+                            'rgba(239, 68, 68, 0.7)',   // Red
+                            'rgba(245, 158, 11, 0.7)'   // Amber
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(245, 158, 11, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: textColor
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Actions Taken in Trajectory',
+                            color: textColor
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Add event listeners
+        function addEventListeners() {
+            // Grid size change
+            gridSizeSelect.addEventListener('change', () => {
+                gridSize = parseInt(gridSizeSelect.value);
+                cellSize = gridWorldCanvas.width / gridSize;
+                stateCount = gridSize * gridSize;
+                resetEnvironment();
+                resetModel();
+                updateStateValuesGrid();
+                render();
+                drawPolicyNetworkVisualization();
+                drawValueNetworkVisualization();
+            });
+            
+            // Environment type change
+            environmentTypeSelect.addEventListener('change', () => {
+                resetEnvironment();
+                render();
+            });
+            
+            // Edit mode toggle
+            editModeCheckbox.addEventListener('change', () => {
+                editMode = editModeCheckbox.checked;
+                
+                // Enable/disable tool options
+                document.querySelectorAll('.edit-tool-container').forEach(container => {
+                    const input = container.querySelector('input');
+                    input.disabled = !editMode;
+                    if (editMode) {
+                        container.classList.remove('opacity-50');
+                    } else {
+                        container.classList.add('opacity-50');
+                    }
+                });
+                
+                render();
+            });
+            
+            // Edit tools
+            editTools.forEach(tool => {
+                tool.addEventListener('change', () => {
+                    currentTool = tool.value;
+                });
+            });
+            
+            // Reset environment
+            resetEnvironmentBtn.addEventListener('click', () => {
+                resetEnvironment();
+                render();
+                updateStateValuesGrid();
+            });
+            
+            // Algorithm type
+            algorithmTypeSelect.addEventListener('change', () => {
+                algorithmType = algorithmTypeSelect.value;
+                updateAlgorithmUI();
+                resetModel();
+                drawPolicyNetworkVisualization();
+                drawValueNetworkVisualization();
+            });
+            
+            // Parameter changes
+            policyLearningRateInput.addEventListener('input', () => {
+                policyLearningRate = parseFloat(policyLearningRateInput.value);
+                updatePolicyLearningRateDisplay();
+                resetModel();
+            });
+            
+            valueLearningRateInput.addEventListener('input', () => {
+                valueLearningRate = parseFloat(valueLearningRateInput.value);
+                updateValueLearningRateDisplay();
+                resetModel();
+            });
+            
+            discountFactorInput.addEventListener('input', () => {
+                discountFactor = parseFloat(discountFactorInput.value);
+                updateDiscountFactorDisplay();
+            });
+            
+            entropyCoefInput.addEventListener('input', () => {
+                entropyCoef = parseFloat(entropyCoefInput.value);
+                updateEntropyCoefDisplay();
+            });
+            
+            vfCoefInput.addEventListener('input', () => {
+                vfCoef = parseFloat(vfCoefInput.value);
+                updateVfCoefDisplay();
+            });
+            
+            clipRatioInput.addEventListener('input', () => {
+                clipRatio = parseFloat(clipRatioInput.value);
+                updateClipRatioDisplay();
+            });
+            
+            // Network architecture changes
+            policyArchitectureSelect.addEventListener('change', () => {
+                resetModel();
+                drawPolicyNetworkVisualization();
+            });
+            
+            valueArchitectureSelect.addEventListener('change', () => {
+                resetModel();
+                drawValueNetworkVisualization();
+            });
+            
+            // Training parameters
+            maxEpisodesInput.addEventListener('change', () => {
+                maxEpisodes = parseInt(maxEpisodesInput.value);
+            });
+            
+            batchSizeSelect.addEventListener('change', () => {
+                batchSize = parseInt(batchSizeSelect.value);
+            });
+            
+            // Animation speed
+            animationSpeedInput.addEventListener('input', () => {
+                animationSpeed = parseInt(animationSpeedInput.value);
+            });
+            
+            // Training controls
+            runTrainingBtn.addEventListener('click', runTraining);
+            stepTrainingBtn.addEventListener('click', stepTraining);
+            resetTrainingBtn.addEventListener('click', () => {
+                resetModel();
+                updateStateValuesGrid();
+                render();
+                drawPolicyNetworkVisualization();
+                drawValueNetworkVisualization();
+                updateCharts();
+                clearTrajectoryInfo();
+            });
+            
+            // Agent controls
+            runAgentBtn.addEventListener('click', runAgent);
+            collectTrajectoryBtn.addEventListener('click', collectTrajectory);
+            
+            // Visualization options
+            showActionProbsCheckbox.addEventListener('change', render);
+            showPolicyArrowsCheckbox.addEventListener('change', render);
+            showTrajectoriesCheckbox.addEventListener('change', render);
+            
+            // Toggle views
+            toggleActionProbsBtn.addEventListener('click', () => {
+                showingActionProbs = true;
+                actionProbabilitiesContainer.classList.remove('hidden');
+                stateValuesContainer.classList.add('hidden');
+                toggleActionProbsBtn.classList.add('bg-[#3498db]', 'text-white');
+                toggleActionProbsBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                toggleStateValuesBtn.classList.remove('bg-[#3498db]', 'text-white');
+                toggleStateValuesBtn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+            });
+            
+            toggleStateValuesBtn.addEventListener('click', () => {
+                showingActionProbs = false;
+                actionProbabilitiesContainer.classList.add('hidden');
+                stateValuesContainer.classList.remove('hidden');
+                toggleStateValuesBtn.classList.add('bg-[#3498db]', 'text-white');
+                toggleStateValuesBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                toggleActionProbsBtn.classList.remove('bg-[#3498db]', 'text-white');
+                toggleActionProbsBtn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                updateStateValuesGrid();
+            });
+            
+            // Toggle trajectory info
+            toggleTrajectoryInfoBtn.addEventListener('click', () => {
+                const isHidden = trajectoryInfoContainer.classList.contains('hidden');
+                if (isHidden) {
+                    trajectoryInfoContainer.classList.remove('hidden');
+                    toggleTrajectoryInfoBtn.textContent = 'Hide Details';
+                } else {
+                    trajectoryInfoContainer.classList.add('hidden');
+                    toggleTrajectoryInfoBtn.textContent = 'Show Details';
+                }
+            });
+            
+            // Canvas click event for editing
+            gridWorldCanvas.addEventListener('click', handleCanvasClick);
+        }
+        
+        // Update UI based on algorithm selection
+        function updateAlgorithmUI() {
+            // Show/hide value network parameters based on algorithm
+            if (algorithmType === 'reinforce') {
+                valueNetworkParams.classList.add('hidden');
+                // Hide PPO-specific controls
+                document.querySelectorAll('.ppo-only').forEach(el => el.classList.add('hidden'));
+            } else {
+                valueNetworkParams.classList.remove('hidden');
+                // Show/hide PPO-specific controls
+                if (algorithmType === 'ppo') {
+                    document.querySelectorAll('.ppo-only').forEach(el => el.classList.remove('hidden'));
+                } else {
+                    document.querySelectorAll('.ppo-only').forEach(el => el.classList.add('hidden'));
+                }
+            }
+        }
+        
+        // Handle canvas click for editing
+        function handleCanvasClick(event) {
+            if (!editMode) return;
+            
+            const rect = gridWorldCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            // Convert to grid coordinates
+            const gridX = Math.floor(x / cellSize);
+            const gridY = Math.floor(y / cellSize);
+            
+            // Check if within bounds
+            if (gridX < 0 || gridX >= gridSize || gridY < 0 || gridY >= gridSize) {
+                return;
+            }
+            
+            // Apply the current tool
+            switch (currentTool) {
+                case 'wall':
+                    environment[gridY][gridX] = 'wall';
+                    break;
+                case 'start':
+                    // Remove old start position
+                    environment[startPosition.y][startPosition.x] = 'empty';
+                    // Set new start position
+                    startPosition = { x: gridX, y: gridY };
+                    agentPosition = { x: gridX, y: gridY };
+                    environment[gridY][gridX] = 'start';
+                    break;
+                case 'goal':
+                    // Remove old goal position
+                    environment[goalPosition.y][goalPosition.x] = 'empty';
+                    // Set new goal position
+                    goalPosition = { x: gridX, y: gridY };
+                    environment[gridY][gridX] = 'goal';
+                    break;
+                case 'trap':
+                    environment[gridY][gridX] = 'trap';
+                    break;
+                case 'erase':
+                    // Don't erase start or goal
+                    if ((gridX === startPosition.x && gridY === startPosition.y) || 
+                        (gridX === goalPosition.x && gridY === goalPosition.y)) {
+                        return;
+                    }
+                    environment[gridY][gridX] = 'empty';
+                    break;
+            }
+            
+            // Redraw
+            render();
+            
+            // Ensure path exists
+            ensurePathExists();
+            
+            // Update state values grid if showing
+            if (!showingActionProbs) {
+                updateStateValuesGrid();
+            }
+        }
+        
+        // Reset the environment
+        function resetEnvironment() {
+            // Initialize the grid with empty cells
+            environment = Array(gridSize).fill().map(() => Array(gridSize).fill('empty'));
+            
+            // Set up environment based on selected type
+            const envType = environmentTypeSelect.value;
+            
+            switch (envType) {
+                case 'empty':
+                    // Just an empty room with start and goal
+                    startPosition = { x: 0, y: 0 };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    break;
+                    
+                case 'maze':
+                    // Simple maze with some walls
+                    startPosition = { x: 0, y: 0 };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    
+                    // Add some walls to form a simple maze
+                    for (let i = 1; i < gridSize - 1; i += 2) {
+                        for (let j = 0; j < gridSize; j++) {
+                            // Skip some positions to create paths
+                            if (Math.random() > 0.3) {
+                                environment[i][j] = 'wall';
+                            }
+                        }
+                    }
+                    
+                    // Ensure start and goal are accessible
+                    environment[startPosition.y][startPosition.x] = 'empty';
+                    environment[goalPosition.y][goalPosition.x] = 'empty';
+                    break;
+                    
+                case 'obstacles':
+                    // Random obstacles
+                    startPosition = { x: 0, y: 0 };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    
+                    // Add random walls and traps
+                    for (let i = 0; i < gridSize; i++) {
+                        for (let j = 0; j < gridSize; j++) {
+                            // Skip start and goal positions
+                            if ((i === startPosition.y && j === startPosition.x) || 
+                                (i === goalPosition.y && j === goalPosition.x)) {
+                                continue;
+                            }
+                            
+                            const rand = Math.random();
+                            if (rand < 0.2) {
+                                environment[i][j] = 'wall';
+                            } else if (rand < 0.25) {
+                                environment[i][j] = 'trap';
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'cliff':
+                    // Cliff walking problem
+                    startPosition = { x: 0, y: gridSize - 1 };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    
+                    // Create a "cliff" (row of traps) along the bottom
+                    for (let j = 1; j < gridSize - 1; j++) {
+                        environment[gridSize - 1][j] = 'trap';
+                    }
+                    break;
+                    
+                case 'ice':
+                    // Slippery ice environment (implemented with stochastic transitions)
+                    startPosition = { x: Math.floor(gridSize / 2), y: Math.floor(gridSize / 2) };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    
+                    // Add some obstacles around the edges
+                    for (let i = 0; i < gridSize; i++) {
+                        if (i !== Math.floor(gridSize / 2)) {
+                            environment[0][i] = 'wall';
+                            environment[gridSize - 1][i] = 'wall';
+                            environment[i][0] = 'wall';
+                            environment[i][gridSize - 1] = 'wall';
+                        }
+                    }
+                    
+                    // Make sure goal is accessible
+                    environment[goalPosition.y][goalPosition.x] = 'empty';
+                    break;
+            }
+            
+            // Set start and goal in the environment
+            environment[startPosition.y][startPosition.x] = 'start';
+            environment[goalPosition.y][goalPosition.x] = 'goal';
+            
+            // Reset agent position to start
+            agentPosition = { ...startPosition };
+            
+            // Ensure path exists between start and goal
+            ensurePathExists();
+        }
+        
+        // Make sure there is at least one valid path from start to goal
+        function ensurePathExists() {
+            // Create a temporary copy of the environment to test path
+            const tempEnv = environment.map(row => [...row]);
+            
+            // Breadth-first search to find a path
+            const queue = [{ x: startPosition.x, y: startPosition.y, path: [] }];
+            const visited = new Set();
+            visited.add(`${startPosition.x},${startPosition.y}`);
+            
+            let pathFound = false;
+            
+            while (queue.length > 0 && !pathFound) {
+                const { x, y, path } = queue.shift();
+                
+                // Check if reached goal
+                if (x === goalPosition.x && y === goalPosition.y) {
+                    pathFound = true;
+                    break;
+                }
+                
+                // Try all four directions
+                for (const { dx, dy } of ACTIONS) {
+                    const newX = x + dx;
+                    const newY = y + dy;
+                    const key = `${newX},${newY}`;
+                    
+                    // Skip if out of bounds
+                    if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize) {
+                        continue;
+                    }
+                    
+                    // Skip if visited
+                    if (visited.has(key)) {
+                        continue;
+                    }
+                    
+                    // Skip walls but allow traps (since they're still traversable)
+                    if (tempEnv[newY][newX] === 'wall') {
+                        continue;
+                    }
+                    
+                    // Add to queue
+                    visited.add(key);
+                    queue.push({ x: newX, y: newY, path: [...path, { x: newX, y: newY }] });
+                }
+            }
+            
+            // If no path found, clear obstacles to create a path
+            if (!pathFound) {
+                // Reset obstacles and create a simple path from start to goal
+                createSimplePath();
+                render(); // Redraw the environment
+            }
+        }
+        
+        // Create a simple path from start to goal by clearing obstacles
+        function createSimplePath() {
+            // Create a simple L-shaped path from start to goal
+            let currentX = startPosition.x;
+            let currentY = startPosition.y;
+            
+            // Move horizontally to align with goal column
+            while (currentX !== goalPosition.x) {
+                currentX += (goalPosition.x > currentX) ? 1 : -1;
+                
+                // Clear any obstacles
+                if (environment[currentY][currentX] === 'wall' || environment[currentY][currentX] === 'trap') {
+                    environment[currentY][currentX] = 'empty';
+                }
+            }
+            
+            // Move vertically to reach goal
+            while (currentY !== goalPosition.y) {
+                currentY += (goalPosition.y > currentY) ? 1 : -1;
+                
+                // Clear any obstacles
+                if (environment[currentY][currentX] === 'wall' || environment[currentY][currentX] === 'trap') {
+                    environment[currentY][currentX] = 'empty';
+                }
+            }
+        }
+        
+        // Reset model and related state
+        function resetModel() {
+            // Clear old models
+            if (policyNetwork) {
+                policyNetwork.dispose();
+            }
+            if (valueNetwork) {
+                valueNetwork.dispose();
+            }
+            
+            // Set up network architecture based on selection
+            switch (policyArchitectureSelect.value) {
+                case 'small':
+                    policyNetworkLayerSizes = [32];
+                    break;
+                case 'medium':
+                    policyNetworkLayerSizes = [64];
+                    break;
+                case 'large':
+                    policyNetworkLayerSizes = [128, 64];
+                    break;
+                default:
+                    policyNetworkLayerSizes = [64];
+            }
+            
+            switch (valueArchitectureSelect.value) {
+                case 'small':
+                    valueNetworkLayerSizes = [32];
+                    break;
+                case 'medium':
+                    valueNetworkLayerSizes = [64];
+                    break;
+                case 'large':
+                    valueNetworkLayerSizes = [128, 64];
+                    break;
+                default:
+                    valueNetworkLayerSizes = [64];
+            }
+            
+            // Create networks
+            policyNetwork = createPolicyNetwork();
+            
+            if (algorithmType !== 'reinforce') {
+                valueNetwork = createValueNetwork();
+            }
+            
+            // Create optimizers
+            policyOptimizer = tf.train.adam(policyLearningRate);
+            
+            if (algorithmType !== 'reinforce') {
+                valueOptimizer = tf.train.adam(valueLearningRate);
+            }
+            
+            // Reset counters and state
+            currentEpisode = 0;
+            totalEpisodes = 0;
+            totalSteps = 0;
+            episodeReward = 0;
+            episodeSteps = 0;
+            episodeRewards = [];
+            policyLosses = [];
+            valueLosses = [];
+            entropyValues = [];
+            trajectories = [];
+            currentTrajectory = [];
+            
+            // Reset agent position
+            agentPosition = { ...startPosition };
+            
+            // Reset activations and probabilities
+            currentPolicyActivations = Array(policyNetworkLayerSizes.length + 1).fill().map(() => Array(0));
+            currentValueActivations = Array(valueNetworkLayerSizes.length + 1).fill().map(() => Array(0));
+            currentActionProbs = Array(actionCount).fill(1 / actionCount);
+            stateValues = Array(stateCount).fill(0);
+            
+            // Reset UI displays
+            currentEpisodeDisplay.textContent = `${currentEpisode}/${maxEpisodes}`;
+            totalEpisodesDisplay.textContent = totalEpisodes;
+            totalStepsDisplay.textContent = totalSteps;
+            policyLossDisplay.textContent = '-';
+            valueLossDisplay.textContent = '-';
+            entropyValueDisplay.textContent = '-';
+            episodeRewardDisplay.textContent = episodeReward.toFixed(2);
+            algorithmStatusDisplay.textContent = 'Reset';
+            
+            // Clear training flags
+            isTraining = false;
+            isRunningAgent = false;
+            isCollectingTrajectory = false;
+            stepByStepMode = false;
+            
+            // Update charts
+            updateActionProbsChart([0.25, 0.25, 0.25, 0.25]);
+            updateCharts();
+            
+            // Clear trajectory info
+            clearTrajectoryInfo();
+        }
+        
+        // Create policy network model
+        function createPolicyNetwork() {
+            // Input layer: one-hot encoded state
+            const model = tf.sequential();
+            
+            // Input shape: one-hot encoding of grid position
+            const inputShape = [stateCount];
+            
+            // Add first hidden layer
+            model.add(tf.layers.dense({
+                units: policyNetworkLayerSizes[0],
+                activation: 'relu',
+                inputShape
+            }));
+            
+            // Add additional hidden layers
+            for (let i = 1; i < policyNetworkLayerSizes.length; i++) {
+                model.add(tf.layers.dense({
+                    units: policyNetworkLayerSizes[i],
+                    activation: 'relu'
+                }));
+            }
+            
+            // Output layer: logits for action probabilities
+            model.add(tf.layers.dense({
+                units: actionCount,
+                activation: 'linear' // We'll apply softmax manually for more control
+            }));
+            
+            return model;
+        }
+        
+        // Create value network model
+        function createValueNetwork() {
+            // Input layer: one-hot encoded state
+            const model = tf.sequential();
+            
+            // Input shape: one-hot encoding of grid position
+            const inputShape = [stateCount];
+            
+            // Add first hidden layer
+            model.add(tf.layers.dense({
+                units: valueNetworkLayerSizes[0],
+                activation: 'relu',
+                inputShape
+            }));
+            
+            // Add additional hidden layers
+            for (let i = 1; i < valueNetworkLayerSizes.length; i++) {
+                model.add(tf.layers.dense({
+                    units: valueNetworkLayerSizes[i],
+                    activation: 'relu'
+                }));
+            }
+            
+            // Output layer: single value estimate
+            model.add(tf.layers.dense({
+                units: 1,
+                activation: 'linear'
+            }));
+            
+            return model;
+        }
+        
+        // Update policy learning rate display
+        function updatePolicyLearningRateDisplay() {
+            policyLearningRateValue.textContent = policyLearningRate.toFixed(4);
+        }
+        
+        // Update value learning rate display
+        function updateValueLearningRateDisplay() {
+            valueLearningRateValue.textContent = valueLearningRate.toFixed(4);
+        }
+        
+        // Update discount factor display
+        function updateDiscountFactorDisplay() {
+            discountFactorValue.textContent = discountFactor.toFixed(2);
+        }
+        
+        // Update entropy coefficient display
+        function updateEntropyCoefDisplay() {
+            entropyCoefValue.textContent = entropyCoef.toFixed(2);
+        }
+        
+        // Update value function coefficient display
+        function updateVfCoefDisplay() {
+            vfCoefValue.textContent = vfCoef.toFixed(2);
+        }
+        
+        // Update clip ratio display
+        function updateClipRatioDisplay() {
+            clipRatioValue.textContent = clipRatio.toFixed(2);
+        }
+        
+        // Convert (x,y) coordinates to state index
+        function coordsToState(x, y) {
+            return y * gridSize + x;
+        }
+        
+        // Convert state index to (x,y) coordinates
+        function stateToCoords(state) {
+            const x = state % gridSize;
+            const y = Math.floor(state / gridSize);
+            return { x, y };
+        }
+        
+        // Create state representation (one-hot encoded)
+        function createStateRepresentation(x, y) {
+            const state = coordsToState(x, y);
+            const stateVector = tf.buffer([stateCount]);
+            stateVector.set(1, state);
+            return stateVector.toTensor();
+        }
+        
+        // Get the type of cell at given coordinates
+        function getCellType(x, y) {
+            // Check if out of bounds
+            if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) {
+                return 'wall'; // Treat out of bounds as walls
+            }
+            return environment[y][x];
+        }
+        
+        // Check if state is terminal (goal or trap)
+        function isTerminalState(x, y) {
+            const cellType = getCellType(x, y);
+            return cellType === 'goal' || cellType === 'trap';
+        }
+        
+        // Get possible actions from a state (removes actions that lead to walls)
+        function getPossibleActions(x, y) {
+            const possibleActions = [];
+            
+            for (let action = 0; action < actionCount; action++) {
+                const { dx, dy } = ACTIONS[action];
+                const newX = x + dx;
+                const newY = y + dy;
+                
+                // Check if the new position is valid (not a wall and not out of bounds)
+                if (getCellType(newX, newY) !== 'wall') {
+                    possibleActions.push(action);
+                }
+            }
+            
+            return possibleActions;
+        }
+        
+        // Get action probabilities from policy network
+        async function getActionProbabilities(x, y) {
+            const stateTensor = createStateRepresentation(x, y);
+            
+            // Get logits from policy network
+            const logits = await tf.tidy(() => {
+                const predictions = policyNetwork.predict(stateTensor.expandDims(0));
+                return predictions.squeeze();
+            });
+            
+            // Apply softmax to get probabilities
+            const probs = await tf.tidy(() => {
+                // Apply mask for invalid actions (walls)
+                const possibleActions = getPossibleActions(x, y);
+                const mask = tf.zeros([actionCount]);
+                
+                // Set mask to very negative values for invalid actions
+                for (let i = 0; i < actionCount; i++) {
+                    if (possibleActions.includes(i)) {
+                        mask.bufferSync().set(0, i); // Valid action
+                    } else {
+                        mask.bufferSync().set(-1e9, i); // Invalid action, mask with large negative
+                    }
+                }
+                
+                // Apply mask and then softmax
+                const maskedLogits = logits.add(mask);
+                return tf.softmax(maskedLogits);
+            });
+            
+            // Get probabilities as array
+            const probsArray = await probs.data();
+            
+            // Clean up tensors
+            stateTensor.dispose();
+            logits.dispose();
+            probs.dispose();
+            
+            return Array.from(probsArray);
+        }
+        
+        // Sample action from policy
+        async function sampleAction(x, y) {
+            // Get action probabilities
+            const probs = await getActionProbabilities(x, y);
+            
+            // Store for visualization
+            currentActionProbs = probs;
+            
+            // Sample action based on probabilities
+            const rand = Math.random();
+            let cumulativeProb = 0;
+            
+            for (let action = 0; action < actionCount; action++) {
+                cumulativeProb += probs[action];
+                if (rand < cumulativeProb) {
+                    return action;
+                }
+            }
+            
+            // Fallback to highest probability action
+            return probs.indexOf(Math.max(...probs));
+        }
+        
+        // Get highest probability action
+        async function getBestAction(x, y) {
+            // Get action probabilities
+            const probs = await getActionProbabilities(x, y);
+            
+            // Store for visualization
+            currentActionProbs = probs;
+            
+            // Return action with highest probability
+            return probs.indexOf(Math.max(...probs));
+        }
+        
+        // Get state value from value network
+        async function getStateValue(x, y) {
+            if (!valueNetwork) return 0;
+            
+            const stateTensor = createStateRepresentation(x, y);
+            
+            // Get value from network
+            const value = await tf.tidy(() => {
+                const prediction = valueNetwork.predict(stateTensor.expandDims(0));
+                return prediction.dataSync()[0];
+            });
+            
+            // Clean up tensor
+            stateTensor.dispose();
+            
+            return value;
+        }
+        
+        // Take a step in the environment
+        function takeStep(x, y, action) {
+            const { dx, dy } = ACTIONS[action];
+            const newX = x + dx;
+            const newY = y + dy;
+            
+            let reward = REWARDS.step; // Default step reward
+            
+            // Check if the action leads to a wall
+            if (getCellType(newX, newY) === 'wall') {
+                reward = REWARDS.wall;
+                return { newX: x, newY: y, reward, done: false }; // Stay in place
+            }
+            
+            // Check for goal or trap
+            const cellType = getCellType(newX, newY);
+            if (cellType === 'goal') {
+                reward = REWARDS.goal;
+                return { newX, newY, reward, done: true };
+            } else if (cellType === 'trap') {
+                reward = REWARDS.trap;
+                return { newX, newY, reward, done: true };
+            }
+            
+            // Add environment-specific mechanics
+            if (environmentTypeSelect.value === 'ice' && Math.random() < 0.2) {
+                // Slippery ice: 20% chance to move in a random direction
+                const randomAction = Math.floor(Math.random() * actionCount);
+                const randomMove = ACTIONS[randomAction];
+                const slipX = x + randomMove.dx;
+                const slipY = y + randomMove.dy;
+                
+                // Check if slipped into a wall
+                if (getCellType(slipX, slipY) === 'wall') {
+                    return { newX, newY, reward, done: false }; // Use the original move
+                }
+                
+                return { newX: slipX, newY: slipY, reward, done: false };
+            }
+            
+            return { newX, newY, reward, done: false };
+        }
+        
+        // Get the most likely action's policy arrow for a state
+        async function getPolicyArrow(x, y) {
+            if (isTerminalState(x, y)) return null;
+            
+            // Get action probabilities
+            const probs = await getActionProbabilities(x, y);
+            
+            // Find most likely action
+            let bestAction = 0;
+            let bestProb = probs[0];
+            
+            for (let action = 1; action < actionCount; action++) {
+                if (probs[action] > bestProb) {
+                    bestProb = probs[action];
+                    bestAction = action;
+                }
+            }
+            
+            // Calculate "confidence" as the difference between best and second-best
+            const sortedProbs = [...probs].sort((a, b) => b - a);
+            const confidence = sortedProbs[0] - sortedProbs[1];
+            
+            return { action: bestAction, probability: bestProb, confidence };
+        }
+        
+        // Compute entropy of a probability distribution
+        function computeEntropy(probs) {
+            let entropy = 0;
+            for (let p of probs) {
+                if (p > 0) {
+                    entropy -= p * Math.log(p);
+                }
+            }
+            return entropy;
+        }
+        
+        // Compute returns for a trajectory (REINFORCE)
+        function computeReturns(trajectory) {
+            const returns = [];
+            let G = 0;
+            
+            // Work backwards through trajectory
+            for (let i = trajectory.length - 1; i >= 0; i--) {
+                const { reward } = trajectory[i];
+                G = reward + discountFactor * G;
+                returns.unshift(G);
+            }
+            
+            return returns;
+        }
+        
+        // Compute advantages for a trajectory (Actor-Critic)
+        async function computeAdvantages(trajectory) {
+            const advantages = [];
+            
+            for (let i = 0; i < trajectory.length; i++) {
+                const { state, reward, nextState, done } = trajectory[i];
+                
+                // Get value estimates
+                const valueState = await getStateValue(state.x, state.y);
+                
+                let nextValue = 0;
+                if (!done) {
+                    nextValue = await getStateValue(nextState.x, nextState.y);
+                }
+                
+                // Compute TD error as advantage
+                const advantage = reward + discountFactor * nextValue - valueState;
+                advantages.push(advantage);
+            }
+            
+            return advantages;
+        }
+        
+        // Compute policy gradient for REINFORCE
+        async function computePolicyGradient(trajectory, returns) {
+            return tf.tidy(() => {
+                // Collect states and actions
+                const states = trajectory.map(step => 
+                    createStateRepresentation(step.state.x, step.state.y).expandDims(0)
+                );
+                const stateTensor = tf.concat(states, 0);
+                
+                // Get action probs from policy
+                const logits = policyNetwork.predict(stateTensor);
+                const probs = tf.softmax(logits);
+                
+                // Create action masks
+                const actionMasks = [];
+                for (let i = 0; i < trajectory.length; i++) {
+                    const { action } = trajectory[i];
+                    const mask = tf.zeros([actionCount]);
+                    mask.bufferSync().set(1, action); // Set 1 for the action taken
+                    actionMasks.push(mask.expandDims(0));
+                }
+                const actionMaskTensor = tf.concat(actionMasks, 0);
+                
+                // Compute log probabilities of chosen actions
+                const actionProbs = tf.sum(tf.mul(probs, actionMaskTensor), 1);
+                const logProbs = tf.log(actionProbs);
+                
+                // Compute advantage values (returns for REINFORCE)
+                const returnsTensor = tf.tensor1d(returns);
+                
+                // Compute policy loss
+                const policyLoss = tf.neg(tf.mean(tf.mul(logProbs, returnsTensor)));
+                
+                // Compute entropy for regularization
+                const entropy = tf.neg(tf.sum(tf.mul(probs, tf.log(tf.add(probs, 1e-10)))));
+                const meanEntropy = tf.div(entropy, tf.scalar(trajectory.length));
+                
+                // Total loss = policy loss - entropy_coef * entropy
+                const totalLoss = tf.sub(policyLoss, tf.mul(tf.scalar(entropyCoef), meanEntropy));
+                
+                // Store values for display
+                lastPolicyLoss = policyLoss.dataSync()[0];
+                lastEntropy = meanEntropy.dataSync()[0];
+                
+                return totalLoss;
+            });
+        }
+        
+        // Compute losses for Actor-Critic
+        async function computeActorCriticLosses(trajectory, advantages) {
+            return tf.tidy(() => {
+                // Collect states and actions for policy gradient
+                const states = trajectory.map(step => 
+                    createStateRepresentation(step.state.x, step.state.y).expandDims(0)
+                );
+                const stateTensor = tf.concat(states, 0);
+                
+                // Get action probs from policy
+                const logits = policyNetwork.predict(stateTensor);
+                const probs = tf.softmax(logits);
+                
+                // Create action masks
+                const actionMasks = [];
+                for (let i = 0; i < trajectory.length; i++) {
+                    const { action } = trajectory[i];
+                    const mask = tf.zeros([actionCount]);
+                    mask.bufferSync().set(1, action); // Set 1 for the action taken
+                    actionMasks.push(mask.expandDims(0));
+                }
+                const actionMaskTensor = tf.concat(actionMasks, 0);
+                
+                // Compute log probabilities of chosen actions
+                const actionProbs = tf.sum(tf.mul(probs, actionMaskTensor), 1);
+                const logProbs = tf.log(actionProbs);
+                
+                // Compute advantages tensor
+                const advantageTensor = tf.tensor1d(advantages);
+                
+                // Compute policy loss
+                const policyLoss = tf.neg(tf.mean(tf.mul(logProbs, advantageTensor)));
+                
+                // Compute entropy for regularization
+                const entropy = tf.neg(tf.sum(tf.mul(probs, tf.log(tf.add(probs, 1e-10)))));
+                const meanEntropy = tf.div(entropy, tf.scalar(trajectory.length));
+                
+                // Total actor loss = policy loss - entropy_coef * entropy
+                const totalActorLoss = tf.sub(policyLoss, tf.mul(tf.scalar(entropyCoef), meanEntropy));
+                
+                // Compute value loss
+                let valueStates = [];
+                let targetValues = [];
+                
+                for (let i = 0; i < trajectory.length; i++) {
+                    const { state, reward, nextState, done } = trajectory[i];
+                    const stateTensor = createStateRepresentation(state.x, state.y).expandDims(0);
+                    valueStates.push(stateTensor);
+                    
+                    // Compute target value
+                    let target = reward;
+                    if (!done) {
+                        // Get next state value
+                        const nextStateTensor = createStateRepresentation(nextState.x, nextState.y).expandDims(0);
+                        const nextValue = valueNetwork.predict(nextStateTensor).dataSync()[0];
+                        target += discountFactor * nextValue;
+                    }
+                    targetValues.push(target);
+                }
+                
+                const valueStatesTensor = tf.concat(valueStates, 0);
+                const targetValuesTensor = tf.tensor1d(targetValues);
+                const predictedValues = valueNetwork.predict(valueStatesTensor).squeeze();
+                
+                // Value loss (MSE)
+                const valueLoss = tf.losses.meanSquaredError(targetValuesTensor, predictedValues);
+                
+                // Store values for display
+                lastPolicyLoss = policyLoss.dataSync()[0];
+                lastValueLoss = valueLoss.dataSync()[0];
+                lastEntropy = meanEntropy.dataSync()[0];
+                
+                return { policyLoss: totalActorLoss, valueLoss };
+            });
+        }
+        
+        // Compute losses for Proximal Policy Optimization (PPO)
+        async function computePPOLosses(trajectory, advantages, oldProbs) {
+            return tf.tidy(() => {
+                // Collect states and actions for policy gradient
+                const states = trajectory.map(step => 
+                    createStateRepresentation(step.state.x, step.state.y).expandDims(0)
+                );
+                const stateTensor = tf.concat(states, 0);
+                
+                // Get action probs from policy
+                const logits = policyNetwork.predict(stateTensor);
+                const probs = tf.softmax(logits);
+                
+                // Create action masks
+                const actionMasks = [];
+                for (let i = 0; i < trajectory.length; i++) {
+                    const { action } = trajectory[i];
+                    const mask = tf.zeros([actionCount]);
+                    mask.bufferSync().set(1, action); // Set 1 for the action taken
+                    actionMasks.push(mask.expandDims(0));
+                }
+                const actionMaskTensor = tf.concat(actionMasks, 0);
+                
+                // Compute probabilities of chosen actions
+                const actionProbs = tf.sum(tf.mul(probs, actionMaskTensor), 1);
+                
+                // Create tensor for old probabilities
+                const oldProbsTensor = tf.tensor1d(oldProbs);
+                
+                // Compute probability ratio r(θ) = π_θ(a|s) / π_θ_old(a|s)
+                const probRatio = tf.div(actionProbs, oldProbsTensor);
+                
+                // Compute advantages tensor
+                const advantageTensor = tf.tensor1d(advantages);
+                
+                // Compute surrogate objectives
+                const surrogate1 = tf.mul(probRatio, advantageTensor);
+                const surrogate2 = tf.mul(
+                    tf.clipByValue(probRatio, 1 - clipRatio, 1 + clipRatio),
+                    advantageTensor
+                );
+                
+                // PPO's clipped objective function
+                const objectiveMin = tf.minimum(surrogate1, surrogate2);
+                const policyLoss = tf.neg(tf.mean(objectiveMin));
+                
+                // Compute entropy for regularization
+                const entropy = tf.neg(tf.sum(tf.mul(probs, tf.log(tf.add(probs, 1e-10)))));
+                const meanEntropy = tf.div(entropy, tf.scalar(trajectory.length));
+                
+                // Total actor loss = policy loss - entropy_coef * entropy
+                const totalActorLoss = tf.sub(policyLoss, tf.mul(tf.scalar(entropyCoef), meanEntropy));
+                
+                // Compute value loss
+                let valueStates = [];
+                let targetValues = [];
+                
+                for (let i = 0; i < trajectory.length; i++) {
+                    const { state, reward, nextState, done } = trajectory[i];
+                    const stateTensor = createStateRepresentation(state.x, state.y).expandDims(0);
+                    valueStates.push(stateTensor);
+                    
+                    // Compute target value
+                    let target = reward;
+                    if (!done) {
+                        // Get next state value
+                        const nextStateTensor = createStateRepresentation(nextState.x, nextState.y).expandDims(0);
+                        const nextValue = valueNetwork.predict(nextStateTensor).dataSync()[0];
+                        target += discountFactor * nextValue;
+                    }
+                    targetValues.push(target);
+                }
+                
+                const valueStatesTensor = tf.concat(valueStates, 0);
+                const targetValuesTensor = tf.tensor1d(targetValues);
+                const predictedValues = valueNetwork.predict(valueStatesTensor).squeeze();
+                
+                // Value loss (MSE)
+                const valueLoss = tf.losses.meanSquaredError(targetValuesTensor, predictedValues);
+                
+                // Store values for display
+                lastPolicyLoss = policyLoss.dataSync()[0];
+                lastValueLoss = valueLoss.dataSync()[0];
+                lastEntropy = meanEntropy.dataSync()[0];
+                
+                return { policyLoss: totalActorLoss, valueLoss };
+            });
+        }
+        
+        // Update networks based on a batch of trajectories
+        async function updateNetworks(trajectoryBatch) {
+            // Skip if batch is empty
+            if (trajectoryBatch.length === 0) return;
+            
+            try {
+                // Flatten trajectories into a single list of steps
+                const flatTrajectory = trajectoryBatch.flat();
+                
+                if (algorithmType === 'reinforce') {
+                    // For REINFORCE, compute returns for each trajectory and flatten
+                    const allReturns = [];
+                    
+                    for (const trajectory of trajectoryBatch) {
+                        const returns = computeReturns(trajectory);
+                        allReturns.push(...returns);
+                    }
+                    
+                    // Update policy network
+                    const policyLoss = await computePolicyGradient(flatTrajectory, allReturns);
+                    
+                    policyOptimizer.minimize(() => policyLoss);
+                    
+                    policyLosses.push(lastPolicyLoss);
+                    entropyValues.push(lastEntropy);
+                    
+                    // Update UI
+                    policyLossDisplay.textContent = lastPolicyLoss.toFixed(4);
+                    entropyValueDisplay.textContent = lastEntropy.toFixed(4);
+                } else if (algorithmType === 'actor-critic') {
+                    // For Actor-Critic, compute advantages
+                    const advantages = await computeAdvantages(flatTrajectory);
+                    
+                    // Compute losses
+                    const { policyLoss, valueLoss } = await computeActorCriticLosses(flatTrajectory, advantages);
+                    
+                    // Update policy network
+                    policyOptimizer.minimize(() => policyLoss);
+                    
+                    // Update value network
+                    valueOptimizer.minimize(() => tf.mul(tf.scalar(vfCoef), valueLoss));
+                    
+                    // Track losses
+                    policyLosses.push(lastPolicyLoss);
+                    valueLosses.push(lastValueLoss);
+                    entropyValues.push(lastEntropy);
+                    
+                    // Update UI
+                    policyLossDisplay.textContent = lastPolicyLoss.toFixed(4);
+                    valueLossDisplay.textContent = lastValueLoss.toFixed(4);
+                    entropyValueDisplay.textContent = lastEntropy.toFixed(4);
+                } else if (algorithmType === 'ppo') {
+                    // For PPO, compute advantages and store old probabilities
+                    const advantages = await computeAdvantages(flatTrajectory);
+                    
+                    // Get old probabilities for each action
+                    const oldProbs = [];
+                    for (const step of flatTrajectory) {
+                        const { state, action } = step;
+                        const probs = await getActionProbabilities(state.x, state.y);
+                        oldProbs.push(probs[action]);
+                    }
+                    
+                    // Compute PPO losses
+                    const { policyLoss, valueLoss } = await computePPOLosses(flatTrajectory, advantages, oldProbs);
+                    
+                    // Update policy network
+                    policyOptimizer.minimize(() => policyLoss);
+                    
+                    // Update value network
+                    valueOptimizer.minimize(() => tf.mul(tf.scalar(vfCoef), valueLoss));
+                    
+                    // Track losses
+                    policyLosses.push(lastPolicyLoss);
+                    valueLosses.push(lastValueLoss);
+                    entropyValues.push(lastEntropy);
+                    
+                    // Update UI
+                    policyLossDisplay.textContent = lastPolicyLoss.toFixed(4);
+                    valueLossDisplay.textContent = lastValueLoss.toFixed(4);
+                    entropyValueDisplay.textContent = lastEntropy.toFixed(4);
+                }
+                
+                // Update charts
+                updateCharts();
+                
+                // Update state values
+                if (algorithmType !== 'reinforce') {
+                    await updateStateValues();
+                }
+            } catch (error) {
+                console.error('Error updating networks:', error);
+                algorithmStatusDisplay.textContent = 'Update Error';
+            }
+        }
+        
+        // Update state values grid display
+        async function updateStateValues() {
+            if (algorithmType === 'reinforce') return;
+            
+            stateValues = [];
+            
+            // Compute value for each state
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cellType = environment[y][x];
+                    if (cellType === 'wall') {
+                        // Walls don't have values
+                        stateValues.push(null);
+                    } else {
+                        const value = await getStateValue(x, y);
+                        stateValues.push(value);
+                    }
+                }
+            }
+            
+            // Update grid if showing
+            if (!showingActionProbs) {
+                updateStateValuesGrid();
+            }
+        }
+        
+        // Update state values grid display
+        function updateStateValuesGrid() {
+            // Clear grid
+            stateValuesGrid.innerHTML = '';
+            
+            // Set grid columns based on grid size
+            stateValuesGrid.style.gridTemplateColumns = `repeat(${gridSize}, minmax(0, 1fr))`;
+            
+            // Create cells
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const state = coordsToState(x, y);
+                    const cell = document.createElement('div');
+                    cell.className = 'p-1 text-center text-xs border border-gray-200 dark:border-gray-700';
+                    
+                    // Set background based on cell type
+                    const cellType = environment[y][x];
+                    switch (cellType) {
+                        case 'wall':
+                            cell.classList.add('bg-gray-300', 'dark:bg-gray-600');
+                            cell.textContent = '';
+                            break;
+                        case 'goal':
+                            cell.classList.add('bg-green-100', 'dark:bg-green-900');
+                            if (stateValues[state] !== undefined && stateValues[state] !== null) {
+                                cell.textContent = stateValues[state].toFixed(2);
+                            } else {
+                                cell.textContent = '1.00';
+                            }
+                            break;
+                        case 'trap':
+                            cell.classList.add('bg-red-100', 'dark:bg-red-900');
+                            if (stateValues[state] !== undefined && stateValues[state] !== null) {
+                                cell.textContent = stateValues[state].toFixed(2);
+                            } else {
+                                cell.textContent = '-1.00';
+                            }
+                            break;
+                        case 'start':
+                            cell.classList.add('bg-purple-100', 'dark:bg-purple-900');
+                            if (stateValues[state] !== undefined && stateValues[state] !== null) {
+                                cell.textContent = stateValues[state].toFixed(2);
+                            } else {
+                                cell.textContent = '0.00';
+                            }
+                            break;
+                        default:
+                            // Set color based on value
+                            if (stateValues[state] !== undefined && stateValues[state] !== null) {
+                                const value = stateValues[state];
+                                cell.textContent = value.toFixed(2);
+                                
+                                // Normalize value for color (assuming values between -1 and 1)
+                                const normalizedValue = (value + 1) / 2; // Scale to 0-1
+                                
+                                if (value >= 0) {
+                                    const intensity = Math.min(255, Math.floor(200 * normalizedValue) + 50);
+                                    cell.style.backgroundColor = `rgba(16, 185, 129, ${normalizedValue * 0.5 + 0.1})`;
+                                } else {
+                                    const intensity = Math.min(255, Math.floor(200 * (1 - normalizedValue)) + 50);
+                                    cell.style.backgroundColor = `rgba(239, 68, 68, ${(1 - normalizedValue) * 0.5 + 0.1})`;
+                                }
+                            } else {
+                                cell.textContent = '0.00';
+                            }
+                    }
+                    
+                    // Highlight current agent position
+                    if (x === agentPosition.x && y === agentPosition.y) {
+                        cell.classList.add('ring-2', 'ring-blue-500');
+                    }
+                    
+                    stateValuesGrid.appendChild(cell);
+                }
+            }
+        }
+        
+        // Clear trajectory information
+        function clearTrajectoryInfo() {
+            trajectoryLengthDisplay.textContent = '0';
+            trajectoryReturnDisplay.textContent = '0.00';
+            trajectoryStepsContainer.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400">No trajectory data available</div>';
+            
+            // Reset action distribution chart
+            updateActionDistributionChart([0, 0, 0, 0]);
+        }
+        
+        // Update trajectory visualization
+        function updateTrajectoryVisualization(trajectory) {
+            // Clear container
+            trajectoryStepsContainer.innerHTML = '';
+            
+            if (trajectory.length === 0) {
+                trajectoryStepsContainer.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400">No trajectory data available</div>';
+                return;
+            }
+            
+            // Calculate return
+            let totalReturn = 0;
+            for (const step of trajectory) {
+                totalReturn += step.reward;
+            }
+            
+            // Update trajectory stats
+            trajectoryLengthDisplay.textContent = trajectory.length;
+            trajectoryReturnDisplay.textContent = totalReturn.toFixed(2);
+            
+            // Count actions for distribution chart
+            const actionCounts = [0, 0, 0, 0];
+            
+            // Create step items
+            for (let i = 0; i < trajectory.length; i++) {
+                const { state, action, reward, nextState, done } = trajectory[i];
+                
+                const stepItem = document.createElement('div');
+                stepItem.className = 'flex justify-between items-center py-1 border-b border-gray-200 dark:border-gray-700 text-xs';
+                
+                // Step number
+                const stepNum = document.createElement('div');
+                stepNum.className = 'w-6 text-gray-500 dark:text-gray-400';
+                stepNum.textContent = i + 1;
+                
+                // State info
+                const stateInfo = document.createElement('div');
+                stateInfo.className = 'flex-1';
+                stateInfo.textContent = `(${state.x},${state.y})`;
+                
+                // Action
+                const actionInfo = document.createElement('div');
+                actionInfo.className = 'w-12';
+                actionInfo.textContent = ACTION_NAMES[action];
+                
+                // Track action for distribution chart
+                actionCounts[action]++;
+                
+                // Add arrow based on action
+                const arrow = document.createElement('span');
+                arrow.className = 'ml-1';
+                switch(action) {
+                    case 0: arrow.textContent = '↑'; break;
+                    case 1: arrow.textContent = '→'; break;
+                    case 2: arrow.textContent = '↓'; break;
+                    case 3: arrow.textContent = '←'; break;
+                }
+                actionInfo.appendChild(arrow);
+                
+                // Reward
+                const rewardInfo = document.createElement('div');
+                rewardInfo.className = 'w-12 text-right';
+                rewardInfo.textContent = reward.toFixed(2);
+                
+                if (reward > 0) {
+                    rewardInfo.classList.add('text-green-500');
+                } else if (reward < 0) {
+                    rewardInfo.classList.add('text-red-500');
+                }
+                
+                // Terminal state indicator
+                if (done) {
+                    stepItem.classList.add('bg-purple-50', 'dark:bg-purple-900', 'bg-opacity-30');
+                }
+                
+                // Assemble step item
+                stepItem.appendChild(stepNum);
+                stepItem.appendChild(stateInfo);
+                stepItem.appendChild(actionInfo);
+                stepItem.appendChild(rewardInfo);
+                
+                trajectoryStepsContainer.appendChild(stepItem);
+            }
+            
+            // Update action distribution chart
+            updateActionDistributionChart(actionCounts);
+        }
+        
+        // Update action probabilities chart
+        function updateActionProbsChart(probs) {
+            if (!actionProbsChartInstance) return;
+            
+            actionProbsChartInstance.data.datasets[0].data = probs;
+            actionProbsChartInstance.update();
+        }
+        
+        // Update action distribution chart
+        function updateActionDistributionChart(counts) {
+            if (!actionDistributionChartInstance) return;
+            
+            actionDistributionChartInstance.data.datasets[0].data = counts;
+            actionDistributionChartInstance.update();
+        }
+        
+        // Update charts with training progress
+        function updateCharts() {
+            // Update rewards chart
+            if (rewardsChartInstance && episodeRewards.length > 0) {
+                // Create episode labels
+                const labels = Array.from({ length: episodeRewards.length }, (_, i) => i + 1);
+                
+                // Update chart data
+                rewardsChartInstance.data.labels = labels;
+                rewardsChartInstance.data.datasets[0].data = episodeRewards;
+                
+                rewardsChartInstance.update();
+            }
+            
+            // Update losses chart
+            if (lossesChartInstance) {
+                const updateLabels = Array.from({ length: policyLosses.length }, (_, i) => i + 1);
+                
+                // Update policy loss data
+                lossesChartInstance.data.labels = updateLabels;
+                lossesChartInstance.data.datasets[0].data = policyLosses;
+                
+                // Update value loss if available
+                if (valueLosses.length > 0) {
+                    lossesChartInstance.data.datasets[1].data = valueLosses;
+                } else {
+                    lossesChartInstance.data.datasets[1].data = [];
+                }
+                
+                // Update entropy data
+                lossesChartInstance.data.datasets[2].data = entropyValues;
+                
+                lossesChartInstance.update();
+            }
+        }
+        
+        // Draw policy network visualization
+        function drawPolicyNetworkVisualization() {
+            // Clear SVG
+            policyNetworkSvg.innerHTML = '';
+            
+            // Get SVG dimensions
+            const width = policyNetworkSvg.clientWidth;
+            const height = policyNetworkSvg.clientHeight;
+            
+            // Define layer sizes
+            const layers = [stateCount, ...policyNetworkLayerSizes, actionCount];
+            const layerSpacing = width / (layers.length + 1);
+            const nodeSpacing = 20;
+            
+            // Calculate max neurons to show per layer (to avoid overcrowding)
+            const maxNeuronsToShow = Math.floor(height / nodeSpacing);
+            
+            // Draw connections first (so they appear behind nodes)
+            for (let l = 0; l < layers.length - 1; l++) {
+                const x1 = (l + 1) * layerSpacing;
+                const x2 = (l + 2) * layerSpacing;
+                
+                // Determine how many neurons to show in each layer
+                const sourceNeurons = Math.min(layers[l], maxNeuronsToShow);
+                const targetNeurons = Math.min(layers[l + 1], maxNeuronsToShow);
+                
+                const sourceSkip = layers[l] > maxNeuronsToShow ? Math.ceil(layers[l] / maxNeuronsToShow) : 1;
+                const targetSkip = layers[l + 1] > maxNeuronsToShow ? Math.ceil(layers[l + 1] / maxNeuronsToShow) : 1;
+                
+                // Draw connections
+                for (let i = 0; i < sourceNeurons; i++) {
+                    // Calculate actual neuron index
+                    const sourceIdx = Math.min(i * sourceSkip, layers[l] - 1);
+                    const y1 = height / 2 - (sourceNeurons * nodeSpacing) / 2 + i * nodeSpacing;
+                    
+                    // Get neuron activation
+                    const sourceActivation = l < currentPolicyActivations.length && sourceIdx < currentPolicyActivations[l].length 
+                        ? currentPolicyActivations[l][sourceIdx] 
+                        : 0;
+                    
+                    for (let j = 0; j < targetNeurons; j++) {
+                        // Calculate actual neuron index
+                        const targetIdx = Math.min(j * targetSkip, layers[l + 1] - 1);
+                        const y2 = height / 2 - (targetNeurons * nodeSpacing) / 2 + j * nodeSpacing;
+                        
+                        // Get target neuron activation
+                        const targetActivation = l + 1 < currentPolicyActivations.length && targetIdx < currentPolicyActivations[l + 1].length 
+                            ? currentPolicyActivations[l + 1][targetIdx] 
+                            : 0;
+                        
+                        // Create connection
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', x1);
+                        line.setAttribute('y1', y1);
+                        line.setAttribute('x2', x2);
+                        line.setAttribute('y2', y2);
+                        
+                        // Set connection color based on activations
+                        const connectionStrength = Math.abs(sourceActivation * targetActivation);
+                        const isDarkMode = document.body.classList.contains('dark');
+                        
+                        if (connectionStrength > 0.5) {
+                            // Active connection
+                            line.setAttribute('stroke', COLORS.activeConnection.light);
+                            line.setAttribute('stroke-width', 1 + connectionStrength);
+                            line.setAttribute('opacity', 0.7);
+                        } else {
+                            // Inactive connection
+                            line.setAttribute('stroke', isDarkMode ? COLORS.connection.dark : COLORS.connection.light);
+                            line.setAttribute('stroke-width', 0.5);
+                            line.setAttribute('opacity', 0.3);
+                        }
+                        
+                        policyNetworkSvg.appendChild(line);
+                    }
+                }
+            }
+            
+            // Draw nodes for each layer
+            for (let l = 0; l < layers.length; l++) {
+                const x = (l + 1) * layerSpacing;
+                
+                // Determine how many neurons to show
+                const neuronsToShow = Math.min(layers[l], maxNeuronsToShow);
+                const skip = layers[l] > maxNeuronsToShow ? Math.ceil(layers[l] / maxNeuronsToShow) : 1;
+                
+                // Add layer label if there's space
+                if (height > 50) {
+                    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    label.setAttribute('x', x);
+                    label.setAttribute('y', 20);
+                    label.setAttribute('text-anchor', 'middle');
+                    label.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                    label.setAttribute('font-size', '10');
+                    
+                    if (l === 0) {
+                        label.textContent = 'State';
+                    } else if (l === layers.length - 1) {
+                        label.textContent = 'Action';
+                    } else {
+                        label.textContent = `Hidden ${l}`;
+                    }
+                    
+                    policyNetworkSvg.appendChild(label);
+                }
+                
+                // Draw individual neurons
+                for (let i = 0; i < neuronsToShow; i++) {
+                    // Calculate actual neuron index
+                    const neuronIdx = Math.min(i * skip, layers[l] - 1);
+                    
+                    const y = height / 2 - (neuronsToShow * nodeSpacing) / 2 + i * nodeSpacing;
+                    
+                    // Get neuron activation
+                    const activation = l < currentPolicyActivations.length && neuronIdx < currentPolicyActivations[l].length 
+                        ? currentPolicyActivations[l][neuronIdx] 
+                        : 0;
+                    
+                    // Create neuron
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', x);
+                    circle.setAttribute('cy', y);
+                    circle.setAttribute('r', 4);
+                    
+                    // Highlight active neurons
+                    if (activation > 0.5) {
+                        circle.setAttribute('fill', COLORS.activeNeuron.light);
+                    } else {
+                        circle.setAttribute('fill', COLORS.policyNeuron.light);
+                    }
+                    
+                    // Add stroke
+                    circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                    circle.setAttribute('stroke-width', '1');
+                    
+                    policyNetworkSvg.appendChild(circle);
+                    
+                    // Add action name for output layer
+                    if (l === layers.length - 1 && width > 300) {
+                        const actionLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        actionLabel.setAttribute('x', x + 15);
+                        actionLabel.setAttribute('y', y + 4);
+                        actionLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                        actionLabel.setAttribute('font-size', '10');
+                        actionLabel.textContent = ACTION_NAMES[neuronIdx];
+                        policyNetworkSvg.appendChild(actionLabel);
+                        
+                        // Show probabilities if available
+                        if (currentActionProbs.length > 0) {
+                            const probLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                            probLabel.setAttribute('x', x + 45);
+                            probLabel.setAttribute('y', y + 4);
+                            probLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                            probLabel.setAttribute('font-size', '10');
+                            probLabel.textContent = `${(currentActionProbs[neuronIdx] * 100).toFixed(1)}%`;
+                            policyNetworkSvg.appendChild(probLabel);
+                        }
+                    }
+                    
+                    // Show dots for skipped neurons
+                    if (i === neuronsToShow - 1 && neuronsToShow < layers[l] && height > 100) {
+                        const ellipsis = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        ellipsis.setAttribute('x', x);
+                        ellipsis.setAttribute('y', y + 15);
+                        ellipsis.setAttribute('text-anchor', 'middle');
+                        ellipsis.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                        ellipsis.setAttribute('font-size', '12');
+                        ellipsis.textContent = '⋮';
+                        policyNetworkSvg.appendChild(ellipsis);
+                        
+                        // Add count of hidden neurons
+                        const countLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        countLabel.setAttribute('x', x);
+                        countLabel.setAttribute('y', y + 25);
+                        countLabel.setAttribute('text-anchor', 'middle');
+                        countLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                        countLabel.setAttribute('font-size', '8');
+                        countLabel.textContent = `(${layers[l]} total)`;
+                        policyNetworkSvg.appendChild(countLabel);
+                    }
+                }
+            }
+        }
+        
+        // Draw value network visualization
+        function drawValueNetworkVisualization() {
+            // Clear SVG
+            valueNetworkSvg.innerHTML = '';
+            
+            // Skip if not using value network
+            if (algorithmType === 'reinforce') {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', '50%');
+                text.setAttribute('y', '50%');
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                text.textContent = 'No value network in REINFORCE algorithm';
+                valueNetworkSvg.appendChild(text);
+                return;
+            }
+            
+            // Get SVG dimensions
+            const width = valueNetworkSvg.clientWidth;
+            const height = valueNetworkSvg.clientHeight;
+            
+            // Define layer sizes
+            const layers = [stateCount, ...valueNetworkLayerSizes, 1]; // Value network has 1 output
+            const layerSpacing = width / (layers.length + 1);
+            const nodeSpacing = 20;
+            
+            // Calculate max neurons to show per layer (to avoid overcrowding)
+            const maxNeuronsToShow = Math.floor(height / nodeSpacing);
+            
+            // Draw connections first (so they appear behind nodes)
+            for (let l = 0; l < layers.length - 1; l++) {
+                const x1 = (l + 1) * layerSpacing;
+                const x2 = (l + 2) * layerSpacing;
+                
+                // Determine how many neurons to show in each layer
+                const sourceNeurons = Math.min(layers[l], maxNeuronsToShow);
+                const targetNeurons = Math.min(layers[l + 1], maxNeuronsToShow);
+                
+                const sourceSkip = layers[l] > maxNeuronsToShow ? Math.ceil(layers[l] / maxNeuronsToShow) : 1;
+                const targetSkip = layers[l + 1] > maxNeuronsToShow ? Math.ceil(layers[l + 1] / maxNeuronsToShow) : 1;
+                
+                // Draw connections
+                for (let i = 0; i < sourceNeurons; i++) {
+                    // Calculate actual neuron index
+                    const sourceIdx = Math.min(i * sourceSkip, layers[l] - 1);
+                    const y1 = height / 2 - (sourceNeurons * nodeSpacing) / 2 + i * nodeSpacing;
+                    
+                    // Get neuron activation
+                    const sourceActivation = l < currentValueActivations.length && sourceIdx < currentValueActivations[l].length 
+                        ? currentValueActivations[l][sourceIdx] 
+                        : 0;
+                    
+                    for (let j = 0; j < targetNeurons; j++) {
+                        // Calculate actual neuron index
+                        const targetIdx = Math.min(j * targetSkip, layers[l + 1] - 1);
+                        const y2 = height / 2 - (targetNeurons * nodeSpacing) / 2 + j * nodeSpacing;
+                        
+                        // Get target neuron activation
+                        const targetActivation = l + 1 < currentValueActivations.length && targetIdx < currentValueActivations[l + 1].length 
+                            ? currentValueActivations[l + 1][targetIdx] 
+                            : 0;
+                        
+                        // Create connection
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', x1);
+                        line.setAttribute('y1', y1);
+                        line.setAttribute('x2', x2);
+                        line.setAttribute('y2', y2);
+                        
+                        // Set connection color based on activations
+                        const connectionStrength = Math.abs(sourceActivation * targetActivation);
+                        const isDarkMode = document.body.classList.contains('dark');
+                        
+                        if (connectionStrength > 0.5) {
+                            // Active connection
+                            line.setAttribute('stroke', COLORS.activeConnection.light);
+                            line.setAttribute('stroke-width', 1 + connectionStrength);
+                            line.setAttribute('opacity', 0.7);
+                        } else {
+                            // Inactive connection
+                            line.setAttribute('stroke', isDarkMode ? COLORS.connection.dark : COLORS.connection.light);
+                            line.setAttribute('stroke-width', 0.5);
+                            line.setAttribute('opacity', 0.3);
+                        }
+                        
+                        valueNetworkSvg.appendChild(line);
+                    }
+                }
+            }
+            
+            // Draw nodes for each layer
+            for (let l = 0; l < layers.length; l++) {
+                const x = (l + 1) * layerSpacing;
+                
+                // Determine how many neurons to show
+                const neuronsToShow = Math.min(layers[l], maxNeuronsToShow);
+                const skip = layers[l] > maxNeuronsToShow ? Math.ceil(layers[l] / maxNeuronsToShow) : 1;
+                
+                // Add layer label if there's space
+                if (height > 50) {
+                    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    label.setAttribute('x', x);
+                    label.setAttribute('y', 20);
+                    label.setAttribute('text-anchor', 'middle');
+                    label.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                    label.setAttribute('font-size', '10');
+                    
+                    if (l === 0) {
+                        label.textContent = 'State';
+                    } else if (l === layers.length - 1) {
+                        label.textContent = 'Value';
+                    } else {
+                        label.textContent = `Hidden ${l}`;
+                    }
+                    
+                    valueNetworkSvg.appendChild(label);
+                }
+                
+                // Draw individual neurons
+                for (let i = 0; i < neuronsToShow; i++) {
+                    // Calculate actual neuron index
+                    const neuronIdx = Math.min(i * skip, layers[l] - 1);
+                    
+                    const y = height / 2 - (neuronsToShow * nodeSpacing) / 2 + i * nodeSpacing;
+                    
+                    // Get neuron activation
+                    const activation = l < currentValueActivations.length && neuronIdx < currentValueActivations[l].length 
+                        ? currentValueActivations[l][neuronIdx] 
+                        : 0;
+                    
+                    // Create neuron
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', x);
+                    circle.setAttribute('cy', y);
+                    circle.setAttribute('r', 4);
+                    
+                    // Highlight active neurons
+                    if (activation > 0.5) {
+                        circle.setAttribute('fill', COLORS.activeNeuron.light);
+                    } else {
+                        circle.setAttribute('fill', COLORS.valueNeuron.light);
+                    }
+                    
+                    // Add stroke
+                    circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                    circle.setAttribute('stroke-width', '1');
+                    
+                    valueNetworkSvg.appendChild(circle);
+                    
+                    // Add value for output layer
+                    if (l === layers.length - 1 && width > 300) {
+                        const valueLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        valueLabel.setAttribute('x', x + 15);
+                        valueLabel.setAttribute('y', y + 4);
+                        valueLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                        valueLabel.setAttribute('font-size', '10');
+                        
+                        // Display actual state value if available
+                        const currentStateValue = stateValues[coordsToState(agentPosition.x, agentPosition.y)];
+                        valueLabel.textContent = `V = ${currentStateValue !== undefined && currentStateValue !== null ? currentStateValue.toFixed(2) : '0.00'}`;
+                        
+                        valueNetworkSvg.appendChild(valueLabel);
+                    }
+                    
+                    // Show dots for skipped neurons
+                    if (i === neuronsToShow - 1 && neuronsToShow < layers[l] && height > 100) {
+                        const ellipsis = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        ellipsis.setAttribute('x', x);
+                        ellipsis.setAttribute('y', y + 15);
+                        ellipsis.setAttribute('text-anchor', 'middle');
+                        ellipsis.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                        ellipsis.setAttribute('font-size', '12');
+                        ellipsis.textContent = '⋮';
+                        valueNetworkSvg.appendChild(ellipsis);
+                        
+                        // Add count of hidden neurons
+                        const countLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        countLabel.setAttribute('x', x);
+                        countLabel.setAttribute('y', y + 25);
+                        countLabel.setAttribute('text-anchor', 'middle');
+                        countLabel.setAttribute('fill', document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937');
+                        countLabel.setAttribute('font-size', '8');
+                        countLabel.textContent = `(${layers[l]} total)`;
+                        valueNetworkSvg.appendChild(countLabel);
+                    }
+                }
+            }
+        }
+        
+        // Run full training
+        async function runTraining() {
+            if (isTraining) return;
+            
+            isTraining = true;
+            stepByStepMode = false;
+            currentEpisode = 0;
+            
+            algorithmStatusDisplay.textContent = 'Training...';
+            
+            // Disable buttons during training
+            setControlsEnabled(false);
+            
+            try {
+                const trajectoryBatch = [];
+                
+                // Run episodes
+                for (let episode = 0; episode < maxEpisodes; episode++) {
+                    currentEpisode = episode + 1;
+                    
+                    // Collect a trajectory
+                    const trajectory = await collectSingleTrajectory();
+                    
+                    // Add to batch
+                    trajectoryBatch.push(trajectory);
+                    
+                    // Update batch and reset if needed
+                    if (trajectoryBatch.length >= batchSize) {
+                        await updateNetworks(trajectoryBatch);
+                        trajectoryBatch.length = 0;
+                    }
+                    
+                    // Update UI
+                    currentEpisodeDisplay.textContent = `${currentEpisode}/${maxEpisodes}`;
+                    totalEpisodesDisplay.textContent = ++totalEpisodes;
+                    
+                    // Update charts every 10 episodes
+                    if (episode % 10 === 0 || episode === maxEpisodes - 1) {
+                        updateCharts();
+                        render();
+                        
+                        // Update networks visualization
+                        drawPolicyNetworkVisualization();
+                        if (algorithmType !== 'reinforce') {
+                            drawValueNetworkVisualization();
+                        }
+                        
+                        // Small delay to allow UI updates
+                        await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                }
+                
+                // Process any remaining trajectories
+                if (trajectoryBatch.length > 0) {
+                    await updateNetworks(trajectoryBatch);
+                }
+                
+                algorithmStatusDisplay.textContent = 'Training Complete';
+            } catch (err) {
+                console.error('Error during training:', err);
+                algorithmStatusDisplay.textContent = 'Training Error';
+            } finally {
+                // Re-enable controls
+                setControlsEnabled(true);
+                isTraining = false;
+                
+                // Final UI updates
+                updateCharts();
+                render();
+                drawPolicyNetworkVisualization();
+                if (algorithmType !== 'reinforce') {
+                    drawValueNetworkVisualization();
+                }
+            }
+        }
+        
+        // Step through training
+        async function stepTraining() {
+            if (isTraining) return;
+            
+            stepByStepMode = true;
+            isTraining = true;
+            
+            try {
+                // If current episode is complete, start a new one
+                if (currentEpisode === 0 || currentTrajectory.length === 0 || 
+                    currentTrajectory[currentTrajectory.length - 1].done) {
+                    currentEpisode++;
+                    currentEpisodeDisplay.textContent = `${currentEpisode}/${maxEpisodes}`;
+                    totalEpisodesDisplay.textContent = ++totalEpisodes;
+                    
+                    // Reset for new episode
+                    agentPosition = { ...startPosition };
+                    episodeReward = 0;
+                    episodeSteps = 0;
+                    currentTrajectory = [];
+                    
+                    algorithmStatusDisplay.textContent = 'Episode Started';
+                    episodeRewardDisplay.textContent = episodeReward.toFixed(2);
+                }
+                
+                // Take a single step
+                const state = { ...agentPosition };
+                const action = await sampleAction(agentPosition.x, agentPosition.y);
+                
+                // Get action probabilities for visualization
+                await getActionProbabilities(agentPosition.x, agentPosition.y);
+                
+                // Update action probs chart
+                updateActionProbsChart(currentActionProbs);
+                
+                // Take step in environment
+                const result = takeStep(agentPosition.x, agentPosition.y, action);
+                
+                // Update agent position
+                agentPosition.x = result.newX;
+                agentPosition.y = result.newY;
+                
+                // Update counters
+                episodeReward += result.reward;
+                episodeSteps++;
+                totalSteps++;
+                
+                // Update UI
+                episodeRewardDisplay.textContent = episodeReward.toFixed(2);
+                totalStepsDisplay.textContent = totalSteps;
+                
+                // Add step to trajectory
+                currentTrajectory.push({
+                    state,
+                    action,
+                    reward: result.reward,
+                    nextState: { ...agentPosition },
+                    done: result.done
+                });
+                
+                // Update trajectory visualization
+                updateTrajectoryVisualization(currentTrajectory);
+                
+                // If episode is done, update networks
+                if (result.done) {
+                    // Add to episode rewards
+                    episodeRewards.push(episodeReward);
+                    
+                    // Update networks
+                    await updateNetworks([currentTrajectory]);
+                    
+                    // Update charts
+                    updateCharts();
+                    
+                    algorithmStatusDisplay.textContent = 'Episode Complete';
+                } else {
+                    algorithmStatusDisplay.textContent = 'Stepping...';
+                }
+                
+                // Render
+                render();
+                
+                // Update network visualizations
+                drawPolicyNetworkVisualization();
+                if (algorithmType !== 'reinforce') {
+                    drawValueNetworkVisualization();
+                }
+            } catch (err) {
+                console.error('Error during step:', err);
+                algorithmStatusDisplay.textContent = 'Step Error';
+            } finally {
+                isTraining = false;
+            }
+        }
+        
+        // Collect a single trajectory
+        async function collectSingleTrajectory() {
+            // Reset agent position to start
+            agentPosition = { ...startPosition };
+            let trajectory = [];
+            let episodeReward = 0;
+            let done = false;
+            let steps = 0;
+            const maxSteps = gridSize * gridSize * 4; // Limit steps to avoid infinite loops
+            
+            while (!done && steps < maxSteps) {
+                steps++;
+                totalSteps++;
+                
+                // Store current state
+                const state = { ...agentPosition };
+                
+                // Sample action from policy
+                const action = await sampleAction(agentPosition.x, agentPosition.y);
+                
+                // Take step in environment
+                const result = takeStep(agentPosition.x, agentPosition.y, action);
+                
+                // Update agent position
+                agentPosition.x = result.newX;
+                agentPosition.y = result.newY;
+                
+                // Store transition
+                trajectory.push({
+                    state,
+                    action,
+                    reward: result.reward,
+                    nextState: { ...agentPosition },
+                    done: result.done
+                });
+                
+                // Accumulate reward
+                episodeReward += result.reward;
+                
+                // Check if episode is done
+                done = result.done;
+            }
+            
+            // Store episode reward
+            episodeRewards.push(episodeReward);
+            
+            return trajectory;
+        }
+        
+        // Run the agent using the learned policy
+        async function runAgent() {
+            if (isTraining || isRunningAgent) return;
+            
+            isRunningAgent = true;
+            agentPosition = { ...startPosition };
+            episodeReward = 0;
+            episodeSteps = 0;
+            
+            algorithmStatusDisplay.textContent = 'Agent Running...';
+            
+            // Disable controls during agent run
+            setControlsEnabled(false);
+            
+            try {
+                let done = false;
+                const maxSteps = gridSize * gridSize * 4;
+                
+                while (!done && episodeSteps < maxSteps) {
+                    // Get best action according to policy
+                    const action = await getBestAction(agentPosition.x, agentPosition.y);
+                    
+                    // Update action probabilities chart
+                    updateActionProbsChart(currentActionProbs);
+                    
+                    // Take the action
+                    const result = takeStep(agentPosition.x, agentPosition.y, action);
+                    
+                    // Update agent position
+                    agentPosition.x = result.newX;
+                    agentPosition.y = result.newY;
+                    
+                    // Update tracking
+                    episodeReward += result.reward;
+                    episodeSteps++;
+                    
+                    // Update UI
+                    episodeRewardDisplay.textContent = episodeReward.toFixed(2);
+                    totalStepsDisplay.textContent = totalSteps + episodeSteps;
+                    
+                    // Render
+                    render();
+                    
+                    // Update visualizations
+                    drawPolicyNetworkVisualization();
+                    if (algorithmType !== 'reinforce') {
+                        drawValueNetworkVisualization();
+                    }
+                    
+                    // Delay based on animation speed
+                    await new Promise(resolve => setTimeout(resolve, 100 - animationSpeed));
+                    
+                    // Check if episode is done
+                    done = result.done;
+                }
+                
+                algorithmStatusDisplay.textContent = done ? 'Agent Reached Goal/Trap' : 'Agent Max Steps';
+            } catch (err) {
+                console.error('Error during agent run:', err);
+                algorithmStatusDisplay.textContent = 'Agent Run Error';
+            } finally {
+                // Re-enable controls
+                setControlsEnabled(true);
+                isRunningAgent = false;
+            }
+        }
+        
+        // Collect trajectory manually
+        async function collectTrajectory() {
+            if (isTraining || isRunningAgent || isCollectingTrajectory) return;
+            
+            isCollectingTrajectory = true;
+            agentPosition = { ...startPosition };
+            episodeReward = 0;
+            episodeSteps = 0;
+            currentTrajectory = [];
+            
+            algorithmStatusDisplay.textContent = 'Collecting Trajectory...';
+            
+            // Disable some controls during collection
+            runTrainingBtn.disabled = true;
+            stepTrainingBtn.disabled = true;
+            resetTrainingBtn.disabled = true;
+            runAgentBtn.disabled = true;
+            
+            try {
+                let done = false;
+                const maxSteps = gridSize * gridSize * 4;
+                
+                while (!done && episodeSteps < maxSteps) {
+                    // Get state
+                    const state = { ...agentPosition };
+                    
+                    // Sample action from policy
+                    const action = await sampleAction(agentPosition.x, agentPosition.y);
+                    
+                    // Update action probabilities chart
+                    updateActionProbsChart(currentActionProbs);
+                    
+                    // Take the action
+                    const result = takeStep(agentPosition.x, agentPosition.y, action);
+                    
+                    // Update agent position
+                    agentPosition.x = result.newX;
+                    agentPosition.y = result.newY;
+                    
+                    // Add to trajectory
+                    currentTrajectory.push({
+                        state,
+                        action,
+                        reward: result.reward,
+                        nextState: { ...agentPosition },
+                        done: result.done
+                    });
+                    
+                    // Update trajectory visualization
+                    updateTrajectoryVisualization(currentTrajectory);
+                    
+                    // Update tracking
+                    episodeReward += result.reward;
+                    episodeSteps++;
+                    
+                    // Update UI
+                    episodeRewardDisplay.textContent = episodeReward.toFixed(2);
+                    
+                    // Render
+                    render();
+                    
+                    // Update visualizations
+                    drawPolicyNetworkVisualization();
+                    if (algorithmType !== 'reinforce') {
+                        drawValueNetworkVisualization();
+                    }
+                    
+                    // Delay based on animation speed
+                    await new Promise(resolve => setTimeout(resolve, 100 - animationSpeed));
+                    
+                    // Check if episode is done
+                    done = result.done;
+                }
+                
+                // Store trajectory
+                trajectories.push(currentTrajectory);
+                
+                algorithmStatusDisplay.textContent = 'Trajectory Collected';
+            } catch (err) {
+                console.error('Error collecting trajectory:', err);
+                algorithmStatusDisplay.textContent = 'Collection Error';
+            } finally {
+                // Re-enable controls
+                runTrainingBtn.disabled = false;
+                stepTrainingBtn.disabled = false;
+                resetTrainingBtn.disabled = false;
+                runAgentBtn.disabled = false;
+                isCollectingTrajectory = false;
+            }
+        }
+        
+        // Enable or disable controls during processing
+        function setControlsEnabled(enabled) {
+            runTrainingBtn.disabled = !enabled;
+            stepTrainingBtn.disabled = !enabled;
+            resetTrainingBtn.disabled = !enabled;
+            runAgentBtn.disabled = !enabled;
+            collectTrajectoryBtn.disabled = !enabled;
+            gridSizeSelect.disabled = !enabled;
+            environmentTypeSelect.disabled = !enabled;
+            resetEnvironmentBtn.disabled = !enabled;
+        }
+        
+        // Render the grid world
+        async function render() {
+            const isDarkMode = document.body.classList.contains('dark');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, gridWorldCanvas.width, gridWorldCanvas.height);
+            
+            // Draw grid cells
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cellType = environment[y][x];
+                    
+                    // Cell position
+                    const cellX = x * cellSize;
+                    const cellY = y * cellSize;
+                    
+                    // Set cell color based on type
+                    let cellColor;
+                    switch (cellType) {
+                        case 'wall':
+                            cellColor = isDarkMode ? COLORS.wall.dark : COLORS.wall.light;
+                            break;
+                        case 'goal':
+                            cellColor = COLORS.goal.light;
+                            break;
+                        case 'trap':
+                            cellColor = COLORS.trap.light;
+                            break;
+                        case 'start':
+                            cellColor = isDarkMode ? COLORS.empty.dark : COLORS.empty.light;
+                            break;
+                        default:
+                            cellColor = isDarkMode ? COLORS.empty.dark : COLORS.empty.light;
+                    }
+                    
+                    // Fill cell with base color
+                    ctx.fillStyle = cellColor;
+                    ctx.fillRect(cellX, cellY, cellSize, cellSize);
+                    
+                    // Draw cell border
+                    ctx.strokeStyle = isDarkMode ? COLORS.grid.dark : COLORS.grid.light;
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(cellX, cellY, cellSize, cellSize);
+                    
+                    // Draw special markers for start and goal
+                    if (cellType === 'start') {
+                        ctx.fillStyle = COLORS.start.light;
+                        const padding = cellSize * 0.2;
+                        ctx.beginPath();
+                        ctx.arc(cellX + cellSize/2, cellY + cellSize/2, cellSize/2 - padding, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Draw 'S' in the start cell
+                        ctx.fillStyle = isDarkMode ? COLORS.text.dark : COLORS.text.light;
+                        ctx.font = `${cellSize * 0.6}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('S', cellX + cellSize/2, cellY + cellSize/2);
+                    } else if (cellType === 'goal') {
+                        // Draw 'G' in the goal cell
+                        ctx.fillStyle = isDarkMode ? COLORS.text.dark : COLORS.text.light;
+                        ctx.font = `${cellSize * 0.6}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('G', cellX + cellSize/2, cellY + cellSize/2);
+                    } else if (cellType === 'trap') {
+                        // Draw 'T' in the trap cell
+                        ctx.fillStyle = isDarkMode ? COLORS.text.dark : COLORS.text.light;
+                        ctx.font = `${cellSize * 0.6}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('T', cellX + cellSize/2, cellY + cellSize/2);
+                    }
+                    
+                    // Show action probabilities if enabled (for non-wall, non-terminal cells)
+                    if (showActionProbsCheckbox.checked && cellType !== 'wall' && !isTerminalState(x, y) && policyNetwork) {
+                        await drawActionProbabilities(x, y, cellX, cellY);
+                    }
+                    
+                    // Show policy arrows if enabled (for non-wall, non-terminal cells)
+                    if (showPolicyArrowsCheckbox.checked && cellType !== 'wall' && !isTerminalState(x, y) && policyNetwork) {
+                        await drawPolicyArrow(x, y, cellX, cellY);
+                    }
+                }
+            }
+            
+            // Draw past trajectories if enabled
+            if (showTrajectoriesCheckbox.checked && trajectories.length > 0) {
+                drawTrajectories();
+            }
+            
+            // Draw agent
+            const agentX = agentPosition.x * cellSize;
+            const agentY = agentPosition.y * cellSize;
+            
+            ctx.fillStyle = COLORS.agent.light;
+            const padding = cellSize * 0.15;
+            ctx.fillRect(agentX + padding, agentY + padding, cellSize - 2*padding, cellSize - 2*padding);
+            
+            // Draw eyes to make it look like a character
+            ctx.fillStyle = isDarkMode ? COLORS.text.dark : COLORS.text.light;
+            const eyeSize = cellSize * 0.1;
+            const eyeY = agentY + cellSize * 0.35;
+            ctx.fillRect(agentX + cellSize * 0.3, eyeY, eyeSize, eyeSize);
+            ctx.fillRect(agentX + cellSize * 0.6, eyeY, eyeSize, eyeSize);
+            
+            // Draw mouth
+            ctx.beginPath();
+            ctx.moveTo(agentX + cellSize * 0.3, agentY + cellSize * 0.65);
+            ctx.lineTo(agentX + cellSize * 0.7, agentY + cellSize * 0.65);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Draw action probabilities for a cell
+        async function drawActionProbabilities(x, y, cellX, cellY) {
+            // Get action probabilities
+            const probs = await getActionProbabilities(x, y);
+            
+            // Save for visualization
+            if (x === agentPosition.x && y === agentPosition.y) {
+                currentActionProbs = probs;
+                updateActionProbsChart(probs);
+            }
+            
+            const fontSize = Math.max(8, Math.min(10, cellSize / 6));
+            
+            ctx.font = `${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Draw probabilities for each action
+            for (let action = 0; action < actionCount; action++) {
+                const prob = probs[action];
+                
+                // Skip if very low probability
+                if (prob < 0.05) continue;
+                
+                // Position for probability text
+                let textX, textY;
+                
+                switch (action) {
+                    case 0: // Up
+                        textX = cellX + cellSize / 2;
+                        textY = cellY + cellSize * 0.2;
+                        break;
+                    case 1: // Right
+                        textX = cellX + cellSize * 0.8;
+                        textY = cellY + cellSize / 2;
+                        break;
+                    case 2: // Down
+                        textX = cellX + cellSize / 2;
+                        textY = cellY + cellSize * 0.8;
+                        break;
+                    case 3: // Left
+                        textX = cellX + cellSize * 0.2;
+                        textY = cellY + cellSize / 2;
+                        break;
+                }
+                
+                // Draw background circle for better visibility
+                ctx.beginPath();
+                ctx.arc(textX, textY, fontSize * 0.8, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(139, 92, 246, ${prob * 0.8})`;
+                ctx.fill();
+                
+                // Draw probability text
+                ctx.fillStyle = 'white';
+                ctx.fillText(`${(prob * 100).toFixed(0)}%`, textX, textY);
+            }
+        }
+        
+        // Draw policy arrow for a cell
+        async function drawPolicyArrow(x, y, cellX, cellY) {
+            // Get policy arrow data
+            const arrowData = await getPolicyArrow(x, y);
+            if (!arrowData) return;
+            
+            const { action, probability, confidence } = arrowData;
+            const { dx, dy } = ACTIONS[action];
+            
+            const centerX = cellX + cellSize / 2;
+            const centerY = cellY + cellSize / 2;
+            
+            // Draw arrow
+            ctx.beginPath();
+            
+            // Move to center of cell
+            ctx.moveTo(centerX, centerY);
+            
+            // Arrow length based on probability
+            const arrowLength = cellSize * 0.3 * probability;
+            const endX = centerX + dx * arrowLength;
+            const endY = centerY + dy * arrowLength;
+            ctx.lineTo(endX, endY);
+            
+            // Arrow head
+            const headSize = cellSize * 0.15;
+            let angle;
+            
+            switch (action) {
+                case 0: angle = -Math.PI / 2; break; // Up
+                case 1: angle = 0; break;           // Right
+                case 2: angle = Math.PI / 2; break; // Down
+                case 3: angle = Math.PI; break;     // Left
+            }
+            
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle - Math.PI / 6),
+                endY - headSize * Math.sin(angle - Math.PI / 6)
+            );
+            
+            ctx.moveTo(endX, endY);
+            
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle + Math.PI / 6),
+                endY - headSize * Math.sin(angle + Math.PI / 6)
+            );
+            
+            // Set arrow properties based on confidence
+            ctx.strokeStyle = document.body.classList.contains('dark') ? COLORS.arrow.dark : COLORS.arrow.light;
+            ctx.lineWidth = 2 * (0.5 + 0.5 * confidence);
+            
+            // Set opacity based on probability
+            ctx.globalAlpha = 0.3 + 0.7 * probability;
+            
+            // Draw the arrow
+            ctx.stroke();
+            
+            // Reset opacity
+            ctx.globalAlpha = 1.0;
+        }
+        
+        // Draw trajectories
+        function drawTrajectories() {
+            // Use the last few trajectories (max 3)
+            const recentTrajectories = trajectories.slice(-3);
+            
+            for (let t = 0; t < recentTrajectories.length; t++) {
+                const trajectory = recentTrajectories[t];
+                
+                // Skip if empty
+                if (trajectory.length === 0) continue;
+                
+                // Set line style (more recent = more opaque)
+                ctx.strokeStyle = COLORS.trajectory.light;
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.3 + 0.2 * t;
+                
+                ctx.beginPath();
+                
+                // Start at first position
+                const startX = trajectory[0].state.x * cellSize + cellSize / 2;
+                const startY = trajectory[0].state.y * cellSize + cellSize / 2;
+                ctx.moveTo(startX, startY);
+                
+                // Draw line through all positions
+                for (let i = 1; i < trajectory.length; i++) {
+                    const x = trajectory[i].state.x * cellSize + cellSize / 2;
+                    const y = trajectory[i].state.y * cellSize + cellSize / 2;
+                    ctx.lineTo(x, y);
+                }
+                
+                // Draw path
+                ctx.stroke();
+                
+                // Reset opacity
+                ctx.globalAlpha = 1.0;
+                
+                // Draw point at terminal state with reward indicator
+                if (trajectory.length > 0) {
+                    const lastStep = trajectory[trajectory.length - 1];
+                    const endX = lastStep.nextState.x * cellSize + cellSize / 2;
+                    const endY = lastStep.nextState.y * cellSize + cellSize / 2;
+                    
+                    // Draw circle at end position
+                    ctx.beginPath();
+                    ctx.arc(endX, endY, 5, 0, Math.PI * 2);
+                    
+                    if (lastStep.reward > 0) {
+                        ctx.fillStyle = COLORS.goal.light;
+                    } else {
+                        ctx.fillStyle = COLORS.trap.light;
+                    }
+                    
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // Initialize the application
+        initializeApp();
+    </script>
+</body>
+</html>

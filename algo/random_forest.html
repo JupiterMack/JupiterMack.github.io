@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Random Forest Regression Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Random Forest Regression Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-2/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <div class="w-full h-[600px] relative" id="visualization-container">
+                    <svg id="visualization" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                </div>
+                <div class="mt-2 flex flex-wrap justify-between items-center text-sm gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+                        <span>Data Points</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-red-500"></span>
+                        <span>Random Forest Prediction</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-purple-500 dashed-line"></span>
+                        <span>True Relationship</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-green-500 opacity-40"></span>
+                        <span>Individual Trees</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel -->
+            <div class="w-full lg:w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                
+                <div class="space-y-6">
+                    <!-- Data Generation -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="num-points" class="mr-2">Number of Points:</label>
+                                <input type="number" id="num-points" min="10" max="200" value="50" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="data-pattern" class="mr-2">Data Pattern:</label>
+                                <select id="data-pattern" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="linear">Linear</option>
+                                    <option value="quadratic" selected>Quadratic</option>
+                                    <option value="sinusoidal">Sinusoidal</option>
+                                    <option value="step">Step Function</option>
+                                    <option value="complex">Complex</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="noise-level" class="mr-2">Noise Level:</label>
+                                <input type="range" id="noise-level" min="0" max="3" step="0.1" value="1" class="w-40">
+                                <span id="noise-value" class="text-sm">1.0</span>
+                            </div>
+                            <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Random Forest Parameters -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Random Forest Parameters</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="num-trees" class="mr-2">Number of Trees:</label>
+                                <select id="num-trees" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="1">1</option>
+                                    <option value="3">3</option>
+                                    <option value="5" selected>5</option>
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="max-depth" class="mr-2">Max Tree Depth:</label>
+                                <select id="max-depth" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3" selected>3</option>
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="min-samples-split" class="mr-2">Min Samples to Split:</label>
+                                <select id="min-samples-split" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="2" selected>2</option>
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="max-features" class="mr-2">Max Features:</label>
+                                <select id="max-features" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="1" selected>1</option>
+                                </select>
+                            </div>
+                            <button id="fit-forest" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Fit Random Forest</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Visualization Options -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-individual-trees" class="w-4 h-4" checked>
+                                <label for="show-individual-trees">Show Individual Trees</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-true-curve" class="w-4 h-4" checked>
+                                <label for="show-true-curve">Show True Relationship</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-residuals" class="w-4 h-4">
+                                <label for="show-residuals">Show Residuals</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-decision-boundaries" class="w-4 h-4">
+                                <label for="show-decision-boundaries">Show Decision Boundaries</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status and Info -->
+                    <div id="regression-result" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h3 class="text-lg font-medium mb-2">Model Performance</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>True Relationship:</span>
+                                <span id="true-equation" class="font-mono">y = 0.5x² + 1</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>MSE (Mean Squared Error):</span>
+                                <span id="mse-value">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>R² Value:</span>
+                                <span id="r-squared">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Number of Trees:</span>
+                                <span id="current-trees">5</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Tree Depth:</span>
+                                <span id="current-depth">3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature Importance Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Feature Importance</h2>
+            <div class="w-full h-[200px]">
+                <svg id="feature-importance" class="w-full h-full" viewBox="0 0 1000 200"></svg>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Random Forest Regression Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>What is Random Forest Regression?</strong></p>
+                <p>Random Forest is an ensemble learning method that builds multiple decision trees and merges their predictions. 
+                For regression tasks, it averages the predictions from all trees to produce a final output.</p>
+                
+                <p><strong>Key Components:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Decision Trees:</strong> Each tree splits the data based on feature values to create homogeneous subgroups</li>
+                    <li><strong>Bootstrap Sampling:</strong> Each tree is trained on a random subset of the data with replacement</li>
+                    <li><strong>Feature Randomness:</strong> At each split, only a random subset of features is considered</li>
+                    <li><strong>Ensemble Averaging:</strong> Final prediction is the average of all individual tree predictions</li>
+                </ul>
+                
+                <p><strong>Hyperparameters:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Number of Trees:</strong> More trees generally improve performance but increase computation time</li>
+                    <li><strong>Max Depth:</strong> Controls how deep each tree can grow (deeper trees can model more complex patterns but may overfit)</li>
+                    <li><strong>Min Samples Split:</strong> Minimum number of samples required to split a node (helps control overfitting)</li>
+                    <li><strong>Max Features:</strong> Number of features to consider when looking for the best split</li>
+                </ul>
+                
+                <p><strong>Advantages:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Handles non-linear relationships well</li>
+                    <li>Robust to outliers and noise</li>
+                    <li>Provides feature importance measures</li>
+                    <li>Less prone to overfitting than individual decision trees</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .dashed-line {
+            border-top: 2px dashed;
+            height: 0;
+        }
+    </style>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const svg = document.getElementById('visualization');
+        const featureImportanceSvg = document.getElementById('feature-importance');
+        const generateDataBtn = document.getElementById('generate-data');
+        const fitForestBtn = document.getElementById('fit-forest');
+        const numPointsInput = document.getElementById('num-points');
+        const dataPatternSelect = document.getElementById('data-pattern');
+        const noiseLevelInput = document.getElementById('noise-level');
+        const noiseValueDisplay = document.getElementById('noise-value');
+        const numTreesSelect = document.getElementById('num-trees');
+        const maxDepthSelect = document.getElementById('max-depth');
+        const minSamplesSplitSelect = document.getElementById('min-samples-split');
+        const maxFeaturesSelect = document.getElementById('max-features');
+        const showIndividualTreesCheckbox = document.getElementById('show-individual-trees');
+        const showTrueCurveCheckbox = document.getElementById('show-true-curve');
+        const showResidualsCheckbox = document.getElementById('show-residuals');
+        const showDecisionBoundariesCheckbox = document.getElementById('show-decision-boundaries');
+        const trueEquationDisplay = document.getElementById('true-equation');
+        const mseValueDisplay = document.getElementById('mse-value');
+        const rSquaredDisplay = document.getElementById('r-squared');
+        const currentTreesDisplay = document.getElementById('current-trees');
+        const currentDepthDisplay = document.getElementById('current-depth');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 600;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Data visualization constants
+        const DATA_WIDTH = WIDTH - MARGIN * 2;
+        const DATA_HEIGHT = HEIGHT - MARGIN * 2;
+        const DATA_X = MARGIN;
+        const DATA_Y = MARGIN;
+        
+        // Feature importance visualization constants
+        const FI_HEIGHT = 200;
+        const FI_MARGIN = 30;
+        const FI_WIDTH = WIDTH - 2 * FI_MARGIN;
+        const FI_PLOT_HEIGHT = FI_HEIGHT - 2 * FI_MARGIN;
+        
+        // Data range - adjusted to prevent stacking at the edges
+        const X_MIN = 0;
+        const X_MAX = 10;
+        const Y_MIN = -5;
+        const Y_MAX = 15;
+        
+        // Colors
+        const DATA_POINT_COLOR = '#3B82F6'; // Blue
+        const FOREST_PREDICTION_COLOR = '#EF4444'; // Red
+        const TRUE_CURVE_COLOR = '#8B5CF6'; // Purple
+        const TREE_COLORS = [
+            'rgba(132, 204, 22, 0.4)', // Light green
+            'rgba(6, 182, 212, 0.4)',  // Light cyan
+            'rgba(249, 115, 22, 0.4)', // Light orange
+            'rgba(236, 72, 153, 0.4)', // Light pink
+            'rgba(168, 85, 247, 0.4)'  // Light purple
+        ];
+        const RESIDUAL_COLOR = '#84CC16'; // Green
+        const DECISION_BOUNDARY_COLOR = 'rgba(75, 85, 99, 0.3)'; // Gray
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and model parameters
+        let data = [];
+        let noiseLevel = 1.0;
+        let dataPattern = 'quadratic';
+        let numTrees = 5;
+        let maxDepth = 3;
+        let minSamplesSplit = 2;
+        let maxFeatures = 1;
+        let trees = [];
+        let featureImportance = {};
+        
+        // Parameters for the true data patterns
+        const dataPatternParams = {
+            linear: { a: 2, b: 1 }, // y = ax + b
+            quadratic: { a: 0.5, b: -2, c: 5 }, // y = ax^2 + bx + c
+            sinusoidal: { amp: 4, freq: 0.5, phase: 0, offset: 5 }, // y = amp * sin(freq * x + phase) + offset
+            step: { threshold: 5, low: 3, high: 8 }, // y = low if x < threshold else high
+            complex: { a: 0.05, b: -0.6, c: 1, d: 0, e: 5 } // y = ax^4 + bx^3 + cx^2 + dx + e
+        };
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            svg.innerHTML = '';
+            featureImportanceSvg.innerHTML = '';
+            
+            // Add background for main visualization
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            svg.appendChild(background);
+            
+            // Add grid lines for data visualization
+            const numVerticalLines = 10;
+            const numHorizontalLines = 20;
+            const verticalSpacing = DATA_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = DATA_X + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                svg.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', DATA_X);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', DATA_X + DATA_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                svg.appendChild(hLine);
+            }
+            
+            // Add axes for data visualization
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', DATA_X);
+            xAxis.setAttribute('y1', mapY(0)); // Draw x-axis at y=0
+            xAxis.setAttribute('x2', DATA_X + DATA_WIDTH);
+            xAxis.setAttribute('y2', mapY(0));
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', DATA_X);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', DATA_X);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 30);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'X';
+            svg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', DATA_X - 30);
+            yLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, ${DATA_X - 30}, ${DATA_Y + DATA_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Y';
+            svg.appendChild(yLabel);
+            
+            // Add x-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const x = mapX(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', mapY(0));
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', mapY(0) + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', mapY(0) + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Add y-axis ticks and labels (with extended range)
+            for (let i = Y_MIN; i <= Y_MAX; i += 5) {
+                const y = mapY(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', DATA_X);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', DATA_X - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', DATA_X - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Initialize feature importance visualization
+            initFeatureImportanceSVG();
+        }
+        
+        // Initialize the feature importance visualization
+        function initFeatureImportanceSVG() {
+            // Clear existing SVG
+            featureImportanceSvg.innerHTML = '';
+            
+            // Add background
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', FI_HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            featureImportanceSvg.appendChild(background);
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', FI_MARGIN);
+            xAxis.setAttribute('y1', FI_HEIGHT - FI_MARGIN);
+            xAxis.setAttribute('x2', WIDTH - FI_MARGIN);
+            xAxis.setAttribute('y2', FI_HEIGHT - FI_MARGIN);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            featureImportanceSvg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', FI_MARGIN);
+            yAxis.setAttribute('y1', FI_MARGIN);
+            yAxis.setAttribute('x2', FI_MARGIN);
+            yAxis.setAttribute('y2', FI_HEIGHT - FI_MARGIN);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            featureImportanceSvg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', WIDTH / 2);
+            xLabel.setAttribute('y', FI_HEIGHT - 5);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Feature';
+            featureImportanceSvg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', 15);
+            yLabel.setAttribute('y', FI_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, 15, ${FI_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Importance';
+            featureImportanceSvg.appendChild(yLabel);
+            
+            // Add title
+            const title = document.createElementNS(svgNS, 'text');
+            title.setAttribute('x', WIDTH / 2);
+            title.setAttribute('y', FI_MARGIN / 2);
+            title.setAttribute('text-anchor', 'middle');
+            title.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            title.setAttribute('font-weight', 'bold');
+            title.textContent = 'Feature Importance';
+            featureImportanceSvg.appendChild(title);
+            
+            // Add placeholder text when no model is fit
+            const placeholderText = document.createElementNS(svgNS, 'text');
+            placeholderText.setAttribute('x', WIDTH / 2);
+            placeholderText.setAttribute('y', FI_HEIGHT / 2);
+            placeholderText.setAttribute('text-anchor', 'middle');
+            placeholderText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            placeholderText.setAttribute('font-style', 'italic');
+            placeholderText.setAttribute('class', 'feature-importance-placeholder');
+            placeholderText.textContent = 'Fit a model to see feature importance';
+            featureImportanceSvg.appendChild(placeholderText);
+        }
+        
+        // Generate synthetic data 
+        function generateData() {
+            const numPoints = parseInt(numPointsInput.value);
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            dataPattern = dataPatternSelect.value;
+            data = [];
+            
+            // Update the noise value display
+            noiseValueDisplay.textContent = noiseLevel.toFixed(1);
+            
+            // Update true equation display based on pattern
+            updateTrueEquationDisplay();
+            
+            // Function to add noise
+            const addNoise = (baseValue) => {
+                return baseValue + (Math.random() * 2 - 1) * noiseLevel;
+            };
+            
+            // Generate data based on selected pattern
+            for (let i = 0; i < numPoints; i++) {
+                let x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                let y = getTrueY(x);
+                
+                // Add noise
+                y = addNoise(y);
+                
+                // Store the data point
+                data.push({ x, y });
+            }
+            
+            // Sort data by x for better visualization
+            data.sort((a, b) => a.x - b.x);
+            
+            // Reset model
+            trees = [];
+            featureImportance = {};
+            mseValueDisplay.textContent = '-';
+            rSquaredDisplay.textContent = '-';
+            
+            // Visualize data
+            visualizeData();
+            
+            // Show true curve if checkbox is checked
+            if (showTrueCurveCheckbox.checked) {
+                showTrueCurve();
+            }
+            
+            // Reset feature importance display
+            resetFeatureImportance();
+        }
+        
+        // Get y value for the true relationship at a given x
+        function getTrueY(x) {
+            switch (dataPattern) {
+                case 'linear':
+                    const { a, b } = dataPatternParams.linear;
+                    return a * x + b;
+                    
+                case 'quadratic':
+                    const q = dataPatternParams.quadratic;
+                    return q.a * x * x + q.b * x + q.c;
+                    
+                case 'sinusoidal':
+                    const s = dataPatternParams.sinusoidal;
+                    return s.amp * Math.sin(s.freq * x + s.phase) + s.offset;
+                    
+                case 'step':
+                    const step = dataPatternParams.step;
+                    return x < step.threshold ? step.low : step.high;
+                    
+                case 'complex':
+                    const cx = dataPatternParams.complex;
+                    return cx.a * Math.pow(x, 4) + cx.b * Math.pow(x, 3) + cx.c * Math.pow(x, 2) + cx.d * x + cx.e;
+                    
+                default:
+                    return 0;
+            }
+        }
+        
+        // Update the true equation display based on pattern
+        function updateTrueEquationDisplay() {
+            switch (dataPattern) {
+                case 'linear':
+                    const { a, b } = dataPatternParams.linear;
+                    trueEquationDisplay.textContent = `y = ${a}x + ${b}`;
+                    break;
+                    
+                case 'quadratic':
+                    const q = dataPatternParams.quadratic;
+                    trueEquationDisplay.textContent = `y = ${q.a}x² + ${q.b}x + ${q.c}`;
+                    break;
+                    
+                case 'sinusoidal':
+                    const s = dataPatternParams.sinusoidal;
+                    trueEquationDisplay.textContent = `y = ${s.amp}sin(${s.freq}x) + ${s.offset}`;
+                    break;
+                    
+                case 'step':
+                    const step = dataPatternParams.step;
+                    trueEquationDisplay.textContent = `y = ${step.low} if x < ${step.threshold}, else ${step.high}`;
+                    break;
+                    
+                case 'complex':
+                    const cx = dataPatternParams.complex;
+                    trueEquationDisplay.textContent = `y = ${cx.a}x⁴ + ${cx.b}x³ + ${cx.c}x² + ${cx.d}x + ${cx.e}`;
+                    break;
+                    
+                default:
+                    trueEquationDisplay.textContent = 'y = ?';
+            }
+        }
+        
+        // Map data coordinates to SVG coordinates
+        function mapX(x) {
+            return DATA_X + ((x - X_MIN) / (X_MAX - X_MIN)) * DATA_WIDTH;
+        }
+        
+        function mapY(y) {
+            return DATA_Y + DATA_HEIGHT - ((y - Y_MIN) / (Y_MAX - Y_MIN)) * DATA_HEIGHT;
+        }
+        
+        // Visualize the data points
+        function visualizeData() {
+            // Remove existing data points
+            const existingPoints = svg.querySelectorAll('.data-point');
+            existingPoints.forEach(point => point.remove());
+            
+            // Remove forest prediction and individual trees
+            clearForestPrediction();
+            
+            // Add new data points
+            data.forEach((point, index) => {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', mapX(point.x));
+                circle.setAttribute('cy', mapY(point.y));
+                circle.setAttribute('r', '5');
+                circle.setAttribute('fill', DATA_POINT_COLOR);
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                svg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(20),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1500
+            });
+        }
+        
+        // Clear forest prediction
+        function clearForestPrediction() {
+            // Remove forest prediction curve
+            const existingCurve = svg.querySelector('.forest-prediction');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            // Remove individual tree predictions
+            const existingTrees = svg.querySelectorAll('.tree-prediction');
+            existingTrees.forEach(tree => tree.remove());
+            
+            // Remove true curve
+            const trueCurve = svg.querySelector('.true-curve');
+            if (trueCurve) {
+                trueCurve.remove();
+            }
+            
+            // Remove residuals
+            const existingResiduals = svg.querySelectorAll('.residual');
+            existingResiduals.forEach(r => r.remove());
+            
+            // Remove decision boundaries
+            const existingBoundaries = svg.querySelectorAll('.decision-boundary');
+            existingBoundaries.forEach(b => b.remove());
+        }
+        
+        // Show the true relationship curve
+        function showTrueCurve() {
+            // Remove existing true curve
+            const existingCurve = svg.querySelector('.true-curve');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            // Create path data for the true relationship
+            let pathData = '';
+            for (let x = X_MIN; x <= X_MAX; x += 0.1) {
+                const y = getTrueY(x);
+                
+                if (pathData === '') {
+                    pathData = `M ${mapX(x)} ${mapY(y)}`;
+                } else {
+                    pathData += ` L ${mapX(x)} ${mapY(y)}`;
+                }
+            }
+            
+            // Add the true relationship path
+            const trueCurve = document.createElementNS(svgNS, 'path');
+            trueCurve.setAttribute('d', pathData);
+            trueCurve.setAttribute('fill', 'none');
+            trueCurve.setAttribute('stroke', TRUE_CURVE_COLOR);
+            trueCurve.setAttribute('stroke-width', '2');
+            trueCurve.setAttribute('stroke-dasharray', '5,5');
+            trueCurve.setAttribute('class', 'true-curve');
+            
+            // Add animation
+            trueCurve.style.opacity = '0';
+            
+            svg.appendChild(trueCurve);
+            
+            // Animate the appearance of the true curve
+            anime({
+                targets: '.true-curve',
+                opacity: 0.8,
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+        }
+        
+        // Decision Tree Node class
+        class TreeNode {
+            constructor() {
+                this.feature = null; // Which feature to split on
+                this.threshold = null; // Threshold value for the split
+                this.left = null; // Left child node
+                this.right = null; // Right child node
+                this.value = null; // Prediction value if this is a leaf node
+                this.samples = 0; // Number of samples in this node
+                this.impurity = 0; // Variance of the target values
+                this.improvement = 0; // Impurity improvement from this split
+            }
+            
+            // Check if this is a leaf node
+            isLeaf() {
+                return this.value !== null;
+            }
+            
+            // Predict value for a single sample
+            predict(sample) {
+                if (this.isLeaf()) {
+                    return this.value;
+                }
+                
+                if (sample[this.feature] <= this.threshold) {
+                    return this.left.predict(sample);
+                } else {
+                    return this.right.predict(sample);
+                }
+            }
+        }
+        
+        // Decision Tree class
+        class DecisionTree {
+            constructor(maxDepth = 3, minSamplesSplit = 2, maxFeatures = 1) {
+                this.maxDepth = maxDepth;
+                this.minSamplesSplit = minSamplesSplit;
+                this.maxFeatures = maxFeatures;
+                this.root = null;
+                this.featureImportance = {};
+            }
+            
+            // Fit the tree to the data
+            fit(X, y) {
+                // Initialize feature importance
+                for (let i = 0; i < X[0].length; i++) {
+                    this.featureImportance[i] = 0;
+                }
+                
+                // Build the tree
+                this.root = this._buildTree(X, y, 0);
+                
+                // Normalize feature importance
+                const totalImportance = Object.values(this.featureImportance).reduce((a, b) => a + b, 0);
+                if (totalImportance > 0) {
+                    for (const feature in this.featureImportance) {
+                        this.featureImportance[feature] /= totalImportance;
+                    }
+                }
+                
+                return this;
+            }
+            
+            // Recursive function to build the tree
+            _buildTree(X, y, depth) {
+                const node = new TreeNode();
+                node.samples = y.length;
+                
+                // Calculate variance of target values
+                const mean = y.reduce((a, b) => a + b, 0) / y.length;
+                node.impurity = y.reduce((a, b) => a + (b - mean) ** 2, 0) / y.length;
+                
+                // Check stopping criteria
+                if (depth >= this.maxDepth || y.length < this.minSamplesSplit || this._isConstant(y)) {
+                    node.value = mean;
+                    return node;
+                }
+                
+                // Find best split
+                const bestSplit = this._findBestSplit(X, y);
+                
+                // If no improvement, make this a leaf node
+                if (!bestSplit.improvement) {
+                    node.value = mean;
+                    return node;
+                }
+                
+                // Set node properties
+                node.feature = bestSplit.feature;
+                node.threshold = bestSplit.threshold;
+                node.improvement = bestSplit.improvement;
+                
+                // Update feature importance
+                this.featureImportance[bestSplit.feature] += bestSplit.improvement * node.samples;
+                
+                // Split the data
+                const [leftX, leftY, rightX, rightY] = this._splitData(X, y, bestSplit.feature, bestSplit.threshold);
+                
+                // Build subtrees
+                node.left = this._buildTree(leftX, leftY, depth + 1);
+                node.right = this._buildTree(rightX, rightY, depth + 1);
+                
+                return node;
+            }
+            
+            // Check if all target values are constant
+            _isConstant(y) {
+                if (y.length <= 1) return true;
+                const firstVal = y[0];
+                return y.every(val => val === firstVal);
+            }
+            
+            // Find the best split for the data
+            _findBestSplit(X, y) {
+                let bestSplit = {
+                    feature: null,
+                    threshold: null,
+                    improvement: 0
+                };
+                
+                // Calculate the variance before the split
+                const n = y.length;
+                const mean = y.reduce((a, b) => a + b, 0) / n;
+                const totalVariance = y.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
+                
+                // Consider only a random subset of features
+                const features = Array.from({ length: X[0].length }, (_, i) => i);
+                const shuffledFeatures = this._shuffleArray(features).slice(0, this.maxFeatures);
+                
+                // Try each feature
+                for (const feature of shuffledFeatures) {
+                    // Get unique values for this feature
+                    const values = [...new Set(X.map(x => x[feature]))].sort((a, b) => a - b);
+                    
+                    // Try each threshold
+                    for (let i = 0; i < values.length - 1; i++) {
+                        const threshold = (values[i] + values[i + 1]) / 2;
+                        
+                        // Split the data
+                        const [leftX, leftY, rightX, rightY] = this._splitData(X, y, feature, threshold);
+                        
+                        // Skip if one of the splits is empty
+                        if (leftY.length === 0 || rightY.length === 0) continue;
+                        
+                        // Calculate the weighted variance after the split
+                        const leftMean = leftY.reduce((a, b) => a + b, 0) / leftY.length;
+                        const rightMean = rightY.reduce((a, b) => a + b, 0) / rightY.length;
+                        
+                        const leftVariance = leftY.reduce((a, b) => a + (b - leftMean) ** 2, 0) / leftY.length;
+                        const rightVariance = rightY.reduce((a, b) => a + (b - rightMean) ** 2, 0) / rightY.length;
+                        
+                        const weightedVariance = (leftY.length / n) * leftVariance + (rightY.length / n) * rightVariance;
+                        
+                        // Calculate the improvement
+                        const improvement = totalVariance - weightedVariance;
+                        
+                        // Update best split if this is better
+                        if (improvement > bestSplit.improvement) {
+                            bestSplit = {
+                                feature,
+                                threshold,
+                                improvement
+                            };
+                        }
+                    }
+                }
+                
+                return bestSplit;
+            }
+            
+            // Split the data based on a feature and threshold
+            _splitData(X, y, feature, threshold) {
+                const leftX = [];
+                const leftY = [];
+                const rightX = [];
+                const rightY = [];
+                
+                for (let i = 0; i < X.length; i++) {
+                    if (X[i][feature] <= threshold) {
+                        leftX.push(X[i]);
+                        leftY.push(y[i]);
+                    } else {
+                        rightX.push(X[i]);
+                        rightY.push(y[i]);
+                    }
+                }
+                
+                return [leftX, leftY, rightX, rightY];
+            }
+            
+            // Shuffle an array (Fisher-Yates algorithm)
+            _shuffleArray(array) {
+                const result = [...array];
+                for (let i = result.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [result[i], result[j]] = [result[j], result[i]];
+                }
+                return result;
+            }
+            
+            // Predict values for new data
+            predict(X) {
+                return X.map(x => this.root.predict(x));
+            }
+            
+            // Get decision boundaries for visualization
+            getDecisionBoundaries() {
+                const boundaries = [];
+                this._collectBoundaries(this.root, 0, 10, boundaries);
+                return boundaries;
+            }
+            
+            // Collect decision boundaries recursively
+            _collectBoundaries(node, minX, maxX, boundaries, parentValue = null) {
+                if (node.isLeaf()) {
+                    return;
+                }
+                
+                // Only add boundaries for x feature (feature 0)
+                if (node.feature === 0) {
+                    boundaries.push({
+                        x: node.threshold,
+                        minY: Y_MIN,
+                        maxY: Y_MAX,
+                        leftValue: node.left.isLeaf() ? node.left.value : parentValue,
+                        rightValue: node.right.isLeaf() ? node.right.value : parentValue
+                    });
+                }
+                
+                // Recursively collect boundaries from child nodes
+                if (!node.left.isLeaf()) {
+                    const leftValue = this._findLeafValue(node.left);
+                    this._collectBoundaries(node.left, minX, node.threshold, boundaries, leftValue);
+                }
+                
+                if (!node.right.isLeaf()) {
+                    const rightValue = this._findLeafValue(node.right);
+                    this._collectBoundaries(node.right, node.threshold, maxX, boundaries, rightValue);
+                }
+            }
+            
+            // Find a leaf value in a subtree (for coloring)
+            _findLeafValue(node) {
+                if (node.isLeaf()) {
+                    return node.value;
+                }
+                return this._findLeafValue(node.left); // Just pick a leaf
+            }
+        }
+        
+        // Random Forest class
+        class RandomForest {
+            constructor(numTrees = 5, maxDepth = 3, minSamplesSplit = 2, maxFeatures = 1) {
+                this.numTrees = numTrees;
+                this.maxDepth = maxDepth;
+                this.minSamplesSplit = minSamplesSplit;
+                this.maxFeatures = maxFeatures;
+                this.trees = [];
+                this.featureImportance = {};
+            }
+            
+            // Fit the forest to the data
+            fit(X, y) {
+                // Initialize feature importance
+                for (let i = 0; i < X[0].length; i++) {
+                    this.featureImportance[i] = 0;
+                }
+                
+                // Build each tree with bootstrap sampling
+                for (let i = 0; i < this.numTrees; i++) {
+                    // Bootstrap sampling
+                    const [bootX, bootY] = this._bootstrapSample(X, y);
+                    
+                    // Create and fit a new tree
+                    const tree = new DecisionTree(this.maxDepth, this.minSamplesSplit, this.maxFeatures);
+                    tree.fit(bootX, bootY);
+                    
+                    // Add tree to the forest
+                    this.trees.push(tree);
+                    
+                    // Accumulate feature importance
+                    for (const feature in tree.featureImportance) {
+                        this.featureImportance[feature] += tree.featureImportance[feature];
+                    }
+                }
+                
+                // Average feature importance across trees
+                for (const feature in this.featureImportance) {
+                    this.featureImportance[feature] /= this.numTrees;
+                }
+                
+                return this;
+            }
+            
+            // Create a bootstrap sample with replacement
+            _bootstrapSample(X, y) {
+                const n = X.length;
+                const bootX = [];
+                const bootY = [];
+                
+                for (let i = 0; i < n; i++) {
+                    const idx = Math.floor(Math.random() * n);
+                    bootX.push(X[idx]);
+                    bootY.push(y[idx]);
+                }
+                
+                return [bootX, bootY];
+            }
+            
+            // Predict values for new data (average of tree predictions)
+            predict(X) {
+                // Get predictions from each tree
+                const treePredictions = this.trees.map(tree => tree.predict(X));
+                
+                // Average the predictions
+                const predictions = [];
+                for (let i = 0; i < X.length; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < this.numTrees; j++) {
+                        sum += treePredictions[j][i];
+                    }
+                    predictions.push(sum / this.numTrees);
+                }
+                
+                return predictions;
+            }
+            
+            // Get individual tree predictions
+            getTreePredictions(X) {
+                return this.trees.map(tree => tree.predict(X));
+            }
+            
+            // Get decision boundaries from all trees
+            getAllDecisionBoundaries() {
+                const allBoundaries = [];
+                for (let i = 0; i < this.trees.length; i++) {
+                    const treeBoundaries = this.trees[i].getDecisionBoundaries();
+                    allBoundaries.push(treeBoundaries);
+                }
+                return allBoundaries;
+            }
+        }
+        
+        // Fit Random Forest Regression model
+        function fitRandomForest() {
+            if (data.length === 0) return;
+            
+            // Get parameters from UI
+            numTrees = parseInt(numTreesSelect.value);
+            maxDepth = parseInt(maxDepthSelect.value);
+            minSamplesSplit = parseInt(minSamplesSplitSelect.value);
+            maxFeatures = parseInt(maxFeaturesSelect.value);
+            
+            // Update parameter displays
+            currentTreesDisplay.textContent = numTrees;
+            currentDepthDisplay.textContent = maxDepth;
+            
+            // Prepare data for the model
+            const X = data.map(point => [point.x]); // For now, just use x as the feature
+            const y = data.map(point => point.y);
+            
+            // Create and fit the random forest model
+            const forest = new RandomForest(numTrees, maxDepth, minSamplesSplit, maxFeatures);
+            forest.fit(X, y);
+            
+            // Store the trees and feature importance
+            trees = forest.trees;
+            featureImportance = forest.featureImportance;
+            
+            // Calculate predictions and metrics
+            const predictions = forest.predict(X);
+            const mse = calculateMSE(y, predictions);
+            const r2 = calculateR2(y, predictions);
+            
+            // Update displays
+            mseValueDisplay.textContent = mse.toFixed(4);
+            rSquaredDisplay.textContent = r2.toFixed(4);
+            
+            // Draw forest prediction
+            drawForestPrediction(forest);
+            
+            // Draw individual trees if enabled
+            if (showIndividualTreesCheckbox.checked) {
+                drawIndividualTrees(forest);
+            }
+            
+            // Draw residuals if enabled
+            if (showResidualsCheckbox.checked) {
+                drawResiduals(y, predictions);
+            }
+            
+            // Draw decision boundaries if enabled
+            if (showDecisionBoundariesCheckbox.checked) {
+                drawDecisionBoundaries(forest);
+            }
+            
+            // Update feature importance visualization
+            updateFeatureImportance();
+        }
+        
+        // Calculate Mean Squared Error
+        function calculateMSE(actual, predicted) {
+            let sum = 0;
+            for (let i = 0; i < actual.length; i++) {
+                sum += (actual[i] - predicted[i]) ** 2;
+            }
+            return sum / actual.length;
+        }
+        
+        // Calculate R-squared
+        function calculateR2(actual, predicted) {
+            const mean = actual.reduce((a, b) => a + b, 0) / actual.length;
+            
+            let totalSS = 0;
+            let residualSS = 0;
+            
+            for (let i = 0; i < actual.length; i++) {
+                totalSS += (actual[i] - mean) ** 2;
+                residualSS += (actual[i] - predicted[i]) ** 2;
+            }
+            
+            return 1 - (residualSS / totalSS);
+        }
+        
+        // Draw forest prediction curve
+        function drawForestPrediction(forest) {
+            // Clear existing forest prediction
+            const existingCurve = svg.querySelector('.forest-prediction');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            // Generate x-values for prediction
+            const numPoints = 100;
+            const step = (X_MAX - X_MIN) / numPoints;
+            
+            // Prepare data for prediction
+            const xValues = [];
+            for (let i = 0; i <= numPoints; i++) {
+                xValues.push(X_MIN + i * step);
+            }
+            
+            const X = xValues.map(x => [x]);
+            const predictions = forest.predict(X);
+            
+            // Create path data for the prediction curve
+            let pathData = '';
+            for (let i = 0; i < xValues.length; i++) {
+                const x = xValues[i];
+                const y = predictions[i];
+                
+                if (pathData === '') {
+                    pathData = `M ${mapX(x)} ${mapY(y)}`;
+                } else {
+                    pathData += ` L ${mapX(x)} ${mapY(y)}`;
+                }
+            }
+            
+            // Add the forest prediction path
+            const forestCurve = document.createElementNS(svgNS, 'path');
+            forestCurve.setAttribute('d', pathData);
+            forestCurve.setAttribute('fill', 'none');
+            forestCurve.setAttribute('stroke', FOREST_PREDICTION_COLOR);
+            forestCurve.setAttribute('stroke-width', '3');
+            forestCurve.setAttribute('class', 'forest-prediction');
+            
+            // Add animation
+            forestCurve.style.opacity = '0';
+            
+            svg.appendChild(forestCurve);
+            
+            // Animate the appearance of the forest prediction
+            anime({
+                targets: '.forest-prediction',
+                opacity: 1,
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 1500
+            });
+        }
+        
+        // Draw individual tree predictions
+        function drawIndividualTrees(forest) {
+            // Clear existing individual tree predictions
+            const existingTrees = svg.querySelectorAll('.tree-prediction');
+            existingTrees.forEach(tree => tree.remove());
+            
+            // Generate x-values for prediction
+            const numPoints = 100;
+            const step = (X_MAX - X_MIN) / numPoints;
+            
+            // Prepare data for prediction
+            const xValues = [];
+            for (let i = 0; i <= numPoints; i++) {
+                xValues.push(X_MIN + i * step);
+            }
+            
+            const X = xValues.map(x => [x]);
+            const treePredictions = forest.getTreePredictions(X);
+            
+            // Draw each tree prediction (up to 5 trees)
+            for (let t = 0; t < Math.min(treePredictions.length, TREE_COLORS.length); t++) {
+                // Create path data for this tree's prediction
+                let pathData = '';
+                for (let i = 0; i < xValues.length; i++) {
+                    const x = xValues[i];
+                    const y = treePredictions[t][i];
+                    
+                    if (pathData === '') {
+                        pathData = `M ${mapX(x)} ${mapY(y)}`;
+                    } else {
+                        pathData += ` L ${mapX(x)} ${mapY(y)}`;
+                    }
+                }
+                
+                // Add the tree prediction path
+                const treeCurve = document.createElementNS(svgNS, 'path');
+                treeCurve.setAttribute('d', pathData);
+                treeCurve.setAttribute('fill', 'none');
+                treeCurve.setAttribute('stroke', TREE_COLORS[t % TREE_COLORS.length]);
+                treeCurve.setAttribute('stroke-width', '2');
+                treeCurve.setAttribute('class', 'tree-prediction');
+                treeCurve.setAttribute('data-tree', t);
+                
+                // Add animation
+                treeCurve.style.opacity = '0';
+                
+                svg.appendChild(treeCurve);
+            }
+            
+            // Animate the appearance of the tree predictions
+            anime({
+                targets: '.tree-prediction',
+                opacity: 1,
+                delay: anime.stagger(200),
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+        }
+        
+        // Draw residuals
+        function drawResiduals(actual, predicted) {
+            // Clear existing residuals
+            const existingResiduals = svg.querySelectorAll('.residual');
+            existingResiduals.forEach(r => r.remove());
+            
+            // Draw a residual for each data point
+            for (let i = 0; i < data.length; i++) {
+                const x = data[i].x;
+                const actualY = data[i].y;
+                const predictedY = predicted[i];
+                
+                const residual = document.createElementNS(svgNS, 'line');
+                residual.setAttribute('x1', mapX(x));
+                residual.setAttribute('y1', mapY(actualY));
+                residual.setAttribute('x2', mapX(x));
+                residual.setAttribute('y2', mapY(predictedY));
+                residual.setAttribute('stroke', RESIDUAL_COLOR);
+                residual.setAttribute('stroke-width', '1.5');
+                residual.setAttribute('stroke-dasharray', '3,3');
+                residual.setAttribute('class', 'residual');
+                
+                // Add animation
+                residual.style.opacity = '0';
+                
+                svg.appendChild(residual);
+            }
+            
+            // Animate the appearance of residuals
+            anime({
+                targets: '.residual',
+                opacity: 0.7,
+                delay: anime.stagger(10),
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+        }
+        
+        // Draw decision boundaries
+        function drawDecisionBoundaries(forest) {
+            // Clear existing boundaries
+            const existingBoundaries = svg.querySelectorAll('.decision-boundary');
+            existingBoundaries.forEach(b => b.remove());
+            
+            // Get decision boundaries from all trees
+            const allBoundaries = forest.getAllDecisionBoundaries();
+            
+            // Draw each boundary
+            for (let t = 0; t < allBoundaries.length; t++) {
+                const treeBoundaries = allBoundaries[t];
+                
+                for (let i = 0; i < treeBoundaries.length; i++) {
+                    const boundary = treeBoundaries[i];
+                    
+                    // Draw the boundary line
+                    const boundaryLine = document.createElementNS(svgNS, 'line');
+                    boundaryLine.setAttribute('x1', mapX(boundary.x));
+                    boundaryLine.setAttribute('y1', mapY(boundary.minY));
+                    boundaryLine.setAttribute('x2', mapX(boundary.x));
+                    boundaryLine.setAttribute('y2', mapY(boundary.maxY));
+                    boundaryLine.setAttribute('stroke', DECISION_BOUNDARY_COLOR);
+                    boundaryLine.setAttribute('stroke-width', '1');
+                    boundaryLine.setAttribute('class', 'decision-boundary');
+                    boundaryLine.setAttribute('data-tree', t);
+                    
+                    // Add animation
+                    boundaryLine.style.opacity = '0';
+                    
+                    svg.appendChild(boundaryLine);
+                }
+            }
+            
+            // Animate the appearance of decision boundaries
+            anime({
+                targets: '.decision-boundary',
+                opacity: 1,
+                delay: anime.stagger(100, { grid: [allBoundaries.length, 10], from: 'center' }),
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+        }
+        
+        // Reset feature importance visualization
+        function resetFeatureImportance() {
+            // Clear existing bars
+            const existingBars = featureImportanceSvg.querySelectorAll('.feature-bar');
+            existingBars.forEach(bar => bar.remove());
+            
+            // Show placeholder text
+            const placeholderText = featureImportanceSvg.querySelector('.feature-importance-placeholder');
+            if (!placeholderText) {
+                const newPlaceholder = document.createElementNS(svgNS, 'text');
+                newPlaceholder.setAttribute('x', WIDTH / 2);
+                newPlaceholder.setAttribute('y', FI_HEIGHT / 2);
+                newPlaceholder.setAttribute('text-anchor', 'middle');
+                newPlaceholder.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                newPlaceholder.setAttribute('font-style', 'italic');
+                newPlaceholder.setAttribute('class', 'feature-importance-placeholder');
+                newPlaceholder.textContent = 'Fit a model to see feature importance';
+                featureImportanceSvg.appendChild(newPlaceholder);
+            }
+        }
+        
+        // Update feature importance visualization
+        function updateFeatureImportance() {
+            // Clear existing visualization
+            const existingBars = featureImportanceSvg.querySelectorAll('.feature-bar');
+            existingBars.forEach(bar => bar.remove());
+            
+            // Remove placeholder text
+            const placeholderText = featureImportanceSvg.querySelector('.feature-importance-placeholder');
+            if (placeholderText) {
+                placeholderText.remove();
+            }
+            
+            // Skip if no feature importance data
+            if (Object.keys(featureImportance).length === 0) return;
+            
+            // Set up dimensions
+            const barWidth = 60;
+            const spacing = 20;
+            const features = Object.keys(featureImportance).sort((a, b) => a - b);
+            
+            // Get maximum importance for scaling
+            const maxImportance = Math.max(...Object.values(featureImportance));
+            
+            // Draw bars for each feature
+            features.forEach((feature, i) => {
+                const importance = featureImportance[feature];
+                const barHeight = (importance / maxImportance) * (FI_PLOT_HEIGHT - 40);
+                
+                const x = FI_MARGIN + 100 + i * (barWidth + spacing);
+                const y = FI_HEIGHT - FI_MARGIN - barHeight;
+                
+                // Draw bar
+                const bar = document.createElementNS(svgNS, 'rect');
+                bar.setAttribute('x', x);
+                bar.setAttribute('y', y);
+                bar.setAttribute('width', barWidth);
+                bar.setAttribute('height', barHeight);
+                bar.setAttribute('fill', FOREST_PREDICTION_COLOR);
+                bar.setAttribute('class', 'feature-bar');
+                
+                // Add animation
+                bar.style.opacity = '0';
+                bar.style.height = '0';
+                bar.style.y = FI_HEIGHT - FI_MARGIN;
+                
+                featureImportanceSvg.appendChild(bar);
+                
+                // Add feature label
+                const featureLabel = document.createElementNS(svgNS, 'text');
+                featureLabel.setAttribute('x', x + barWidth / 2);
+                featureLabel.setAttribute('y', FI_HEIGHT - FI_MARGIN + 20);
+                featureLabel.setAttribute('text-anchor', 'middle');
+                featureLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                featureLabel.setAttribute('class', 'feature-label');
+                featureLabel.textContent = feature === '0' ? 'X' : `X^${parseInt(feature) + 1}`;
+                featureImportanceSvg.appendChild(featureLabel);
+                
+                // Add importance value
+                const valueLabel = document.createElementNS(svgNS, 'text');
+                valueLabel.setAttribute('x', x + barWidth / 2);
+                valueLabel.setAttribute('y', y - 5);
+                valueLabel.setAttribute('text-anchor', 'middle');
+                valueLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                valueLabel.setAttribute('font-size', '12');
+                valueLabel.setAttribute('class', 'feature-bar');
+                valueLabel.textContent = importance.toFixed(2);
+                featureImportanceSvg.appendChild(valueLabel);
+            });
+            
+            // Add feature importance explanation
+            const importanceExplanation = document.createElementNS(svgNS, 'text');
+            importanceExplanation.setAttribute('x', FI_MARGIN + 50);
+            importanceExplanation.setAttribute('y', FI_MARGIN + 20);
+            importanceExplanation.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            importanceExplanation.setAttribute('class', 'feature-explanation');
+            importanceExplanation.textContent = 'Feature Importance (higher = more influential in prediction)';
+            featureImportanceSvg.appendChild(importanceExplanation);
+            
+            // Animate bars
+            anime({
+                targets: '.feature-bar',
+                opacity: 1,
+                height: (el) => el.getAttribute('height'),
+                y: (el) => el.getAttribute('y'),
+                delay: anime.stagger(100),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1500
+            });
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        fitForestBtn.addEventListener('click', fitRandomForest);
+        
+        noiseLevelInput.addEventListener('input', () => {
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            noiseValueDisplay.textContent = noiseLevel.toFixed(1);
+        });
+        
+        numTreesSelect.addEventListener('change', () => {
+            numTrees = parseInt(numTreesSelect.value);
+            currentTreesDisplay.textContent = numTrees;
+        });
+        
+        maxDepthSelect.addEventListener('change', () => {
+            maxDepth = parseInt(maxDepthSelect.value);
+            currentDepthDisplay.textContent = maxDepth;
+        });
+        
+        minSamplesSplitSelect.addEventListener('change', () => {
+            minSamplesSplit = parseInt(minSamplesSplitSelect.value);
+        });
+        
+        maxFeaturesSelect.addEventListener('change', () => {
+            maxFeatures = parseInt(maxFeaturesSelect.value);
+        });
+        
+        showIndividualTreesCheckbox.addEventListener('change', () => {
+            if (trees.length === 0) return;
+            
+            if (showIndividualTreesCheckbox.checked) {
+                // Create forest object to get predictions
+                const forest = new RandomForest(numTrees, maxDepth, minSamplesSplit, maxFeatures);
+                forest.trees = trees;
+                
+                drawIndividualTrees(forest);
+            } else {
+                const existingTrees = svg.querySelectorAll('.tree-prediction');
+                existingTrees.forEach(tree => tree.remove());
+            }
+        });
+        
+        showTrueCurveCheckbox.addEventListener('change', () => {
+            if (showTrueCurveCheckbox.checked) {
+                showTrueCurve();
+            } else {
+                const trueCurve = svg.querySelector('.true-curve');
+                if (trueCurve) {
+                    trueCurve.remove();
+                }
+            }
+        });
+        
+        showResidualsCheckbox.addEventListener('change', () => {
+            if (trees.length === 0) return;
+            
+            if (showResidualsCheckbox.checked) {
+                // Create forest object to get predictions
+                const forest = new RandomForest(numTrees, maxDepth, minSamplesSplit, maxFeatures);
+                forest.trees = trees;
+                
+                // Get predictions for data points
+                const X = data.map(point => [point.x]);
+                const y = data.map(point => point.y);
+                const predictions = forest.predict(X);
+                
+                drawResiduals(y, predictions);
+            } else {
+                const existingResiduals = svg.querySelectorAll('.residual');
+                existingResiduals.forEach(r => r.remove());
+            }
+        });
+        
+        showDecisionBoundariesCheckbox.addEventListener('change', () => {
+            if (trees.length === 0) return;
+            
+            if (showDecisionBoundariesCheckbox.checked) {
+                // Create forest object to get boundaries
+                const forest = new RandomForest(numTrees, maxDepth, minSamplesSplit, maxFeatures);
+                forest.trees = trees;
+                
+                drawDecisionBoundaries(forest);
+            } else {
+                const existingBoundaries = svg.querySelectorAll('.decision-boundary');
+                existingBoundaries.forEach(b => b.remove());
+            }
+        });
+        
+        dataPatternSelect.addEventListener('change', () => {
+            // Update data pattern and regenerate data
+            dataPattern = dataPatternSelect.value;
+            generateData();
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

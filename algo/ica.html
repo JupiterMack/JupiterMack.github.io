@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive ICA Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/numeric@1.2.6/numeric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Independent Component Analysis (ICA) Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- Source Signals Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Original Source Signals</h2>
+                    <div class="w-full h-[250px] relative" id="sources-container">
+                        <canvas id="sources-canvas" width="900" height="250" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>True source signals (unknown in real-world problems)</span>
+                    </div>
+                </div>
+                
+                <!-- Mixed Signals Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Mixed Signals (Observed Data)</h2>
+                    <div class="w-full h-[250px] relative" id="mixed-container">
+                        <canvas id="mixed-canvas" width="900" height="250" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Observed mixed signals (input to ICA)</span>
+                    </div>
+                </div>
+                
+                <!-- Recovered Signals Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Recovered Independent Components</h2>
+                    <div class="w-full h-[250px] relative" id="recovered-container">
+                        <canvas id="recovered-canvas" width="900" height="250" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Independent components recovered by ICA</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel and Matrix Visualization -->
+            <div class="w-full lg:w-2/5">
+                <!-- Controls Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Data Generation -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Signal Generation</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="num-components" class="mr-2">Number of Components:</label>
+                                    <select id="num-components" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="2">2</option>
+                                        <option value="3" selected>3</option>
+                                        <option value="4">4</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="signal-type" class="mr-2">Signal Types:</label>
+                                    <select id="signal-type" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="basic" selected>Sine, Square, Sawtooth</option>
+                                        <option value="audio">Audio-like</option>
+                                        <option value="eeg">EEG-like</option>
+                                        <option value="random">Random Non-Gaussian</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="sample-size" class="mr-2">Sample Size:</label>
+                                    <select id="sample-size" class="w-32 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="500">500 points</option>
+                                        <option value="1000" selected>1000 points</option>
+                                        <option value="2000">2000 points</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="noise-level" class="mr-2">Noise Level:</label>
+                                    <input type="range" id="noise-level" min="0" max="1" step="0.05" value="0.1" class="w-40">
+                                    <span id="noise-value" class="text-sm">0.1</span>
+                                </div>
+                                
+                                <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Signals</button>
+                            </div>
+                        </div>
+                        
+                        <!-- ICA Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">ICA Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="algorithm" class="mr-2">Algorithm:</label>
+                                    <select id="algorithm" class="w-32 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="fastica" selected>FastICA</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="nonlinearity" class="mr-2">Nonlinearity:</label>
+                                    <select id="nonlinearity" class="w-32 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="logcosh" selected>logcosh</option>
+                                        <option value="exp">exp</option>
+                                        <option value="cube">cube</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="max-iterations" class="mr-2">Max Iterations:</label>
+                                    <input type="number" id="max-iterations" min="5" max="1000" value="100" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="tolerance" class="mr-2">Tolerance:</label>
+                                    <input type="number" id="tolerance" min="0.00001" max="0.1" step="0.00001" value="0.0001" class="w-32 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-2">
+                                    <button id="run-ica" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Run ICA</button>
+                                    <button id="step-ica" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step Through</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visualization Options -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-mixing-matrix" class="w-4 h-4" checked>
+                                    <label for="show-mixing-matrix">Show Mixing Matrix</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="normalize-signals" class="w-4 h-4" checked>
+                                    <label for="normalize-signals">Normalize Signals</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="animate-convergence" class="w-4 h-4" checked>
+                                    <label for="animate-convergence">Animate Convergence</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Status -->
+                        <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <h3 class="text-lg font-medium mb-2">ICA Stats</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Iteration:</span>
+                                    <span id="current-iteration">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Convergence:</span>
+                                    <span id="convergence-value">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Status:</span>
+                                    <span id="algorithm-status-text">Not Started</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Matrix Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Mixing/Unmixing Matrices</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-base font-medium mb-1">Mixing Matrix (A)</h3>
+                            <div id="mixing-matrix" class="bg-gray-100 dark:bg-gray-700 p-3 rounded overflow-x-auto whitespace-nowrap font-mono text-sm"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-medium mb-1">Unmixing Matrix (W)</h3>
+                            <div id="unmixing-matrix" class="bg-gray-100 dark:bg-gray-700 p-3 rounded overflow-x-auto whitespace-nowrap font-mono text-sm"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-medium mb-1">Amari Distance (Error)</h3>
+                            <div id="amari-distance" class="bg-gray-100 dark:bg-gray-700 p-3 rounded text-center">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Independent Component Analysis Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>Independent Component Analysis (ICA)</strong> is a computational method for separating a multivariate signal into additive, statistically independent non-Gaussian components. It's primarily used for blind source separation.</p>
+                
+                <p><strong>The ICA Algorithm:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Centering:</strong> Subtract the mean to make the signal zero-mean</li>
+                    <li><strong>Whitening:</strong> Transform the data to have unit variance in all directions (often using PCA)</li>
+                    <li><strong>Estimating Independence:</strong> Find directions where components are maximally non-Gaussian</li>
+                    <li><strong>Optimization:</strong> Iteratively adjust unmixing matrix to maximize independence</li>
+                    <li><strong>Recover Sources:</strong> Apply unmixing matrix to mixed signals to recover independent components</li>
+                </ol>
+                
+                <p><strong>Key Properties:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Statistical Independence:</strong> Components are maximally independent from each other</li>
+                    <li><strong>Non-Gaussianity:</strong> ICA assumes sources are non-Gaussian (works poorly with Gaussian sources)</li>
+                    <li><strong>Ambiguities:</strong> Cannot determine the order, scale, or sign of the independent components</li>
+                    <li><strong>Contrast Functions:</strong> Measures of non-Gaussianity like kurtosis, negentropy, etc.</li>
+                </ul>
+                
+                <p><strong>Applications:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Audio source separation (cocktail party problem)</li>
+                    <li>Artifact removal in EEG/MEG signals</li>
+                    <li>Feature extraction for image processing</li>
+                    <li>Financial data analysis</li>
+                    <li>Text and document analysis</li>
+                </ul>
+                
+                <p><strong>Differences from PCA:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>PCA finds orthogonal directions of maximum variance; ICA finds independent sources</li>
+                    <li>PCA uses second-order statistics (covariance); ICA uses higher-order statistics</li>
+                    <li>PCA components are uncorrelated; ICA components are statistically independent</li>
+                    <li>PCA works with any distribution; ICA requires non-Gaussian distributions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const sourcesCanvas = document.getElementById('sources-canvas');
+        const mixedCanvas = document.getElementById('mixed-canvas');
+        const recoveredCanvas = document.getElementById('recovered-canvas');
+        const generateDataBtn = document.getElementById('generate-data');
+        const runIcaBtn = document.getElementById('run-ica');
+        const stepIcaBtn = document.getElementById('step-ica');
+        const numComponentsSelect = document.getElementById('num-components');
+        const signalTypeSelect = document.getElementById('signal-type');
+        const sampleSizeSelect = document.getElementById('sample-size');
+        const noiseLevelInput = document.getElementById('noise-level');
+        const noiseValueDisplay = document.getElementById('noise-value');
+        const algorithmSelect = document.getElementById('algorithm');
+        const nonlinearitySelect = document.getElementById('nonlinearity');
+        const maxIterationsInput = document.getElementById('max-iterations');
+        const toleranceInput = document.getElementById('tolerance');
+        const showMixingMatrixCheckbox = document.getElementById('show-mixing-matrix');
+        const normalizeSignalsCheckbox = document.getElementById('normalize-signals');
+        const animateConvergenceCheckbox = document.getElementById('animate-convergence');
+        const currentIterationDisplay = document.getElementById('current-iteration');
+        const convergenceValueDisplay = document.getElementById('convergence-value');
+        const algorithmStatusDisplay = document.getElementById('algorithm-status-text');
+        const mixingMatrixDisplay = document.getElementById('mixing-matrix');
+        const unmixingMatrixDisplay = document.getElementById('unmixing-matrix');
+        const amariDistanceDisplay = document.getElementById('amari-distance');
+        
+        // Initialize Chart.js instances
+        let sourcesChart, mixedChart, recoveredChart;
+        
+        // Data and algorithm parameters
+        let numComponents = 3;                // Number of source/independent components
+        let sampleSize = 1000;                // Number of time points
+        let noiseLevel = 0.1;                 // Noise level for mixing
+        let trueSourceSignals = [];           // True source signals (n_components x n_samples)
+        let mixedSignals = [];                // Mixed observed signals (n_components x n_samples)
+        let recoveredSignals = [];            // Recovered independent components (n_components x n_samples)
+        let timePoints = [];                  // Array of time points for x-axis
+        let mixingMatrix = [];                // True mixing matrix (n_components x n_components)
+        let unmixingMatrix = [];              // Estimated unmixing matrix (n_components x n_components)
+        let currentIteration = 0;             // Current iteration in the ICA algorithm
+        let maxIterations = 100;              // Maximum number of iterations
+        let tolerance = 0.0001;               // Convergence tolerance
+        let currentStep = 0;                  // Current step in the step-by-step execution
+        let stepByStepMode = false;           // Flag for step-by-step execution
+        let whitenedData = [];                // Whitened data (intermediate step)
+        let W = [];                           // Current unmixing matrix estimate
+        let prevW = [];                       // Previous unmixing matrix estimate
+        let convergence = 1.0;                // Current convergence measure
+        let animationInProgress = false;      // Flag to prevent multiple simultaneous animations
+        
+        // ICA algorithm state
+        let icaState = {
+            iteration: 0,
+            convergence: 1.0,
+            w: [],
+            whitenedData: [],
+            meanVector: [],
+            whitenMatrix: [],
+            dewhitenMatrix: [],
+            algorithm: 'fastica',
+            nonlinearity: 'logcosh'
+        };
+        
+        // Colors for visualization
+        const SIGNAL_COLORS = [
+            'rgb(239, 68, 68)',     // Red
+            'rgb(59, 130, 246)',     // Blue
+            'rgb(16, 185, 129)',     // Green
+            'rgb(139, 92, 246)',     // Purple
+            'rgb(245, 158, 11)',     // Amber
+        ];
+        
+        // Initialize the application
+        function initializeApp() {
+            // Initialize charts
+            initializeCharts();
+            
+            // Generate initial data
+            generateNewData();
+            
+            // Add event listeners
+            generateDataBtn.addEventListener('click', generateNewData);
+            runIcaBtn.addEventListener('click', runICA);
+            stepIcaBtn.addEventListener('click', stepICA);
+            noiseLevelInput.addEventListener('input', updateNoiseLevel);
+            
+            // Set up chart theme based on dark mode
+            updateChartTheme();
+        }
+        
+        // Initialize charts for signal visualization
+        function initializeCharts() {
+            // Common chart options
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 500
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        },
+                        grid: {
+                            color: document.body.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            color: document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Amplitude'
+                        },
+                        grid: {
+                            color: document.body.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            color: document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937'
+                        }
+                    }
+                }
+            };
+            
+            // Initialize sources chart
+            sourcesChart = new Chart(sourcesCanvas, {
+                type: 'line',
+                data: {
+                    datasets: []
+                },
+                options: {
+                    ...chartOptions,
+                    plugins: {
+                        ...chartOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Source Signals',
+                            color: document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937'
+                        }
+                    }
+                }
+            });
+            
+            // Initialize mixed signals chart
+            mixedChart = new Chart(mixedCanvas, {
+                type: 'line',
+                data: {
+                    datasets: []
+                },
+                options: {
+                    ...chartOptions,
+                    plugins: {
+                        ...chartOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Mixed Signals (Observed)',
+                            color: document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937'
+                        }
+                    }
+                }
+            });
+            
+            // Initialize recovered signals chart
+            recoveredChart = new Chart(recoveredCanvas, {
+                type: 'line',
+                data: {
+                    datasets: []
+                },
+                options: {
+                    ...chartOptions,
+                    plugins: {
+                        ...chartOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Recovered Independent Components',
+                            color: document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update chart theme based on dark mode
+        function updateChartTheme() {
+            const isDarkMode = document.body.classList.contains('dark');
+            const textColor = isDarkMode ? '#D1D5DB' : '#1F2937';
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            // Update each chart's theme
+            [sourcesChart, mixedChart, recoveredChart].forEach(chart => {
+                if (chart) {
+                    // Update title color
+                    if (chart.options.plugins.title) {
+                        chart.options.plugins.title.color = textColor;
+                    }
+                    
+                    // Update legend color
+                    if (chart.options.plugins.legend) {
+                        chart.options.plugins.legend.labels.color = textColor;
+                    }
+                    
+                    // Update axis colors
+                    if (chart.options.scales.x) {
+                        chart.options.scales.x.grid.color = gridColor;
+                        chart.options.scales.x.ticks.color = textColor;
+                    }
+                    
+                    if (chart.options.scales.y) {
+                        chart.options.scales.y.grid.color = gridColor;
+                        chart.options.scales.y.ticks.color = textColor;
+                    }
+                    
+                    chart.update();
+                }
+            });
+        }
+        
+        // Generate new source signals and their mixtures
+        function generateNewData() {
+            // Get parameters from UI
+            numComponents = parseInt(numComponentsSelect.value);
+            sampleSize = parseInt(sampleSizeSelect.value);
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            
+            // Generate time points
+            timePoints = Array.from({length: sampleSize}, (_, i) => i / sampleSize);
+            
+            // Generate source signals based on selected type
+            trueSourceSignals = generateSourceSignals(numComponents, sampleSize, signalTypeSelect.value);
+            
+            // Generate random mixing matrix
+            mixingMatrix = generateMixingMatrix(numComponents);
+            
+            // Mix the signals
+            mixedSignals = mixSignals(trueSourceSignals, mixingMatrix, noiseLevel);
+            
+            // Reset the recovered signals
+            recoveredSignals = Array(numComponents).fill().map(() => Array(sampleSize).fill(0));
+            
+            // Update the visualizations
+            updateSourcesVisualization();
+            updateMixedSignalsVisualization();
+            updateRecoveredVisualization();
+            
+            // Update the matrix displays
+            updateMatrixDisplays();
+            
+            // Reset algorithm state
+            resetAlgorithmState();
+        }
+        
+        // Generate source signals based on type
+        function generateSourceSignals(numComponents, sampleSize, type) {
+            // Array to hold source signals
+            const sources = [];
+            
+            // Generate signals based on type
+            switch (type) {
+                case 'basic':
+                    // Generate basic waveforms: sine, square, sawtooth, etc.
+                    for (let i = 0; i < numComponents; i++) {
+                        const signal = Array(sampleSize).fill(0);
+                        
+                        // Different frequencies for each component
+                        const frequency = 1 + i * 0.5;
+                        
+                        // Different waveform for each component
+                        switch (i % 5) {
+                            case 0: // Sine wave
+                                for (let t = 0; t < sampleSize; t++) {
+                                    signal[t] = Math.sin(2 * Math.PI * frequency * timePoints[t]);
+                                }
+                                break;
+                            case 1: // Square wave
+                                for (let t = 0; t < sampleSize; t++) {
+                                    signal[t] = Math.sin(2 * Math.PI * frequency * timePoints[t]) > 0 ? 1 : -1;
+                                }
+                                break;
+                            case 2: // Sawtooth wave
+                                for (let t = 0; t < sampleSize; t++) {
+                                    signal[t] = 2 * ((frequency * timePoints[t]) % 1) - 1;
+                                }
+                                break;
+                            case 3: // Triangle wave
+                                for (let t = 0; t < sampleSize; t++) {
+                                    const sawtoothValue = 2 * ((frequency * timePoints[t]) % 1) - 1;
+                                    signal[t] = 2 * Math.abs(sawtoothValue) - 1;
+                                    signal[t] *= -1; // Invert to make it more distinct
+                                }
+                                break;
+                            case 4: // Pulse wave
+                                for (let t = 0; t < sampleSize; t++) {
+                                    signal[t] = Math.sin(2 * Math.PI * frequency * timePoints[t]) > 0.7 ? 1 : -0.5;
+                                }
+                                break;
+                        }
+                        
+                        sources.push(signal);
+                    }
+                    break;
+                    
+                case 'audio':
+                    // Generate audio-like signals (sum of sine waves with different frequencies)
+                    for (let i = 0; i < numComponents; i++) {
+                        const signal = Array(sampleSize).fill(0);
+                        
+                        // Base frequency for this component
+                        const baseFreq = 1 + i * 0.7;
+                        
+                        // Sum of harmonics
+                        for (let t = 0; t < sampleSize; t++) {
+                            let value = 0;
+                            
+                            // Add several harmonics with decreasing amplitude
+                            for (let h = 1; h <= 5; h++) {
+                                const harmonic = baseFreq * h;
+                                const amplitude = 1 / h;
+                                value += amplitude * Math.sin(2 * Math.PI * harmonic * timePoints[t]);
+                            }
+                            
+                            // Add some frequency modulation
+                            if (i % 2 === 0) {
+                                value += 0.3 * Math.sin(2 * Math.PI * 0.2 * timePoints[t]) * 
+                                         Math.sin(2 * Math.PI * baseFreq * 2 * timePoints[t]);
+                            }
+                            
+                            signal[t] = value;
+                        }
+                        
+                        // Normalize
+                        const maxAbs = Math.max(...signal.map(Math.abs));
+                        for (let t = 0; t < sampleSize; t++) {
+                            signal[t] /= maxAbs;
+                        }
+                        
+                        sources.push(signal);
+                    }
+                    break;
+                    
+                case 'eeg':
+                    // Generate EEG-like signals (multiple frequency bands: alpha, beta, etc.)
+                    for (let i = 0; i < numComponents; i++) {
+                        const signal = Array(sampleSize).fill(0);
+                        
+                        // Different frequency bands for EEG-like signals
+                        const freqBands = [
+                            {name: 'delta', freq: 2, amp: 1.0},    // 0.5-4 Hz
+                            {name: 'theta', freq: 6, amp: 0.8},    // 4-8 Hz
+                            {name: 'alpha', freq: 10, amp: 1.2},   // 8-13 Hz
+                            {name: 'beta', freq: 20, amp: 0.5},    // 13-30 Hz
+                            {name: 'gamma', freq: 40, amp: 0.3}    // 30+ Hz
+                        ];
+                        
+                        // Each source will have different components of each frequency band
+                        for (let t = 0; t < sampleSize; t++) {
+                            let value = 0;
+                            
+                            // Add contributions from each frequency band
+                            for (const band of freqBands) {
+                                // Different amplitude for each component and band
+                                const bandAmp = band.amp * (0.5 + Math.random());
+                                
+                                // Frequency varies slightly over time (like real EEG)
+                                const freqVariation = 1 + 0.1 * Math.sin(2 * Math.PI * 0.1 * timePoints[t]);
+                                const freq = band.freq * freqVariation;
+                                
+                                // Add this band's contribution
+                                value += bandAmp * Math.sin(2 * Math.PI * freq * timePoints[t]);
+                            }
+                            
+                            // Add some "bursts" of activity
+                            if (Math.random() < 0.01) {
+                                const burstLength = Math.floor(sampleSize * 0.03);
+                                const burstAmp = 1.5 * (0.5 + Math.random());
+                                const burstFreq = 15 + 10 * Math.random();
+                                
+                                if (t + burstLength < sampleSize) {
+                                    for (let b = 0; b < burstLength; b++) {
+                                        const envelope = Math.sin(Math.PI * b / burstLength);
+                                        signal[t + b] += burstAmp * envelope * 
+                                                        Math.sin(2 * Math.PI * burstFreq * timePoints[t + b]);
+                                    }
+                                }
+                            }
+                            
+                            signal[t] += value;
+                        }
+                        
+                        // Normalize
+                        const maxAbs = Math.max(...signal.map(Math.abs));
+                        for (let t = 0; t < sampleSize; t++) {
+                            signal[t] /= maxAbs;
+                        }
+                        
+                        sources.push(signal);
+                    }
+                    break;
+                    
+                case 'random':
+                    // Generate random non-Gaussian signals
+                    for (let i = 0; i < numComponents; i++) {
+                        const signal = Array(sampleSize).fill(0);
+                        
+                        // Different distribution for each component
+                        switch (i % 4) {
+                            case 0: // Super-Gaussian (sparse) signal
+                                for (let t = 0; t < sampleSize; t++) {
+                                    // Laplacian distribution (more peaked than Gaussian)
+                                    const u = Math.random() - 0.5;
+                                    signal[t] = Math.sign(u) * -Math.log(1 - 2 * Math.abs(u));
+                                }
+                                break;
+                            case 1: // Sub-Gaussian (flatter) signal
+                                for (let t = 0; t < sampleSize; t++) {
+                                    // Uniform distribution (flatter than Gaussian)
+                                    signal[t] = Math.random() * 2 - 1;
+                                }
+                                break;
+                            case 2: // Bimodal signal
+                                for (let t = 0; t < sampleSize; t++) {
+                                    // Mixture of two Gaussians
+                                    const mode = Math.random() < 0.5 ? -1 : 1;
+                                    const gaussian = randomNormal() * 0.3;
+                                    signal[t] = mode + gaussian;
+                                }
+                                break;
+                            case 3: // Skewed signal
+                                for (let t = 0; t < sampleSize; t++) {
+                                    // Log-normal-like distribution
+                                    const gaussian = randomNormal();
+                                    signal[t] = Math.sign(gaussian) * Math.pow(Math.abs(gaussian), 1.5);
+                                }
+                                break;
+                        }
+                        
+                        // Normalize
+                        const maxAbs = Math.max(...signal.map(Math.abs));
+                        for (let t = 0; t < sampleSize; t++) {
+                            signal[t] /= maxAbs;
+                        }
+                        
+                        sources.push(signal);
+                    }
+                    break;
+                    
+                default:
+                    // Default to basic waveforms
+                    return generateSourceSignals(numComponents, sampleSize, 'basic');
+            }
+            
+            return sources;
+        }
+        
+        // Generate a random mixing matrix
+        function generateMixingMatrix(numComponents) {
+            const matrix = [];
+            
+            // Create a random matrix
+            for (let i = 0; i < numComponents; i++) {
+                const row = [];
+                for (let j = 0; j < numComponents; j++) {
+                    // Random value between -1 and 1
+                    row.push(Math.random() * 2 - 1);
+                }
+                matrix.push(row);
+            }
+            
+            return matrix;
+        }
+        
+        // Mix the source signals using the mixing matrix
+        function mixSignals(sources, mixingMatrix, noiseLevel) {
+            const numComponents = sources.length;
+            const sampleSize = sources[0].length;
+            const mixed = Array(numComponents).fill().map(() => Array(sampleSize).fill(0));
+            
+            // Mix the signals using the mixing matrix
+            for (let i = 0; i < numComponents; i++) {
+                for (let t = 0; t < sampleSize; t++) {
+                    // Linear combination of sources
+                    for (let j = 0; j < numComponents; j++) {
+                        mixed[i][t] += mixingMatrix[i][j] * sources[j][t];
+                    }
+                    
+                    // Add noise
+                    mixed[i][t] += randomNormal() * noiseLevel;
+                }
+            }
+            
+            return mixed;
+        }
+        
+        // Update the noise level from the slider
+        function updateNoiseLevel() {
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            noiseValueDisplay.textContent = noiseLevel.toFixed(2);
+        }
+        
+        // Update the visualization of source signals
+        function updateSourcesVisualization() {
+            // Prepare data for the chart
+            const datasets = [];
+            
+            for (let i = 0; i < trueSourceSignals.length; i++) {
+                // Skip if beyond the number of components
+                if (i >= numComponents) continue;
+                
+                // Data for this component
+                datasets.push({
+                    label: `Source ${i+1}`,
+                    data: trueSourceSignals[i].map((y, index) => ({ x: timePoints[index], y })),
+                    borderColor: SIGNAL_COLORS[i % SIGNAL_COLORS.length],
+                    backgroundColor: SIGNAL_COLORS[i % SIGNAL_COLORS.length] + '33', // Add alpha
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    tension: 0.1
+                });
+            }
+            
+            // Update the chart
+            sourcesChart.data.datasets = datasets;
+            sourcesChart.update();
+        }
+        
+        // Update the visualization of mixed signals
+        function updateMixedSignalsVisualization() {
+            // Prepare data for the chart
+            const datasets = [];
+            
+            for (let i = 0; i < mixedSignals.length; i++) {
+                // Skip if beyond the number of components
+                if (i >= numComponents) continue;
+                
+                // Data for this component
+                datasets.push({
+                    label: `Mixed ${i+1}`,
+                    data: mixedSignals[i].map((y, index) => ({ x: timePoints[index], y })),
+                    borderColor: SIGNAL_COLORS[i % SIGNAL_COLORS.length],
+                    backgroundColor: SIGNAL_COLORS[i % SIGNAL_COLORS.length] + '33', // Add alpha
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    tension: 0.1
+                });
+            }
+            
+            // Update the chart
+            mixedChart.data.datasets = datasets;
+            mixedChart.update();
+        }
+        
+        // Update the visualization of recovered signals
+        function updateRecoveredVisualization() {
+            // Prepare data for the chart
+            const datasets = [];
+            
+            for (let i = 0; i < recoveredSignals.length; i++) {
+                // Skip if beyond the number of components
+                if (i >= numComponents) continue;
+                
+                // Data for this component
+                datasets.push({
+                    label: `Component ${i+1}`,
+                    data: recoveredSignals[i].map((y, index) => ({ x: timePoints[index], y })),
+                    borderColor: SIGNAL_COLORS[i % SIGNAL_COLORS.length],
+                    backgroundColor: SIGNAL_COLORS[i % SIGNAL_COLORS.length] + '33', // Add alpha
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    tension: 0.1
+                });
+            }
+            
+            // Update the chart
+            recoveredChart.data.datasets = datasets;
+            recoveredChart.update();
+        }
+        
+        // Update the matrix displays
+        function updateMatrixDisplays() {
+            // Format matrix for display
+            const formatMatrix = (matrix) => {
+                let html = '<div class="grid grid-cols-' + numComponents + ' gap-2">';
+                
+                for (let i = 0; i < matrix.length; i++) {
+                    for (let j = 0; j < matrix[i].length; j++) {
+                        const value = matrix[i][j];
+                        const formattedValue = value.toFixed(3);
+                        
+                        // Color based on value
+                        let color = '';
+                        if (value > 0.5) color = 'text-red-500 dark:text-red-400';
+                        else if (value < -0.5) color = 'text-blue-500 dark:text-blue-400';
+                        
+                        html += `<div class="${color}">${formattedValue}</div>`;
+                    }
+                }
+                
+                html += '</div>';
+                return html;
+            };
+            
+            // Update mixing matrix display
+            if (mixingMatrix.length > 0) {
+                mixingMatrixDisplay.innerHTML = formatMatrix(mixingMatrix);
+            } else {
+                mixingMatrixDisplay.textContent = '-';
+            }
+            
+            // Update unmixing matrix display
+            if (unmixingMatrix.length > 0) {
+                unmixingMatrixDisplay.innerHTML = formatMatrix(unmixingMatrix);
+            } else {
+                unmixingMatrixDisplay.textContent = '-';
+            }
+            
+            // Update Amari distance (if available)
+            if (mixingMatrix.length > 0 && unmixingMatrix.length > 0) {
+                const amariDist = calculateAmariDistance(mixingMatrix, unmixingMatrix);
+                amariDistanceDisplay.textContent = amariDist.toFixed(4);
+                
+                // Color based on value
+                if (amariDist < 0.1) {
+                    amariDistanceDisplay.className = 'bg-green-100 dark:bg-green-900 p-3 rounded text-center text-green-700 dark:text-green-300';
+                } else if (amariDist < 0.3) {
+                    amariDistanceDisplay.className = 'bg-yellow-100 dark:bg-yellow-900 p-3 rounded text-center text-yellow-700 dark:text-yellow-300';
+                } else {
+                    amariDistanceDisplay.className = 'bg-red-100 dark:bg-red-900 p-3 rounded text-center text-red-700 dark:text-red-300';
+                }
+            } else {
+                amariDistanceDisplay.textContent = '-';
+                amariDistanceDisplay.className = 'bg-gray-100 dark:bg-gray-700 p-3 rounded text-center';
+            }
+        }
+        
+        // Reset algorithm state
+        function resetAlgorithmState() {
+            // Reset ICA state
+            icaState = {
+                iteration: 0,
+                convergence: 1.0,
+                w: [],
+                whitenedData: [],
+                meanVector: [],
+                whitenMatrix: [],
+                dewhitenMatrix: [],
+                algorithm: algorithmSelect.value,
+                nonlinearity: nonlinearitySelect.value
+            };
+            
+            // Reset UI
+            currentIterationDisplay.textContent = '-';
+            convergenceValueDisplay.textContent = '-';
+            algorithmStatusDisplay.textContent = 'Not Started';
+            
+            // Clear unmixing matrix
+            unmixingMatrix = [];
+            
+            // Update matrix displays
+            updateMatrixDisplays();
+            
+            // Reset step counter
+            currentStep = 0;
+            stepByStepMode = false;
+        }
+        
+        // Run the full ICA algorithm
+        async function runICA() {
+            if (mixedSignals.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during processing
+            runIcaBtn.disabled = true;
+            stepIcaBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            maxIterations = parseInt(maxIterationsInput.value);
+            tolerance = parseFloat(toleranceInput.value);
+            
+            // Reset algorithm state
+            resetAlgorithmState();
+            
+            // Reset recovered signals
+            recoveredSignals = Array(numComponents).fill().map(() => Array(sampleSize).fill(0));
+            
+            // Update UI
+            algorithmStatusDisplay.textContent = 'Running...';
+            
+            // Preprocess data (centering and whitening)
+            await preprocessData();
+            
+            // Run FastICA
+            await runFastICA();
+            
+            // Calculate final unmixing matrix and recover independent components
+            await finalizeICA();
+            
+            // Update UI
+            algorithmStatusDisplay.textContent = 'Complete';
+            
+            // Re-enable buttons
+            runIcaBtn.disabled = false;
+            stepIcaBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Step through ICA algorithm
+        async function stepICA() {
+            if (mixedSignals.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during step
+            runIcaBtn.disabled = true;
+            stepIcaBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            maxIterations = parseInt(maxIterationsInput.value);
+            tolerance = parseFloat(toleranceInput.value);
+            
+            // Initialize if this is the first step
+            if (currentStep === 0) {
+                stepByStepMode = true;
+                
+                // Reset algorithm state
+                resetAlgorithmState();
+                
+                // Reset recovered signals
+                recoveredSignals = Array(numComponents).fill().map(() => Array(sampleSize).fill(0));
+                
+                // First step: data centering
+                await centerData();
+                
+                // Update UI
+                currentStep = 1;
+                algorithmStatusDisplay.textContent = 'Step 1: Data Centering';
+            }
+            // Next step: whitening
+            else if (currentStep === 1) {
+                await whitenData();
+                
+                // Update UI
+                currentStep = 2;
+                algorithmStatusDisplay.textContent = 'Step 2: Data Whitening';
+            }
+            // Next step: initialize ICA
+            else if (currentStep === 2) {
+                await initializeICA();
+                
+                // Update UI
+                currentStep = 3;
+                algorithmStatusDisplay.textContent = 'Step 3: Initialize FastICA';
+            }
+            // Next steps: FastICA iterations
+            else if (currentStep === 3) {
+                // Run one iteration of FastICA
+                const result = await runFastICAIteration();
+                
+                // If converged, move to next step
+                if (result.converged) {
+                    currentStep = 4;
+                    algorithmStatusDisplay.textContent = 'Step 4: Finalize Results';
+                } else {
+                    algorithmStatusDisplay.textContent = `Step 3: FastICA Iteration ${icaState.iteration}`;
+                }
+            }
+            // Final step: recover components
+            else if (currentStep === 4) {
+                await finalizeICA();
+                
+                // Update UI
+                currentStep = 0; // Reset for next run
+                algorithmStatusDisplay.textContent = 'Complete';
+            }
+            
+            // Re-enable buttons
+            runIcaBtn.disabled = false;
+            stepIcaBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Preprocess data (center and whiten)
+        async function preprocessData() {
+            await centerData();
+            await whitenData();
+        }
+        
+        // Center the data (subtract mean)
+        async function centerData() {
+            // Transpose mixedSignals to get data in the right format
+            let data = transposeMatrix(mixedSignals);
+            
+            // Calculate mean of each component
+            icaState.meanVector = [];
+            for (let i = 0; i < numComponents; i++) {
+                const componentData = data.map(row => row[i]);
+                const mean = componentData.reduce((a, b) => a + b, 0) / data.length;
+                icaState.meanVector.push(mean);
+            }
+            
+            // Center the data
+            const centeredData = [];
+            for (let i = 0; i < data.length; i++) {
+                const centeredRow = [];
+                for (let j = 0; j < numComponents; j++) {
+                    centeredRow.push(data[i][j] - icaState.meanVector[j]);
+                }
+                centeredData.push(centeredRow);
+            }
+            
+            // Store centered data (transposed to original format)
+            icaState.centeredData = transposeMatrix(centeredData);
+            
+            // Add animation delay if in step-by-step mode
+            if (stepByStepMode && animateConvergenceCheckbox.checked) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Whiten the data
+        async function whitenData() {
+            // Transpose centered data
+            let data = transposeMatrix(icaState.centeredData);
+            
+            // Calculate covariance matrix
+            const covMatrix = calculateCovarianceMatrix(data);
+            
+            // Eigendecomposition of covariance matrix
+            // Use numeric.js for eigendecomposition
+            const eigen = numeric.eig(covMatrix);
+            
+            // Extract eigenvalues and eigenvectors
+            const eigenValues = eigen.lambda.x; // Real part of eigenvalues
+            const eigenVectors = [];
+            
+            // Extract eigenvectors (columns of eigen.E.x)
+            for (let i = 0; i < numComponents; i++) {
+                const vector = [];
+                for (let j = 0; j < numComponents; j++) {
+                    vector.push(eigen.E.x[j][i]);
+                }
+                eigenVectors.push(vector);
+            }
+            
+            // Create diagonal matrix of eigenvalues
+            const d = [];
+            for (let i = 0; i < numComponents; i++) {
+                const row = Array(numComponents).fill(0);
+                // Ensure eigenvalue is positive (numerical stability)
+                row[i] = 1.0 / Math.sqrt(Math.abs(eigenValues[i]) + 1e-10);
+                d.push(row);
+            }
+            
+            // Compute whitening and dewhitening matrices
+            // whitenMatrix = E * D
+            icaState.whitenMatrix = multiplyMatrices(eigenVectors, d);
+            
+            // dewhitenMatrix = E * D^(-1/2)
+            const dInv = [];
+            for (let i = 0; i < numComponents; i++) {
+                const row = Array(numComponents).fill(0);
+                row[i] = Math.sqrt(Math.abs(eigenValues[i]));
+                dInv.push(row);
+            }
+            icaState.dewhitenMatrix = multiplyMatrices(eigenVectors, dInv);
+            
+            // Whiten the data: Z = X * whitenMatrix
+            const whitenedData = multiplyMatrices(data, icaState.whitenMatrix);
+            
+            // Store whitened data
+            icaState.whitenedData = whitenedData;
+            
+            // Add animation delay if in step-by-step mode
+            if (stepByStepMode && animateConvergenceCheckbox.checked) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Initialize ICA algorithm
+        async function initializeICA() {
+            // Choose FastICA algorithm
+            icaState.algorithm = algorithmSelect.value;
+            icaState.nonlinearity = nonlinearitySelect.value;
+            
+            // Initialize unmixing matrix with random values
+            icaState.w = [];
+            for (let i = 0; i < numComponents; i++) {
+                const row = [];
+                for (let j = 0; j < numComponents; j++) {
+                    row.push(Math.random() * 2 - 1);
+                }
+                icaState.w.push(row);
+            }
+            
+            // Orthogonalize initial matrix (symmetric orthogonalization)
+            icaState.w = symmetricOrthogonalization(icaState.w);
+            
+            // Reset iteration count and convergence
+            icaState.iteration = 0;
+            icaState.convergence = 1.0;
+            
+            // Add animation delay if in step-by-step mode
+            if (stepByStepMode && animateConvergenceCheckbox.checked) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Run FastICA algorithm
+        async function runFastICA() {
+            // Initialize ICA
+            await initializeICA();
+            
+            // Iteratively optimize unmixing matrix
+            while (icaState.iteration < maxIterations && icaState.convergence > tolerance) {
+                // Run one iteration
+                const result = await runFastICAIteration();
+                
+                // Check for convergence
+                if (result.converged) {
+                    break;
+                }
+                
+                // Add delay for animation if enabled
+                if (animateConvergenceCheckbox.checked) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+            }
+        }
+        
+        // Run one iteration of FastICA
+        async function runFastICAIteration() {
+            // Store previous W for convergence check
+            const wOld = icaState.w.map(row => [...row]);
+            
+            // Update each component
+            const Z = icaState.whitenedData;
+            const newW = [];
+            
+            // For each component (row of W)
+            for (let i = 0; i < numComponents; i++) {
+                const w = icaState.w[i];
+                
+                // Calculate wx for all data points
+                const wx = [];
+                for (let j = 0; j < Z.length; j++) {
+                    let sum = 0;
+                    for (let k = 0; k < numComponents; k++) {
+                        sum += w[k] * Z[j][k];
+                    }
+                    wx.push(sum);
+                }
+                
+                // Apply nonlinearity and its derivative
+                const g_wx = [];
+                const g_wx_derivative = [];
+                
+                for (let j = 0; j < wx.length; j++) {
+                    const x = wx[j];
+                    
+                    // Choose nonlinearity function
+                    switch (icaState.nonlinearity) {
+                        case 'logcosh':
+                            g_wx.push(Math.tanh(x));
+                            g_wx_derivative.push(1 - Math.pow(Math.tanh(x), 2));
+                            break;
+                        case 'exp':
+                            g_wx.push(x * Math.exp(-0.5 * x * x));
+                            g_wx_derivative.push((1 - x * x) * Math.exp(-0.5 * x * x));
+                            break;
+                        case 'cube':
+                            g_wx.push(Math.pow(x, 3));
+                            g_wx_derivative.push(3 * Math.pow(x, 2));
+                            break;
+                        default:
+                            g_wx.push(Math.tanh(x));
+                            g_wx_derivative.push(1 - Math.pow(Math.tanh(x), 2));
+                    }
+                }
+                
+                // Calculate expectation of g'(wx)
+                const g_wx_derivative_mean = g_wx_derivative.reduce((a, b) => a + b, 0) / g_wx_derivative.length;
+                
+                // Calculate first term: E[z*g(wx)]
+                const term1 = Array(numComponents).fill(0);
+                for (let j = 0; j < Z.length; j++) {
+                    for (let k = 0; k < numComponents; k++) {
+                        term1[k] += Z[j][k] * g_wx[j];
+                    }
+                }
+                for (let k = 0; k < numComponents; k++) {
+                    term1[k] /= Z.length;
+                }
+                
+                // Calculate second term: E[g'(wx)]*w
+                const term2 = w.map(val => val * g_wx_derivative_mean);
+                
+                // New w = E[z*g(wx)] - E[g'(wx)]*w
+                const w_new = term1.map((val, idx) => val - term2[idx]);
+                
+                // Store new w
+                newW.push(w_new);
+            }
+            
+            // Symmetric orthogonalization
+            icaState.w = symmetricOrthogonalization(newW);
+            
+            // Check convergence
+            icaState.convergence = calculateWDistance(wOld, icaState.w);
+            
+            // Update iteration count
+            icaState.iteration++;
+            
+            // Update UI
+            currentIterationDisplay.textContent = icaState.iteration;
+            convergenceValueDisplay.textContent = icaState.convergence.toExponential(4);
+            
+            // Temporarily calculate unmixing matrix and recovered signals for visualization
+            if (stepByStepMode || animateConvergenceCheckbox.checked) {
+                // Calculate temporary unmixing matrix
+                const tempUnmixingMatrix = multiplyMatrices(icaState.w, icaState.whitenMatrix);
+                
+                // Update recoveredSignals
+                await updateRecoveredSignals(tempUnmixingMatrix);
+                
+                // Update visualization
+                updateRecoveredVisualization();
+            }
+            
+            // Return convergence information
+            return {
+                converged: icaState.convergence <= tolerance,
+                iterations: icaState.iteration,
+                convergence: icaState.convergence
+            };
+        }
+        
+        // Finalize ICA and recover independent components
+        async function finalizeICA() {
+            // Calculate final unmixing matrix: W * whitenMatrix
+            unmixingMatrix = multiplyMatrices(icaState.w, icaState.whitenMatrix);
+            
+            // Update recovered signals
+            await updateRecoveredSignals(unmixingMatrix);
+            
+            // Update visualization
+            updateRecoveredVisualization();
+            
+            // Update matrix displays
+            updateMatrixDisplays();
+        }
+        
+        // Update recovered signals using unmixing matrix
+        async function updateRecoveredSignals(unmixingMatrix) {
+            // Apply unmixing matrix to centered data
+            const data = transposeMatrix(icaState.centeredData);
+            const recovered = multiplyMatrices(data, unmixingMatrix);
+            
+            // Transpose back to original format
+            const transposedRecovered = transposeMatrix(recovered);
+            
+            // Update recoveredSignals
+            recoveredSignals = [];
+            for (let i = 0; i < numComponents; i++) {
+                // Add animation for each component if in step mode
+                if (stepByStepMode && animateConvergenceCheckbox.checked) {
+                    const delay = i * 100; // Stagger animation
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+                
+                // Normalize if requested
+                if (normalizeSignalsCheckbox.checked) {
+                    const signal = [...transposedRecovered[i]];
+                    const maxAbs = Math.max(...signal.map(Math.abs));
+                    
+                    // Avoid division by zero
+                    if (maxAbs > 0) {
+                        recoveredSignals.push(signal.map(val => val / maxAbs));
+                    } else {
+                        recoveredSignals.push(signal);
+                    }
+                } else {
+                    recoveredSignals.push([...transposedRecovered[i]]);
+                }
+            }
+        }
+        
+        // Matrix operations and utility functions
+        
+        // Calculate distance between two W matrices
+        function calculateWDistance(w1, w2) {
+            // Calculate the maximum absolute difference between elements
+            let maxDiff = 0;
+            
+            for (let i = 0; i < w1.length; i++) {
+                for (let j = 0; j < w1[i].length; j++) {
+                    const diff = Math.abs(Math.abs(w1[i][j]) - Math.abs(w2[i][j]));
+                    if (diff > maxDiff) {
+                        maxDiff = diff;
+                    }
+                }
+            }
+            
+            return maxDiff;
+        }
+        
+        // Symmetric orthogonalization
+        function symmetricOrthogonalization(w) {
+            // W * W^T
+            const ww = multiplyMatrices(w, transposeMatrix(w));
+            
+            // Eigendecomposition of WW^T
+            const eigen = numeric.eig(ww);
+            
+            // Extract eigenvalues and eigenvectors
+            const eigenValues = eigen.lambda.x; // Real part of eigenvalues
+            const eigenVectors = [];
+            
+            // Extract eigenvectors (columns of eigen.E.x)
+            for (let i = 0; i < w.length; i++) {
+                const vector = [];
+                for (let j = 0; j < w.length; j++) {
+                    vector.push(eigen.E.x[j][i]);
+                }
+                eigenVectors.push(vector);
+            }
+            
+            // Create diagonal matrix of (eigenvalues)^(-1/2)
+            const d = [];
+            for (let i = 0; i < w.length; i++) {
+                const row = Array(w.length).fill(0);
+                // Ensure eigenvalue is positive (numerical stability)
+                row[i] = 1.0 / Math.sqrt(Math.abs(eigenValues[i]) + 1e-10);
+                d.push(row);
+            }
+            
+            // W_new = (WW^T)^(-1/2) * W
+            const term1 = multiplyMatrices(eigenVectors, d);
+            const term2 = multiplyMatrices(transposeMatrix(eigenVectors), w);
+            
+            return multiplyMatrices(term1, term2);
+        }
+        
+        // Calculate covariance matrix
+        function calculateCovarianceMatrix(data) {
+            // Number of data points and features
+            const n = data.length;
+            const p = data[0].length;
+            
+            // Initialize covariance matrix
+            const cov = Array(p).fill().map(() => Array(p).fill(0));
+            
+            // Calculate covariance
+            for (let i = 0; i < p; i++) {
+                for (let j = 0; j < p; j++) {
+                    let sum = 0;
+                    for (let k = 0; k < n; k++) {
+                        sum += data[k][i] * data[k][j];
+                    }
+                    cov[i][j] = sum / (n - 1);
+                }
+            }
+            
+            return cov;
+        }
+        
+        // Matrix multiplication
+        function multiplyMatrices(a, b) {
+            const aRows = a.length;
+            const aCols = a[0].length;
+            const bRows = b.length;
+            const bCols = b[0].length;
+            
+            // Ensure matrices can be multiplied
+            if (aCols !== bRows) {
+                throw new Error(`Cannot multiply matrices: ${aRows}x${aCols} and ${bRows}x${bCols}`);
+            }
+            
+            // Initialize result matrix
+            const result = Array(aRows).fill().map(() => Array(bCols).fill(0));
+            
+            // Multiply matrices
+            for (let i = 0; i < aRows; i++) {
+                for (let j = 0; j < bCols; j++) {
+                    let sum = 0;
+                    for (let k = 0; k < aCols; k++) {
+                        sum += a[i][k] * b[k][j];
+                    }
+                    result[i][j] = sum;
+                }
+            }
+            
+            return result;
+        }
+        
+        // Transpose a matrix
+        function transposeMatrix(matrix) {
+            const rows = matrix.length;
+            const cols = matrix[0].length;
+            
+            // Initialize result matrix
+            const result = Array(cols).fill().map(() => Array(rows).fill(0));
+            
+            // Transpose
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    result[j][i] = matrix[i][j];
+                }
+            }
+            
+            return result;
+        }
+        
+        // Calculate Amari distance between mixing and unmixing matrices
+        function calculateAmariDistance(A, W) {
+            // Calculate P = W * A
+            const P = multiplyMatrices(W, A);
+            
+            // Get dimensions
+            const n = P.length;
+            
+            // Calculate row and column sums
+            let sum = 0;
+            
+            // For each row
+            for (let i = 0; i < n; i++) {
+                // Row sum
+                let rowSum = 0;
+                for (let j = 0; j < n; j++) {
+                    rowSum += Math.abs(P[i][j]) / Math.max(...P[i].map(Math.abs));
+                }
+                sum += rowSum - 1;
+            }
+            
+            // For each column
+            for (let j = 0; j < n; j++) {
+                // Column sum
+                let colSum = 0;
+                const colValues = P.map(row => row[j]);
+                const colMax = Math.max(...colValues.map(Math.abs));
+                
+                for (let i = 0; i < n; i++) {
+                    colSum += Math.abs(P[i][j]) / colMax;
+                }
+                sum += colSum - 1;
+            }
+            
+            return sum / (2 * n * (n - 1));
+        }
+        
+        // Generate a random normal (Gaussian) number
+        function randomNormal() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random();
+            while (v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+        
+        // Initialize when the window loads
+        window.addEventListener('load', initializeApp);
+    </script>
+</body>
+</html>

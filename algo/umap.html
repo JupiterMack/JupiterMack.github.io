@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive UMAP Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/numeric@1.2.6/numeric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.2/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Uniform Manifold Approximation and Projection (UMAP)</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- Original Data Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Original High-Dimensional Data</h2>
+                    <div class="w-full h-[350px] relative" id="original-container">
+                        <svg id="original-space" class="w-full h-full" viewBox="0 0 1000 350"></svg>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Partial view of high-dimensional data (only 3 dimensions shown)</span>
+                    </div>
+                </div>
+                
+                <!-- UMAP Projection Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">UMAP Projection</h2>
+                    <div class="w-full h-[400px] relative" id="umap-container">
+                        <svg id="umap-space" class="w-full h-full" viewBox="0 0 1000 400"></svg>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Low-dimensional UMAP embedding of the data</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel and KNN Graph Visualization -->
+            <div class="w-full lg:w-2/5">
+                <!-- Controls Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Data Generation -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="num-points" class="mr-2">Number of Points:</label>
+                                    <input type="number" id="num-points" min="50" max="1000" value="300" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="data-distribution" class="mr-2">Distribution:</label>
+                                    <select id="data-distribution" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="clusters" selected>Gaussian Clusters</option>
+                                        <option value="manifold">3D Manifold</option>
+                                        <option value="swiss-roll">Swiss Roll</option>
+                                        <option value="s-curve">S-Curve</option>
+                                        <option value="noisy-circles">Noisy Circles</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="dimensionality" class="mr-2">Original Dimensions:</label>
+                                    <select id="dimensionality" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="3" selected>3D</option>
+                                        <option value="5">5D</option>
+                                        <option value="10">10D</option>
+                                        <option value="20">20D</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="noise-level" class="mr-2">Noise Level:</label>
+                                    <input type="range" id="noise-level" min="0" max="1" step="0.05" value="0.1" class="w-40">
+                                    <span id="noise-value" class="text-sm">0.1</span>
+                                </div>
+                                
+                                <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                            </div>
+                        </div>
+                        
+                        <!-- UMAP Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">UMAP Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="n-neighbors" class="mr-2">n_neighbors:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="n-neighbors" min="2" max="100" step="1" value="15" class="w-32">
+                                        <span id="n-neighbors-value" class="ml-2 w-8 text-sm">15</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="min-dist" class="mr-2">min_dist:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="min-dist" min="0.01" max="0.99" step="0.01" value="0.1" class="w-32">
+                                        <span id="min-dist-value" class="ml-2 w-12 text-sm">0.10</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="n-components" class="mr-2">n_components:</label>
+                                    <select id="n-components" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="2" selected>2D</option>
+                                        <option value="3">3D</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="metric" class="mr-2">Distance Metric:</label>
+                                    <select id="metric" class="w-32 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="euclidean" selected>Euclidean</option>
+                                        <option value="manhattan">Manhattan</option>
+                                        <option value="cosine">Cosine</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-2">
+                                    <button id="run-umap" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Run UMAP</button>
+                                    <button id="step-umap" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step Through</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visualization Options -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-graph" class="w-4 h-4" checked>
+                                    <label for="show-graph">Show k-NN Graph</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="animate-layout" class="w-4 h-4" checked>
+                                    <label for="animate-layout">Animate Layout Process</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="color-by-clusters" class="w-4 h-4" checked>
+                                    <label for="color-by-clusters">Color by Clusters</label>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label for="point-size" class="mr-2">Point Size:</label>
+                                    <input type="range" id="point-size" min="1" max="10" step="0.5" value="4" class="w-32">
+                                    <span id="point-size-value" class="text-sm">4.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Status -->
+                        <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <h3 class="text-lg font-medium mb-2">UMAP Stats</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Current Step:</span>
+                                    <span id="current-step">Not Started</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Iteration:</span>
+                                    <span id="current-iteration">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Status:</span>
+                                    <span id="algorithm-status-text">Not Started</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KNN Graph Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Nearest Neighbor Graph</h2>
+                    <div class="w-full h-[250px]">
+                        <svg id="knn-graph" class="w-full h-full" viewBox="0 0 500 250"></svg>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>k-Nearest Neighbor graph used by UMAP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How UMAP Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>Uniform Manifold Approximation and Projection (UMAP)</strong> is a dimensionality reduction technique that preserves both local and global structure of high-dimensional data. It's particularly effective for visualization and clustering tasks.</p>
+                
+                <p><strong>The UMAP Algorithm:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Construct Neighborhood Graph:</strong> Build a weighted k-nearest neighbor graph representing the high-dimensional manifold structure</li>
+                    <li><strong>Compute Fuzzy Topological Representation:</strong> Transform the neighborhood graph into a fuzzy topological representation using local connectivity patterns</li>
+                    <li><strong>Optimize Low-Dimensional Layout:</strong> Find a low-dimensional embedding that preserves the topological structure using stochastic gradient descent</li>
+                    <li><strong>Refine Embedding:</strong> Iteratively adjust the low-dimensional coordinates to minimize the difference between high and low-dimensional fuzzy topological representations</li>
+                </ol>
+                
+                <p><strong>Key Parameters:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>n_neighbors:</strong> Controls how UMAP balances local versus global structure. Lower values (2-15) emphasize local structure, higher values (50-200) preserve more global structure</li>
+                    <li><strong>min_dist:</strong> Controls how tightly UMAP packs points together. Smaller values create tighter, more clustered embeddings</li>
+                    <li><strong>metric:</strong> The distance function used to measure similarity between points</li>
+                    <li><strong>n_components:</strong> The dimensionality of the output embedding</li>
+                </ul>
+                
+                <p><strong>Applications:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Visualization of high-dimensional data</li>
+                    <li>Pre-processing for machine learning algorithms</li>
+                    <li>Feature extraction and selection</li>
+                    <li>Discovering clusters and patterns in complex datasets</li>
+                    <li>Single-cell RNA sequencing analysis</li>
+                </ul>
+                
+                <p><strong>Advantages over other techniques:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Better preservation of both local and global structure than t-SNE</li>
+                    <li>More faithful representation of distances than PCA</li>
+                    <li>Faster computation than t-SNE for large datasets</li>
+                    <li>Theoretical foundation in Riemannian geometry and algebraic topology</li>
+                    <li>Works well across various domains and data types</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const originalSvg = document.getElementById('original-space');
+        const umapSvg = document.getElementById('umap-space');
+        const knnGraphSvg = document.getElementById('knn-graph');
+        const generateDataBtn = document.getElementById('generate-data');
+        const runUmapBtn = document.getElementById('run-umap');
+        const stepUmapBtn = document.getElementById('step-umap');
+        const numPointsInput = document.getElementById('num-points');
+        const dataDistributionSelect = document.getElementById('data-distribution');
+        const dimensionalitySelect = document.getElementById('dimensionality');
+        const noiseLevelInput = document.getElementById('noise-level');
+        const noiseValueDisplay = document.getElementById('noise-value');
+        const nNeighborsInput = document.getElementById('n-neighbors');
+        const nNeighborsValueDisplay = document.getElementById('n-neighbors-value');
+        const minDistInput = document.getElementById('min-dist');
+        const minDistValueDisplay = document.getElementById('min-dist-value');
+        const nComponentsSelect = document.getElementById('n-components');
+        const metricSelect = document.getElementById('metric');
+        const showGraphCheckbox = document.getElementById('show-graph');
+        const animateLayoutCheckbox = document.getElementById('animate-layout');
+        const colorByClustersCheckbox = document.getElementById('color-by-clusters');
+        const pointSizeInput = document.getElementById('point-size');
+        const pointSizeValueDisplay = document.getElementById('point-size-value');
+        const currentStepDisplay = document.getElementById('current-step');
+        const currentIterationDisplay = document.getElementById('current-iteration');
+        const algorithmStatusDisplay = document.getElementById('algorithm-status-text');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 400;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Colors
+        const CLUSTER_COLORS = [
+            '#EF4444', // Red
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#8B5CF6', // Purple
+            '#F59E0B', // Amber
+            '#EC4899', // Pink
+            '#6366F1', // Indigo
+            '#14B8A6', // Teal
+            '#F97316', // Orange
+            '#8B5CF6'  // Purple
+        ];
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and algorithm parameters
+        let originalData = [];       // Original high-dimensional data
+        let umapEmbedding = [];      // Low-dimensional UMAP embedding
+        let numPoints = 300;         // Number of data points
+        let dimensions = 3;          // Original dimensionality
+        let nComponents = 2;         // Output dimensionality
+        let noiseLevel = 0.1;        // Noise level
+        let nNeighbors = 15;         // Number of neighbors for UMAP
+        let minDist = 0.1;           // Minimum distance for UMAP
+        let metric = 'euclidean';    // Distance metric
+        let pointSize = 4.0;         // Point size for visualization
+        let clusterLabels = [];      // Cluster labels (if any)
+        let knnGraph = [];           // k-nearest neighbor graph
+        let stepByStepMode = false;  // Flag for step-by-step execution
+        let currentStep = 0;         // Current step in the step-by-step execution
+        let currentIteration = 0;    // Current iteration in the optimization
+        let animationInProgress = false; // Flag to prevent multiple simultaneous animations
+        
+        // UMAP algorithm state
+        let umapState = {
+            iteration: 0,
+            maxIterations: 200,
+            graphInitialized: false,
+            embedding: [],
+            knnGraph: [],
+            distanceMatrix: [],
+            sigmaDist: [],
+            rho: [],
+            highDimGraph: [],
+            lowDimGraph: [],
+            optimizationState: null,
+            initialized: false
+        };
+        
+        // Random number generators for reproducibility
+        let rngState = 42;
+        
+        // Seeded random number generator
+        function seededRandom() {
+            rngState = (rngState * 9301 + 49297) % 233280;
+            return rngState / 233280;
+        }
+        
+        // Reset rng
+        function resetRng() {
+            rngState = 42;
+        }
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            originalSvg.innerHTML = '';
+            umapSvg.innerHTML = '';
+            knnGraphSvg.innerHTML = '';
+            
+            // Add background for original space visualization
+            const originalBackground = document.createElementNS(svgNS, 'rect');
+            originalBackground.setAttribute('width', WIDTH);
+            originalBackground.setAttribute('height', 350);
+            originalBackground.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            originalSvg.appendChild(originalBackground);
+            
+            // Add background for UMAP space visualization
+            const umapBackground = document.createElementNS(svgNS, 'rect');
+            umapBackground.setAttribute('width', WIDTH);
+            umapBackground.setAttribute('height', HEIGHT);
+            umapBackground.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            umapSvg.appendChild(umapBackground);
+            
+            // Add background for KNN graph visualization
+            const knnBackground = document.createElementNS(svgNS, 'rect');
+            knnBackground.setAttribute('width', 500);
+            knnBackground.setAttribute('height', 250);
+            knnBackground.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            knnGraphSvg.appendChild(knnBackground);
+            
+            // Add grid and axes for original space
+            addGridAndAxes(originalSvg, 350);
+            
+            // Add grid and axes for UMAP space
+            addGridAndAxes(umapSvg, HEIGHT);
+        }
+        
+        // Add grid and axes to SVG
+        function addGridAndAxes(svgElement, height) {
+            const svgHeight = height;
+            const DATA_HEIGHT = svgHeight - 2 * MARGIN;
+            const DATA_Y = MARGIN;
+            
+            // Add grid lines
+            const numVerticalLines = 10;
+            const numHorizontalLines = 10;
+            const verticalSpacing = PLOT_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = MARGIN + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                vLine.setAttribute('class', 'grid-line');
+                svgElement.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', MARGIN);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', MARGIN + PLOT_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                hLine.setAttribute('class', 'grid-line');
+                svgElement.appendChild(hLine);
+            }
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', MARGIN);
+            xAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT / 2);
+            xAxis.setAttribute('x2', MARGIN + PLOT_WIDTH);
+            xAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT / 2);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            xAxis.setAttribute('class', 'axis-line');
+            svgElement.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', MARGIN + PLOT_WIDTH / 2);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', MARGIN + PLOT_WIDTH / 2);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            yAxis.setAttribute('class', 'axis-line');
+            svgElement.appendChild(yAxis);
+            
+            // Add z-axis if UMAP in 3D
+            if (nComponents === 3) {
+                const zAxis = document.createElementNS(svgNS, 'line');
+                zAxis.setAttribute('x1', MARGIN + PLOT_WIDTH / 2);
+                zAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT / 2);
+                zAxis.setAttribute('x2', MARGIN + PLOT_WIDTH / 2 + 100);
+                zAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT / 2 - 100);
+                zAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                zAxis.setAttribute('stroke-width', '2');
+                zAxis.setAttribute('class', 'axis-line z-axis');
+                svgElement.appendChild(zAxis);
+                
+                // Add z-axis label
+                const zLabel = document.createElementNS(svgNS, 'text');
+                zLabel.setAttribute('x', MARGIN + PLOT_WIDTH / 2 + 110);
+                zLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2 - 110);
+                zLabel.setAttribute('text-anchor', 'start');
+                zLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                zLabel.setAttribute('class', 'axis-label z-label');
+                zLabel.textContent = 'Z';
+                svgElement.appendChild(zLabel);
+            }
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', MARGIN + PLOT_WIDTH);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2 - 10);
+            xLabel.setAttribute('text-anchor', 'end');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.setAttribute('class', 'axis-label x-label');
+            xLabel.textContent = 'X';
+            svgElement.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', MARGIN + PLOT_WIDTH / 2 + 10);
+            yLabel.setAttribute('y', DATA_Y + 15);
+            yLabel.setAttribute('text-anchor', 'start');
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.setAttribute('class', 'axis-label y-label');
+            yLabel.textContent = 'Y';
+            svgElement.appendChild(yLabel);
+        }
+        
+        // Generate synthetic data
+        function generateData() {
+            // Get parameters from UI
+            numPoints = parseInt(numPointsInput.value);
+            dimensions = parseInt(dimensionalitySelect.value);
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            
+            // Reset random number generator for reproducibility
+            resetRng();
+            
+            // Generate data based on selected distribution
+            const distribution = dataDistributionSelect.value;
+            
+            switch (distribution) {
+                case 'clusters':
+                    generateClusterData(numPoints, dimensions, noiseLevel);
+                    break;
+                case 'manifold':
+                    generate3DManifoldData(numPoints, dimensions, noiseLevel);
+                    break;
+                case 'swiss-roll':
+                    generateSwissRollData(numPoints, dimensions, noiseLevel);
+                    break;
+                case 's-curve':
+                    generateSCurveData(numPoints, dimensions, noiseLevel);
+                    break;
+                case 'noisy-circles':
+                    generateNoisyCirclesData(numPoints, dimensions, noiseLevel);
+                    break;
+                default:
+                    generateClusterData(numPoints, dimensions, noiseLevel);
+            }
+            
+            // Reset UMAP state
+            resetUmapState();
+            
+            // Visualize original data
+            visualizeOriginalData();
+            
+            // Clear UMAP visualization
+            clearUmapVisualization();
+            
+            // Clear KNN graph visualization
+            clearKnnGraphVisualization();
+            
+            // Reset step display
+            currentStepDisplay.textContent = 'Not Started';
+            currentIterationDisplay.textContent = '-';
+            algorithmStatusDisplay.textContent = 'Not Started';
+        }
+        
+        // Generate Gaussian clusters
+        function generateClusterData(numPoints, dimensions, noiseLevel) {
+            // Determine number of clusters (between 3 and 6)
+            const numClusters = 3 + Math.floor(seededRandom() * 4);
+            
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                const center = [];
+                for (let j = 0; j < dimensions; j++) {
+                    // Random center between -4 and 4
+                    center.push(-4 + seededRandom() * 8);
+                }
+                clusterCenters.push(center);
+            }
+            
+            // Generate points for each cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            const remainder = numPoints - (pointsPerCluster * numClusters);
+            
+            for (let c = 0; c < numClusters; c++) {
+                // Determine how many points for this cluster
+                let clusterSize = pointsPerCluster;
+                if (c < remainder) {
+                    clusterSize++;
+                }
+                
+                // Generate points for this cluster
+                for (let i = 0; i < clusterSize; i++) {
+                    const point = [];
+                    
+                    // Generate point around cluster center with Gaussian noise
+                    for (let j = 0; j < dimensions; j++) {
+                        const value = clusterCenters[c][j] + randomNormal() * (0.5 + noiseLevel);
+                        point.push(value);
+                    }
+                    
+                    originalData.push(point);
+                    clusterLabels.push(c);
+                }
+            }
+        }
+        
+        // Generate 3D manifold data (a surface in 3D+)
+        function generate3DManifoldData(numPoints, dimensions, noiseLevel) {
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            // Generate points on a 3D manifold and embed in higher dimensions if needed
+            for (let i = 0; i < numPoints; i++) {
+                const u = seededRandom() * 2 * Math.PI;  // Angle parameter
+                const v = seededRandom() * Math.PI;      // Another angle parameter
+                
+                // Base 3D coordinates (on a torus-like surface)
+                const x = (2 + Math.cos(v)) * Math.cos(u);
+                const y = (2 + Math.cos(v)) * Math.sin(u);
+                const z = Math.sin(v);
+                
+                // Create point with 3D manifold coordinates
+                const point = [x, y, z];
+                
+                // Add noise to all coordinates
+                for (let j = 0; j < 3; j++) {
+                    point[j] += randomNormal() * noiseLevel;
+                }
+                
+                // Add random dimensions if needed
+                for (let j = 3; j < dimensions; j++) {
+                    point.push(randomNormal() * noiseLevel);
+                }
+                
+                originalData.push(point);
+                
+                // Assign cluster label based on position on the manifold (for coloring)
+                // Split the torus into 4 segments based on the angles
+                const segment = Math.floor(u / (Math.PI / 2)) % 4;
+                clusterLabels.push(segment);
+            }
+        }
+        
+        // Generate Swiss Roll data
+        function generateSwissRollData(numPoints, dimensions, noiseLevel) {
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            for (let i = 0; i < numPoints; i++) {
+                // Swiss roll parameters
+                const t = 1.5 * Math.PI * (1 + 2 * seededRandom());  // Angular parameter
+                const height = 10 * seededRandom();                 // Height parameter
+                
+                // Swiss roll coordinates
+                const x = t * Math.cos(t);
+                const y = height;
+                const z = t * Math.sin(t);
+                
+                // Create point with Swiss roll coordinates
+                const point = [x, y, z];
+                
+                // Add noise to all coordinates
+                for (let j = 0; j < 3; j++) {
+                    point[j] += randomNormal() * noiseLevel * 2;
+                }
+                
+                // Add random dimensions if needed
+                for (let j = 3; j < dimensions; j++) {
+                    point.push(randomNormal() * noiseLevel);
+                }
+                
+                originalData.push(point);
+                
+                // Assign cluster label based on position on the Swiss roll (for coloring)
+                // Split into 5 segments based on the angle
+                const segment = Math.floor(t / (3 * Math.PI / 5)) % 5;
+                clusterLabels.push(segment);
+            }
+        }
+        
+        // Generate S-Curve data
+        function generateSCurveData(numPoints, dimensions, noiseLevel) {
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            for (let i = 0; i < numPoints; i++) {
+                // S-curve parameters
+                const t = 3 * Math.PI * (seededRandom() - 0.5);  // Angular parameter
+                const height = 10 * seededRandom();             // Height parameter
+                
+                // S-curve coordinates
+                const x = Math.sin(t);
+                const y = height;
+                const z = Math.sign(t) * Math.cos(t);
+                
+                // Create point with S-curve coordinates
+                const point = [x, y, z];
+                
+                // Add noise to all coordinates
+                for (let j = 0; j < 3; j++) {
+                    point[j] += randomNormal() * noiseLevel * 2;
+                }
+                
+                // Add random dimensions if needed
+                for (let j = 3; j < dimensions; j++) {
+                    point.push(randomNormal() * noiseLevel);
+                }
+                
+                originalData.push(point);
+                
+                // Assign cluster label based on position on the S-curve (for coloring)
+                // Split into 4 segments based on the angle and sign
+                let segment;
+                if (t < -Math.PI/2) segment = 0;
+                else if (t < 0) segment = 1;
+                else if (t < Math.PI/2) segment = 2;
+                else segment = 3;
+                
+                clusterLabels.push(segment);
+            }
+        }
+        
+        // Generate Noisy Circles data
+        function generateNoisyCirclesData(numPoints, dimensions, noiseLevel) {
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            // Generate two concentric circles
+            const numCircles = 2;
+            const pointsPerCircle = Math.floor(numPoints / numCircles);
+            
+            for (let c = 0; c < numCircles; c++) {
+                const radius = 1 + c * 2;  // Different radius for each circle
+                
+                for (let i = 0; i < pointsPerCircle; i++) {
+                    const angle = seededRandom() * 2 * Math.PI;
+                    
+                    // Circle coordinates
+                    const x = radius * Math.cos(angle);
+                    const y = radius * Math.sin(angle);
+                    const z = 0;  // Flat circles in 3D
+                    
+                    // Create point
+                    const point = [x, y, z];
+                    
+                    // Add noise to all coordinates
+                    for (let j = 0; j < 3; j++) {
+                        point[j] += randomNormal() * noiseLevel * 1.5;
+                    }
+                    
+                    // Add random dimensions if needed
+                    for (let j = 3; j < dimensions; j++) {
+                        point.push(randomNormal() * noiseLevel);
+                    }
+                    
+                    originalData.push(point);
+                    clusterLabels.push(c);
+                }
+            }
+            
+            // Add remaining points
+            const remaining = numPoints - (pointsPerCircle * numCircles);
+            for (let i = 0; i < remaining; i++) {
+                const c = i % 2;  // Alternate between circles
+                const radius = 1 + c * 2;
+                const angle = seededRandom() * 2 * Math.PI;
+                
+                // Circle coordinates
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+                const z = 0;
+                
+                // Create point
+                const point = [x, y, z];
+                
+                // Add noise
+                for (let j = 0; j < 3; j++) {
+                    point[j] += randomNormal() * noiseLevel * 1.5;
+                }
+                
+                // Add random dimensions if needed
+                for (let j = 3; j < dimensions; j++) {
+                    point.push(randomNormal() * noiseLevel);
+                }
+                
+                originalData.push(point);
+                clusterLabels.push(c);
+            }
+        }
+        
+        // Generate a random normal (Gaussian) number using Box-Muller transform
+        function randomNormal() {
+            const u1 = seededRandom();
+            const u2 = seededRandom();
+            return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+        }
+        
+        // Reset UMAP state
+        function resetUmapState() {
+            // Reset algorithm state
+            umapState = {
+                iteration: 0,
+                maxIterations: 200,
+                graphInitialized: false,
+                embedding: [],
+                knnGraph: [],
+                distanceMatrix: [],
+                sigmaDist: [],
+                rho: [],
+                highDimGraph: [],
+                lowDimGraph: [],
+                optimizationState: null,
+                initialized: false
+            };
+            
+            // Reset embedding
+            umapEmbedding = [];
+            
+            // Reset step counter
+            currentStep = 0;
+            currentIteration = 0;
+            stepByStepMode = false;
+        }
+        
+        // Compute the distance matrix between points
+        function computeDistanceMatrix() {
+            const n = originalData.length;
+            
+            // Initialize distance matrix
+            const distMatrix = Array(n).fill().map(() => Array(n).fill(0));
+            
+            // Choose distance metric
+            const distFunc = getDistanceFunction(metric);
+            
+            // Compute pairwise distances
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    const dist = distFunc(originalData[i], originalData[j]);
+                    distMatrix[i][j] = dist;
+                    distMatrix[j][i] = dist;  // Symmetric
+                }
+            }
+            
+            return distMatrix;
+        }
+        
+        // Get the appropriate distance function based on the metric
+        function getDistanceFunction(metric) {
+            switch (metric) {
+                case 'euclidean':
+                    return (a, b) => {
+                        let sum = 0;
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            sum += Math.pow(a[i] - b[i], 2);
+                        }
+                        return Math.sqrt(sum);
+                    };
+                case 'manhattan':
+                    return (a, b) => {
+                        let sum = 0;
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            sum += Math.abs(a[i] - b[i]);
+                        }
+                        return sum;
+                    };
+                case 'cosine':
+                    return (a, b) => {
+                        let dotProduct = 0;
+                        let aMagnitude = 0;
+                        let bMagnitude = 0;
+                        
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            dotProduct += a[i] * b[i];
+                            aMagnitude += a[i] * a[i];
+                            bMagnitude += b[i] * b[i];
+                        }
+                        
+                        aMagnitude = Math.sqrt(aMagnitude);
+                        bMagnitude = Math.sqrt(bMagnitude);
+                        
+                        if (aMagnitude === 0 || bMagnitude === 0) return 1;  // Max distance for zero vectors
+                        
+                        const similarity = dotProduct / (aMagnitude * bMagnitude);
+                        return 1 - similarity;  // Convert similarity to distance
+                    };
+                default:
+                    return (a, b) => {
+                        let sum = 0;
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            sum += Math.pow(a[i] - b[i], 2);
+                        }
+                        return Math.sqrt(sum);
+                    };
+            }
+        }
+        
+        // Compute k-nearest neighbors for each point
+        function computeKNearestNeighbors(distMatrix, k) {
+            const n = distMatrix.length;
+            const knn = [];
+            
+            for (let i = 0; i < n; i++) {
+                // Get distances from point i to all other points
+                const distances = distMatrix[i].map((d, j) => ({ index: j, distance: d }));
+                
+                // Sort by distance (exclude self)
+                distances.sort((a, b) => a.distance - b.distance);
+                
+                // Get k+1 nearest neighbors (exclude self at index 0)
+                const neighbors = distances.slice(1, k + 1).map(d => ({
+                    target: d.index,
+                    distance: d.distance
+                }));
+                
+                knn.push(neighbors);
+            }
+            
+            return knn;
+        }
+        
+        // Compute local scale factors (sigma) for each point
+        function computeSigmaDistances(knn, distMatrix) {
+            const n = distMatrix.length;
+            const rho = [];  // Distance to nearest neighbor
+            const sigma = [];  // Local scale parameter
+            
+            for (let i = 0; i < n; i++) {
+                if (knn[i].length > 0) {
+                    // Distance to nearest neighbor
+                    rho.push(knn[i][0].distance);
+                    
+                    // Find sigma such that sum(exp(-(dist - rho)^2 / sigma)) = log2(k)
+                    let sigma_i = findSigma(knn[i], rho[i]);
+                    sigma.push(sigma_i);
+                } else {
+                    // If no neighbors (shouldn't happen), use default values
+                    rho.push(1.0);
+                    sigma.push(1.0);
+                }
+            }
+            
+            return { rho, sigma };
+        }
+        
+        // Find sigma for exponential kernel with binary search
+        function findSigma(neighbors, rho, target = Math.log2(nNeighbors)) {
+            // Binary search for sigma
+            let lowerBound = 0.0;
+            let upperBound = 1000.0;
+            let sigma = 1.0;
+            const maxIterations = 20;
+            const tolerance = 1e-5;
+            
+            for (let i = 0; i < maxIterations; i++) {
+                sigma = (lowerBound + upperBound) / 2.0;
+                
+                const sum = neighbors.reduce((acc, neighbor) => {
+                    const dist = neighbor.distance;
+                    const val = Math.exp(-Math.max(0, dist - rho) / sigma);
+                    return acc + val;
+                }, 0);
+                
+                const diff = sum - target;
+                
+                if (Math.abs(diff) < tolerance) {
+                    break;
+                }
+                
+                if (diff > 0) {
+                    upperBound = sigma;
+                } else {
+                    lowerBound = sigma;
+                }
+            }
+            
+            return sigma;
+        }
+        
+        // Compute high-dimensional graph weights
+        function computeHighDimGraph(knn, rho, sigma) {
+            const n = knn.length;
+            const graph = {};
+            
+            for (let i = 0; i < n; i++) {
+                for (const neighbor of knn[i]) {
+                    const j = neighbor.target;
+                    const dist = neighbor.distance;
+                    
+                    // Use min distance if smaller than rho
+                    const d = Math.max(0, dist - rho[i]);
+                    
+                    // Compute weight using the smooth approximation of UMAP
+                    const weight = Math.exp(-d / sigma[i]);
+                    
+                    // Store the edge (symmetric)
+                    if (!graph[`${i},${j}`]) {
+                        graph[`${i},${j}`] = weight;
+                    } else {
+                        graph[`${i},${j}`] = Math.max(graph[`${i},${j}`], weight);
+                    }
+                    
+                    if (!graph[`${j},${i}`]) {
+                        graph[`${j},${i}`] = weight;
+                    } else {
+                        graph[`${j},${i}`] = Math.max(graph[`${j},${i}`], weight);
+                    }
+                }
+            }
+            
+            return graph;
+        }
+        
+        // Initialize low-dimensional embedding
+        function initializeEmbedding(numPoints, outputDim) {
+            const embedding = [];
+            
+            // Random initialization in a small range
+            for (let i = 0; i < numPoints; i++) {
+                const point = [];
+                for (let j = 0; j < outputDim; j++) {
+                    point.push((seededRandom() - 0.5) * 0.0001);
+                }
+                embedding.push(point);
+            }
+            
+            return embedding;
+        }
+        
+        // Optimize embedding with stochastic gradient descent
+        function optimizeEmbedding(highDimGraph, embedding, a = 1.0, b = 1.0, gamma = 1.0, initialAlpha = 1.0) {
+            const n = embedding.length;
+            const dim = embedding[0].length;
+            
+            // Create list of all edges for sampling
+            const edges = [];
+            for (const key in highDimGraph) {
+                const [i, j] = key.split(',').map(Number);
+                if (i < j) {  // Only add each edge once
+                    edges.push({ source: i, target: j, weight: highDimGraph[key] });
+                }
+            }
+            
+            // Create list of all possible negative sample pairs
+            const negativePairs = [];
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    negativePairs.push({ source: i, target: j });
+                }
+            }
+            
+            // Number of iterations (epochs)
+            const nEpochs = umapState.maxIterations;
+            const moveFactor = 4; // Controls how much points move in each step
+            
+            // Optimizer state
+            const state = {
+                iteration: 0,
+                embedding: embedding.map(p => [...p]),  // Copy
+                edges,
+                negativePairs,
+                a,
+                b,
+                gamma,
+                alpha: initialAlpha,
+                nEpochs
+            };
+            
+            return state;
+        }
+        
+        // Perform one epoch of SGD optimization
+        function optimizationStep(state) {
+            const { embedding, edges, negativePairs, a, b, gamma, nEpochs } = state;
+            const n = embedding.length;
+            const dim = embedding[0].length;
+            
+            // Decrease alpha (learning rate) as optimization progresses
+            state.iteration++;
+            state.alpha = 1.0 * (1.0 - state.iteration / nEpochs);
+            
+            // Temporary arrays for gradient updates
+            const gradients = Array(n).fill().map(() => Array(dim).fill(0));
+            
+            // Process positive edges
+            for (const edge of edges) {
+                const { source, target, weight } = edge;
+                const sourceEmbed = embedding[source];
+                const targetEmbed = embedding[target];
+                
+                // Calculate squared distance in the embedding
+                let dist = 0;
+                for (let d = 0; d < dim; d++) {
+                    dist += Math.pow(sourceEmbed[d] - targetEmbed[d], 2);
+                }
+                
+                // Avoid division by zero
+                if (dist < 1e-10) dist = 1e-10;
+                
+                // UMAP attractive force
+                const attractiveForce = -Math.pow(dist, gamma) * weight;
+                
+                // Update gradients for this edge
+                for (let d = 0; d < dim; d++) {
+                    const grad = attractiveForce * (sourceEmbed[d] - targetEmbed[d]);
+                    gradients[source][d] -= grad;
+                    gradients[target][d] += grad;
+                }
+            }
+            
+            // Process negative samples (repulsive force)
+            const numNegativeSamples = Math.min(edges.length * 5, negativePairs.length);
+            for (let i = 0; i < numNegativeSamples; i++) {
+                // Sample a random pair
+                const idx = Math.floor(seededRandom() * negativePairs.length);
+                const { source, target } = negativePairs[idx];
+                
+                const sourceEmbed = embedding[source];
+                const targetEmbed = embedding[target];
+                
+                // Calculate squared distance in the embedding
+                let dist = 0;
+                for (let d = 0; d < dim; d++) {
+                    dist += Math.pow(sourceEmbed[d] - targetEmbed[d], 2);
+                }
+                
+                // Avoid division by zero
+                if (dist < 1e-10) dist = 1e-10;
+                
+                // UMAP repulsive force
+                const repulsiveForce = Math.pow(1 + a * Math.pow(dist, 2 * b), -1);
+                
+                // Update gradients for this pair
+                for (let d = 0; d < dim; d++) {
+                    const grad = repulsiveForce * (sourceEmbed[d] - targetEmbed[d]);
+                    gradients[source][d] -= grad * 0.01; // Scale repulsive force
+                    gradients[target][d] += grad * 0.01;
+                }
+            }
+            
+            // Apply gradients
+            for (let i = 0; i < n; i++) {
+                for (let d = 0; d < dim; d++) {
+                    embedding[i][d] += gradients[i][d] * state.alpha * 0.1;
+                }
+            }
+            
+            return state;
+        }
+        
+        // Visualize the original data
+        function visualizeOriginalData() {
+            // Clear existing visualization
+            clearOriginalVisualization();
+            
+            if (originalData.length === 0) return;
+            
+            // Project to 3D for visualization
+            const data3D = [];
+            for (const point of originalData) {
+                // Take first 3 dimensions or pad with zeros
+                const p = [];
+                for (let i = 0; i < 3; i++) {
+                    p.push(i < point.length ? point[i] : 0);
+                }
+                data3D.push(p);
+            }
+            
+            // Determine data bounds
+            let minX = Infinity, minY = Infinity, minZ = Infinity;
+            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            
+            for (const point of data3D) {
+                minX = Math.min(minX, point[0]);
+                minY = Math.min(minY, point[1]);
+                minZ = Math.min(minZ, point[2]);
+                maxX = Math.max(maxX, point[0]);
+                maxY = Math.max(maxY, point[1]);
+                maxZ = Math.max(maxZ, point[2]);
+            }
+            
+            // Function to map to SVG coordinates
+            const mapX = x => MARGIN + ((x - minX) / (maxX - minX)) * PLOT_WIDTH;
+            const mapY = y => MARGIN + ((y - minY) / (maxY - minY)) * (350 - 2 * MARGIN);
+            const mapZ = z => ((z - minZ) / (maxZ - minZ)); // For point size scaling
+            
+            // Add point size adjustment
+            const pointSizeScale = parseFloat(pointSizeInput.value);
+            
+            // Add data points
+            for (let i = 0; i < data3D.length; i++) {
+                const point = data3D[i];
+                const x = mapX(point[0]);
+                const y = mapY(point[1]);
+                const z = mapZ(point[2]);
+                
+                // Create point
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                
+                // Scale point size by z-coordinate (perspective effect)
+                const size = 3 + (z * 3) * pointSizeScale / 2.5;
+                circle.setAttribute('r', size);
+                
+                // Set color based on cluster if enabled
+                if (colorByClustersCheckbox.checked && clusterLabels.length > 0) {
+                    const clusterIdx = clusterLabels[i] % CLUSTER_COLORS.length;
+                    circle.setAttribute('fill', CLUSTER_COLORS[clusterIdx]);
+                } else {
+                    // Default color varies with point's z-coordinate
+                    const hue = 220 + 140 * z;
+                    circle.setAttribute('fill', `hsl(${hue}, 80%, 60%)`);
+                }
+                
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point original-point');
+                circle.setAttribute('data-index', i);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                originalSvg.appendChild(circle);
+            }
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point.original-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(2),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Visualize the UMAP embedding
+        function visualizeUmapEmbedding(embedding) {
+            // Clear existing visualization
+            clearUmapVisualization();
+            
+            if (embedding.length === 0) return;
+            
+            const n = embedding.length;
+            const dim = embedding[0].length;
+            
+            // Determine embedding bounds
+            let minX = Infinity, minY = Infinity, minZ = Infinity;
+            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            
+            for (const point of embedding) {
+                if (point.length > 0) minX = Math.min(minX, point[0]);
+                if (point.length > 1) minY = Math.min(minY, point[1]);
+                if (point.length > 2) minZ = Math.min(minZ, point[2]);
+                if (point.length > 0) maxX = Math.max(maxX, point[0]);
+                if (point.length > 1) maxY = Math.max(maxY, point[1]);
+                if (point.length > 2) maxZ = Math.max(maxZ, point[2]);
+            }
+            
+            // Add some padding
+            const paddingX = (maxX - minX) * 0.05;
+            const paddingY = (maxY - minY) * 0.05;
+            minX -= paddingX;
+            maxX += paddingX;
+            minY -= paddingY;
+            maxY += paddingY;
+            
+            // Function to map to SVG coordinates
+            const mapX = x => MARGIN + ((x - minX) / (maxX - minX || 1)) * PLOT_WIDTH;
+            const mapY = y => MARGIN + ((y - minY) / (maxY - minY || 1)) * PLOT_HEIGHT;
+            const mapZ = z => ((z - minZ) / (maxZ - minZ || 1)); // For point size scaling
+            
+            // Draw k-NN graph if enabled
+            if (showGraphCheckbox.checked && umapState.knnGraph.length > 0) {
+                const graph = umapState.knnGraph;
+                
+                for (let i = 0; i < graph.length; i++) {
+                    const src = embedding[i];
+                    if (!src || src.length < 2) continue;
+                    
+                    const srcX = mapX(src[0]);
+                    const srcY = mapY(src.length > 1 ? src[1] : 0);
+                    
+                    for (const neighbor of graph[i]) {
+                        const tgtIdx = neighbor.target;
+                        const tgt = embedding[tgtIdx];
+                        if (!tgt || tgt.length < 2) continue;
+                        
+                        const tgtX = mapX(tgt[0]);
+                        const tgtY = mapY(tgt.length > 1 ? tgt[1] : 0);
+                        
+                        // Create edge
+                        const edge = document.createElementNS(svgNS, 'line');
+                        edge.setAttribute('x1', srcX);
+                        edge.setAttribute('y1', srcY);
+                        edge.setAttribute('x2', tgtX);
+                        edge.setAttribute('y2', tgtY);
+                        edge.setAttribute('stroke', document.body.classList.contains('dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)');
+                        edge.setAttribute('stroke-width', '0.5');
+                        edge.setAttribute('class', 'knn-edge umap-element');
+                        
+                        umapSvg.appendChild(edge);
+                    }
+                }
+            }
+            
+            // Add point size adjustment
+            const pointSizeScale = parseFloat(pointSizeInput.value);
+            
+            // Add data points
+            for (let i = 0; i < embedding.length; i++) {
+                const point = embedding[i];
+                if (point.length < 2) continue;
+                
+                const x = mapX(point[0]);
+                const y = mapY(point[1]);
+                const z = point.length > 2 ? mapZ(point[2]) : 0.5;
+                
+                // Create point
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                
+                // Adjust point size based on z-coordinate (for 3D effect) and user preference
+                const size = pointSizeScale * (dim > 2 ? 3 + z * 3 : 4);
+                circle.setAttribute('r', size);
+                
+                // Set color based on cluster if enabled
+                if (colorByClustersCheckbox.checked && clusterLabels.length > 0) {
+                    const clusterIdx = clusterLabels[i] % CLUSTER_COLORS.length;
+                    circle.setAttribute('fill', CLUSTER_COLORS[clusterIdx]);
+                } else {
+                    // Gradient color based on position
+                    const hue = 200 + (x / WIDTH) * 160;
+                    const saturation = 70 + (y / HEIGHT) * 20;
+                    circle.setAttribute('fill', `hsl(${hue}, ${saturation}%, 60%)`);
+                }
+                
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point umap-point umap-element');
+                circle.setAttribute('data-index', i);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                umapSvg.appendChild(circle);
+            }
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point.umap-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(2),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Visualize KNN Graph
+        function visualizeKnnGraph(knnGraph) {
+            // Clear existing visualization
+            clearKnnGraphVisualization();
+            
+            if (knnGraph.length === 0) return;
+            
+            // Add background
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', 500);
+            background.setAttribute('height', 250);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            knnGraphSvg.appendChild(background);
+            
+            // Visualize a subset of points and their neighbors
+            const numPointsToShow = Math.min(30, knnGraph.length);
+            const pointsToShow = [];
+            
+            // Try to select points from different clusters if available
+            const clusterCounts = {};
+            const pointsPerCluster = {};
+            
+            if (colorByClustersCheckbox.checked && clusterLabels.length > 0) {
+                // Count points in each cluster
+                for (let i = 0; i < clusterLabels.length; i++) {
+                    const cluster = clusterLabels[i];
+                    clusterCounts[cluster] = (clusterCounts[cluster] || 0) + 1;
+                    pointsPerCluster[cluster] = pointsPerCluster[cluster] || [];
+                    pointsPerCluster[cluster].push(i);
+                }
+                
+                // Select points proportionally from each cluster
+                const clusters = Object.keys(clusterCounts);
+                let remainingPoints = numPointsToShow;
+                
+                for (const cluster of clusters) {
+                    const clusterSize = clusterCounts[cluster];
+                    const proportion = clusterSize / knnGraph.length;
+                    const numToSelect = Math.max(1, Math.round(proportion * numPointsToShow));
+                    const actualNumToSelect = Math.min(numToSelect, remainingPoints);
+                    
+                    // Randomly select points from this cluster
+                    const clusterPoints = pointsPerCluster[cluster];
+                    for (let i = 0; i < actualNumToSelect; i++) {
+                        if (clusterPoints.length > 0) {
+                            const idx = Math.floor(seededRandom() * clusterPoints.length);
+                            pointsToShow.push(clusterPoints[idx]);
+                            clusterPoints.splice(idx, 1);
+                            remainingPoints--;
+                        }
+                    }
+                }
+                
+                // Fill remaining points randomly if needed
+                while (remainingPoints > 0 && pointsToShow.length < knnGraph.length) {
+                    const idx = Math.floor(seededRandom() * knnGraph.length);
+                    if (!pointsToShow.includes(idx)) {
+                        pointsToShow.push(idx);
+                        remainingPoints--;
+                    }
+                }
+            } else {
+                // Randomly select points
+                const allIndices = Array.from({ length: knnGraph.length }, (_, i) => i);
+                while (pointsToShow.length < numPointsToShow && allIndices.length > 0) {
+                    const idx = Math.floor(seededRandom() * allIndices.length);
+                    pointsToShow.push(allIndices[idx]);
+                    allIndices.splice(idx, 1);
+                }
+            }
+            
+            // Create a force-directed layout for the graph
+            // Use D3.js for the layout
+            const nodes = pointsToShow.map(i => ({ id: i }));
+            const links = [];
+            
+            // Create links based on KNN
+            for (const srcId of pointsToShow) {
+                for (const neighbor of knnGraph[srcId]) {
+                    const tgtId = neighbor.target;
+                    if (pointsToShow.includes(tgtId)) {
+                        links.push({ source: srcId, target: tgtId, value: 1 });
+                    }
+                }
+            }
+            
+            // Create D3 simulation
+            const simulation = d3.forceSimulation(nodes)
+                .force('link', d3.forceLink(links).id(d => d.id))
+                .force('charge', d3.forceManyBody().strength(-50))
+                .force('center', d3.forceCenter(250, 125))
+                .stop();
+            
+            // Run simulation
+            for (let i = 0; i < 300; ++i) simulation.tick();
+            
+            // Draw the links
+            for (const link of links) {
+                const sourceNode = nodes.find(n => n.id === link.source.id || n.id === link.source);
+                const targetNode = nodes.find(n => n.id === link.target.id || n.id === link.target);
+                
+                if (!sourceNode || !targetNode) continue;
+                
+                const edge = document.createElementNS(svgNS, 'line');
+                edge.setAttribute('x1', sourceNode.x);
+                edge.setAttribute('y1', sourceNode.y);
+                edge.setAttribute('x2', targetNode.x);
+                edge.setAttribute('y2', targetNode.y);
+                edge.setAttribute('stroke', document.body.classList.contains('dark') ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)');
+                edge.setAttribute('stroke-width', '1');
+                edge.setAttribute('class', 'knn-edge');
+                
+                knnGraphSvg.appendChild(edge);
+            }
+            
+            // Draw the nodes
+            for (const node of nodes) {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', node.x);
+                circle.setAttribute('cy', node.y);
+                circle.setAttribute('r', 5);
+                
+                // Set color based on cluster if enabled
+                if (colorByClustersCheckbox.checked && clusterLabels.length > 0) {
+                    const clusterIdx = clusterLabels[node.id] % CLUSTER_COLORS.length;
+                    circle.setAttribute('fill', CLUSTER_COLORS[clusterIdx]);
+                } else {
+                    circle.setAttribute('fill', '#3B82F6');
+                }
+                
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point knn-node');
+                
+                knnGraphSvg.appendChild(circle);
+                
+                // Add node ID
+                const text = document.createElementNS(svgNS, 'text');
+                text.setAttribute('x', node.x);
+                text.setAttribute('y', node.y - 8);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '8');
+                text.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                text.textContent = node.id;
+                
+                knnGraphSvg.appendChild(text);
+            }
+            
+            // Add legend
+            const legend = document.createElementNS(svgNS, 'text');
+            legend.setAttribute('x', 10);
+            legend.setAttribute('y', 20);
+            legend.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            legend.setAttribute('font-size', '12');
+            legend.textContent = `Displaying ${numPointsToShow} points with k=${nNeighbors} neighbors`;
+            
+            knnGraphSvg.appendChild(legend);
+        }
+        
+        // Clear original space visualization
+        function clearOriginalVisualization() {
+            const elements = originalSvg.querySelectorAll('.original-point');
+            elements.forEach(el => el.remove());
+        }
+        
+        // Clear UMAP visualization
+        function clearUmapVisualization() {
+            const elements = umapSvg.querySelectorAll('.umap-element');
+            elements.forEach(el => el.remove());
+        }
+        
+        // Clear KNN graph visualization
+        function clearKnnGraphVisualization() {
+            knnGraphSvg.innerHTML = '';
+        }
+        
+        // Run UMAP algorithm
+        async function runUMAP() {
+            if (originalData.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during processing
+            runUmapBtn.disabled = true;
+            stepUmapBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            nNeighbors = parseInt(nNeighborsInput.value);
+            minDist = parseFloat(minDistInput.value);
+            nComponents = parseInt(nComponentsSelect.value);
+            metric = metricSelect.value;
+            
+            // Reset UMAP state
+            resetUmapState();
+            
+            // Update visualization settings
+            updateSvgConfig();
+            
+            // Run UMAP steps
+            algorithmStatusDisplay.textContent = 'Running...';
+            currentStepDisplay.textContent = 'Computing distances...';
+            
+            try {
+                // Step 1: Compute distance matrix
+                umapState.distanceMatrix = computeDistanceMatrix();
+                
+                // Step 2: Compute k-nearest neighbors
+                umapState.knnGraph = computeKNearestNeighbors(umapState.distanceMatrix, nNeighbors);
+                
+                // Visualize KNN graph
+                visualizeKnnGraph(umapState.knnGraph);
+                
+                // Step 3: Compute sigma distances
+                const { rho, sigma } = computeSigmaDistances(umapState.knnGraph, umapState.distanceMatrix);
+                umapState.rho = rho;
+                umapState.sigmaDist = sigma;
+                
+                // Step 4: Compute high-dimensional graph
+                umapState.highDimGraph = computeHighDimGraph(umapState.knnGraph, rho, sigma);
+                
+                // Step 5: Initialize embedding
+                umapState.embedding = initializeEmbedding(originalData.length, nComponents);
+                
+                // Step 6: Optimize embedding
+                currentStepDisplay.textContent = 'Optimizing embedding...';
+                
+                const a = 1.0;  // Default UMAP parameters
+                const b = 1.0;
+                
+                // Initialize optimization
+                umapState.optimizationState = optimizeEmbedding(
+                    umapState.highDimGraph,
+                    umapState.embedding,
+                    a, b, 1.0, 1.0
+                );
+                
+                // Run optimization
+                for (let i = 0; i < umapState.maxIterations; i++) {
+                    umapState.optimizationState = optimizationStep(umapState.optimizationState);
+                    umapState.embedding = umapState.optimizationState.embedding;
+                    
+                    // Update iteration counter
+                    currentIterationDisplay.textContent = i + 1;
+                    
+                    // Update visualization periodically
+                    if (i % 5 === 0 && animateLayoutCheckbox.checked) {
+                        visualizeUmapEmbedding(umapState.embedding);
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
+                }
+                
+                // Store final embedding
+                umapEmbedding = umapState.embedding.map(p => [...p]);
+                
+                // Update final visualization
+                visualizeUmapEmbedding(umapEmbedding);
+                
+                // Update status
+                algorithmStatusDisplay.textContent = 'Complete';
+                currentStepDisplay.textContent = 'Finished';
+            } catch (error) {
+                console.error('Error running UMAP:', error);
+                algorithmStatusDisplay.textContent = 'Error';
+                alert('Error running UMAP. Check console for details.');
+            }
+            
+            // Re-enable buttons
+            runUmapBtn.disabled = false;
+            stepUmapBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Step through UMAP algorithm
+        async function stepUMAP() {
+            if (originalData.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during step
+            runUmapBtn.disabled = true;
+            stepUmapBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            nNeighbors = parseInt(nNeighborsInput.value);
+            minDist = parseFloat(minDistInput.value);
+            nComponents = parseInt(nComponentsSelect.value);
+            metric = metricSelect.value;
+            
+            // Update visualization settings
+            updateSvgConfig();
+            
+            try {
+                // Initialize if this is the first step
+                if (currentStep === 0) {
+                    stepByStepMode = true;
+                    
+                    // Reset UMAP state
+                    resetUmapState();
+                    
+                    // Step 1: Compute distance matrix
+                    currentStepDisplay.textContent = 'Step 1: Computing distances';
+                    umapState.distanceMatrix = computeDistanceMatrix();
+                    
+                    // Update step counter
+                    currentStep = 1;
+                    algorithmStatusDisplay.textContent = 'Computing distances';
+                }
+                // Step 2: Compute k-nearest neighbors
+                else if (currentStep === 1) {
+                    currentStepDisplay.textContent = 'Step 2: Finding nearest neighbors';
+                    umapState.knnGraph = computeKNearestNeighbors(umapState.distanceMatrix, nNeighbors);
+                    
+                    // Visualize KNN graph
+                    visualizeKnnGraph(umapState.knnGraph);
+                    
+                    // Update step counter
+                    currentStep = 2;
+                    algorithmStatusDisplay.textContent = 'Finding nearest neighbors';
+                }
+                // Step 3: Compute sigma distances
+                else if (currentStep === 2) {
+                    currentStepDisplay.textContent = 'Step 3: Computing local scales (sigma)';
+                    const { rho, sigma } = computeSigmaDistances(umapState.knnGraph, umapState.distanceMatrix);
+                    umapState.rho = rho;
+                    umapState.sigmaDist = sigma;
+                    
+                    // Update step counter
+                    currentStep = 3;
+                    algorithmStatusDisplay.textContent = 'Computing local scales';
+                }
+                // Step 4: Compute high-dimensional graph
+                else if (currentStep === 3) {
+                    currentStepDisplay.textContent = 'Step 4: Building high-dimensional graph';
+                    umapState.highDimGraph = computeHighDimGraph(umapState.knnGraph, umapState.rho, umapState.sigmaDist);
+                    
+                    // Update step counter
+                    currentStep = 4;
+                    algorithmStatusDisplay.textContent = 'Building graph representation';
+                }
+                // Step 5: Initialize embedding
+                else if (currentStep === 4) {
+                    currentStepDisplay.textContent = 'Step 5: Initializing embedding';
+                    umapState.embedding = initializeEmbedding(originalData.length, nComponents);
+                    
+                    // Initialize optimization
+                    const a = 1.0;  // Default UMAP parameters
+                    const b = 1.0;
+                    
+                    umapState.optimizationState = optimizeEmbedding(
+                        umapState.highDimGraph,
+                        umapState.embedding,
+                        a, b, 1.0, 1.0
+                    );
+                    
+                    // Update step counter
+                    currentStep = 5;
+                    currentIteration = 0;
+                    algorithmStatusDisplay.textContent = 'Initializing embedding';
+                    
+                    // Visualize initial embedding
+                    visualizeUmapEmbedding(umapState.embedding);
+                }
+                // Step 6: Optimize embedding with SGD (run multiple iterations per step)
+                else if (currentStep === 5) {
+                    const iterationsPerStep = 10;
+                    currentStepDisplay.textContent = `Step 6: Optimizing embedding (${currentIteration + 1}-${currentIteration + iterationsPerStep}/${umapState.maxIterations})`;
+                    
+                    // Run multiple iterations
+                    for (let i = 0; i < iterationsPerStep; i++) {
+                        if (currentIteration < umapState.maxIterations) {
+                            umapState.optimizationState = optimizationStep(umapState.optimizationState);
+                            umapState.embedding = umapState.optimizationState.embedding;
+                            currentIteration++;
+                        }
+                    }
+                    
+                    // Update iteration display
+                    currentIterationDisplay.textContent = currentIteration;
+                    
+                    // Update visualization
+                    visualizeUmapEmbedding(umapState.embedding);
+                    
+                    // Check if optimization is complete
+                    if (currentIteration >= umapState.maxIterations) {
+                        // Update step counter to indicate completion
+                        currentStep = 6;
+                        algorithmStatusDisplay.textContent = 'Optimization complete';
+                        
+                        // Store final embedding
+                        umapEmbedding = umapState.embedding.map(p => [...p]);
+                    } else {
+                        algorithmStatusDisplay.textContent = `Optimizing embedding (${Math.round(currentIteration/umapState.maxIterations * 100)}%)`;
+                    }
+                }
+                // Final step: Complete
+                else if (currentStep === 6) {
+                    // Reset step counter for next run
+                    currentStep = 0;
+                    currentStepDisplay.textContent = 'Complete';
+                    algorithmStatusDisplay.textContent = 'Complete';
+                }
+                
+            } catch (error) {
+                console.error('Error in UMAP step:', error);
+                algorithmStatusDisplay.textContent = 'Error';
+                alert('Error in UMAP step. Check console for details.');
+            }
+            
+            // Re-enable buttons
+            runUmapBtn.disabled = false;
+            stepUmapBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Update SVG configuration based on output dimensionality
+        function updateSvgConfig() {
+            nComponents = parseInt(nComponentsSelect.value);
+            
+            // Clear existing z-axis elements
+            const zAxis = umapSvg.querySelector('.z-axis');
+            const zLabel = umapSvg.querySelector('.z-label');
+            
+            if (nComponents === 3) {
+                // Add z-axis if not present
+                if (!zAxis) {
+                    const zAxis = document.createElementNS(svgNS, 'line');
+                    zAxis.setAttribute('x1', MARGIN + PLOT_WIDTH / 2);
+                    zAxis.setAttribute('y1', MARGIN + PLOT_HEIGHT / 2);
+                    zAxis.setAttribute('x2', MARGIN + PLOT_WIDTH / 2 + 100);
+                    zAxis.setAttribute('y2', MARGIN + PLOT_HEIGHT / 2 - 100);
+                    zAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                    zAxis.setAttribute('stroke-width', '2');
+                    zAxis.setAttribute('class', 'axis-line z-axis');
+                    umapSvg.appendChild(zAxis);
+                }
+                
+                // Add z-axis label if not present
+                if (!zLabel) {
+                    const zLabel = document.createElementNS(svgNS, 'text');
+                    zLabel.setAttribute('x', MARGIN + PLOT_WIDTH / 2 + 110);
+                    zLabel.setAttribute('y', MARGIN + PLOT_HEIGHT / 2 - 110);
+                    zLabel.setAttribute('text-anchor', 'start');
+                    zLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                    zLabel.setAttribute('class', 'axis-label z-label');
+                    zLabel.textContent = 'Z';
+                    umapSvg.appendChild(zLabel);
+                }
+            } else {
+                // Remove z-axis if present
+                if (zAxis) zAxis.remove();
+                if (zLabel) zLabel.remove();
+            }
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        runUmapBtn.addEventListener('click', runUMAP);
+        stepUmapBtn.addEventListener('click', stepUMAP);
+        
+        noiseLevelInput.addEventListener('input', function() {
+            noiseLevel = parseFloat(this.value);
+            noiseValueDisplay.textContent = noiseLevel.toFixed(2);
+        });
+        
+        nNeighborsInput.addEventListener('input', function() {
+            nNeighbors = parseInt(this.value);
+            nNeighborsValueDisplay.textContent = nNeighbors;
+        });
+        
+        minDistInput.addEventListener('input', function() {
+            minDist = parseFloat(this.value);
+            minDistValueDisplay.textContent = minDist.toFixed(2);
+        });
+        
+        pointSizeInput.addEventListener('input', function() {
+            pointSize = parseFloat(this.value);
+            pointSizeValueDisplay.textContent = pointSize.toFixed(1);
+            
+            // Update point sizes if data is already displayed
+            const originalPoints = originalSvg.querySelectorAll('.data-point');
+            const umapPoints = umapSvg.querySelectorAll('.data-point');
+            
+            originalPoints.forEach(point => {
+                const currentSize = parseFloat(point.getAttribute('r'));
+                const newSize = currentSize * (pointSize / pointSizeValueDisplay.textContent);
+                point.setAttribute('r', newSize);
+            });
+            
+            umapPoints.forEach(point => {
+                const currentSize = parseFloat(point.getAttribute('r'));
+                const newSize = currentSize * (pointSize / pointSizeValueDisplay.textContent);
+                point.setAttribute('r', newSize);
+            });
+        });
+        
+        showGraphCheckbox.addEventListener('change', function() {
+            // Update visualization if embedding exists
+            if (umapEmbedding.length > 0) {
+                visualizeUmapEmbedding(umapEmbedding);
+            }
+        });
+        
+        colorByClustersCheckbox.addEventListener('change', function() {
+            // Update visualizations if data exists
+            if (originalData.length > 0) {
+                visualizeOriginalData();
+            }
+            if (umapEmbedding.length > 0) {
+                visualizeUmapEmbedding(umapEmbedding);
+            }
+            if (umapState.knnGraph.length > 0) {
+                visualizeKnnGraph(umapState.knnGraph);
+            }
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

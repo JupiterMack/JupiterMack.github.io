@@ -1,0 +1,1977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive PCA Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/numeric@1.2.6/numeric.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Principal Component Analysis (PCA) Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- Original Space Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Original Space</h2>
+                    <div class="w-full h-[400px] relative" id="original-container">
+                        <svg id="original-space" class="w-full h-full" viewBox="0 0 1000 400"></svg>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Original high-dimensional data with principal components shown as vectors</span>
+                    </div>
+                </div>
+                
+                <!-- Reduced Space Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">PCA Projection</h2>
+                    <div class="w-full h-[400px] relative" id="reduced-container">
+                        <svg id="reduced-space" class="w-full h-full" viewBox="0 0 1000 400"></svg>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Data projected onto the principal components</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel and Variance Plot -->
+            <div class="w-full lg:w-2/5">
+                <!-- Controls Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Data Generation -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="num-points" class="mr-2">Number of Points:</label>
+                                    <input type="number" id="num-points" min="20" max="500" value="100" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="data-distribution" class="mr-2">Distribution:</label>
+                                    <select id="data-distribution" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="gaussian" selected>Multivariate Gaussian</option>
+                                        <option value="swiss-roll">Swiss Roll</option>
+                                        <option value="s-curve">S-Curve</option>
+                                        <option value="blob-clusters">Blob Clusters</option>
+                                        <option value="noisy">Noisy Distribution</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="dimensionality" class="mr-2">Original Dimensions:</label>
+                                    <select id="dimensionality" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="2">2D</option>
+                                        <option value="3" selected>3D</option>
+                                        <option value="5">5D</option>
+                                        <option value="10">10D</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="variance-ratio" class="mr-2">Variance Ratio:</label>
+                                    <input type="range" id="variance-ratio" min="1" max="10" step="0.5" value="4" class="w-40">
+                                    <span id="variance-value" class="text-sm">4.0</span>
+                                </div>
+                                
+                                <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                            </div>
+                        </div>
+                        
+                        <!-- PCA Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">PCA Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="target-dimensions" class="mr-2">Target Dimensions:</label>
+                                    <select id="target-dimensions" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="1">1D</option>
+                                        <option value="2" selected>2D</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="standardize-data" class="mr-2">Standardize Data:</label>
+                                    <input type="checkbox" id="standardize-data" class="w-4 h-4" checked>
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-2">
+                                    <button id="run-pca" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Run PCA</button>
+                                    <button id="step-pca" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step Through</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visualization Options -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-eigenvectors" class="w-4 h-4" checked>
+                                    <label for="show-eigenvectors">Show Principal Components</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-grid" class="w-4 h-4" checked>
+                                    <label for="show-grid">Show Grid Transformation</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="color-by-original" class="w-4 h-4" checked>
+                                    <label for="color-by-original">Color By Original Position</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="animate-projection" class="w-4 h-4" checked>
+                                    <label for="animate-projection">Animate Projection</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Status -->
+                        <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <h3 class="text-lg font-medium mb-2">PCA Stats</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Variance Explained:</span>
+                                    <span id="variance-explained">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Eigenvalues:</span>
+                                    <span id="eigenvalues">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Current Step:</span>
+                                    <span id="current-step">Not Started</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Variance Explained Plot -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Explained Variance</h2>
+                    <div class="w-full h-[300px]">
+                        <svg id="variance-plot" class="w-full h-full" viewBox="0 0 500 300"></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Principal Component Analysis Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>Principal Component Analysis (PCA)</strong> is a dimensionality reduction technique that transforms data to a new coordinate system where the axes (principal components) are ordered by the amount of variance they explain.</p>
+                
+                <p><strong>The PCA Algorithm:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Standardization:</strong> Center the data by subtracting the mean, and optionally scale it to unit variance</li>
+                    <li><strong>Covariance Matrix:</strong> Compute the covariance matrix of the standardized data</li>
+                    <li><strong>Eigendecomposition:</strong> Find the eigenvectors and eigenvalues of the covariance matrix</li>
+                    <li><strong>Sort Components:</strong> Order the eigenvectors by their corresponding eigenvalues (highest to lowest)</li>
+                    <li><strong>Project Data:</strong> Transform the original data onto the new coordinate system defined by the principal components</li>
+                </ol>
+                
+                <p><strong>Key Properties:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Principal Components:</strong> Directions in which the data varies the most</li>
+                    <li><strong>Eigenvalues:</strong> Represent the amount of variance explained by each principal component</li>
+                    <li><strong>Variance Explained:</strong> Percentage of total variation captured by each principal component</li>
+                    <li><strong>Orthogonality:</strong> Principal components are perpendicular to each other</li>
+                </ul>
+                
+                <p><strong>Applications:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Visualization of high-dimensional data</li>
+                    <li>Noise reduction and data preprocessing</li>
+                    <li>Feature extraction and selection</li>
+                    <li>Compression of high-dimensional data</li>
+                </ul>
+                
+                <p><strong>Limitations:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Only captures linear relationships in the data</li>
+                    <li>Sensitive to the relative scaling of the original variables</li>
+                    <li>May not work well if the data has non-linear structures</li>
+                    <li>Interpretation of principal components can be difficult</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const originalSvg = document.getElementById('original-space');
+        const reducedSvg = document.getElementById('reduced-space');
+        const variancePlotSvg = document.getElementById('variance-plot');
+        const generateDataBtn = document.getElementById('generate-data');
+        const runPcaBtn = document.getElementById('run-pca');
+        const stepPcaBtn = document.getElementById('step-pca');
+        const numPointsInput = document.getElementById('num-points');
+        const dataDistributionSelect = document.getElementById('data-distribution');
+        const dimensionalitySelect = document.getElementById('dimensionality');
+        const varianceRatioInput = document.getElementById('variance-ratio');
+        const varianceValueDisplay = document.getElementById('variance-value');
+        const targetDimensionsSelect = document.getElementById('target-dimensions');
+        const standardizeDataCheckbox = document.getElementById('standardize-data');
+        const showEigenvectorsCheckbox = document.getElementById('show-eigenvectors');
+        const showGridCheckbox = document.getElementById('show-grid');
+        const colorByOriginalCheckbox = document.getElementById('color-by-original');
+        const animateProjectionCheckbox = document.getElementById('animate-projection');
+        const varianceExplainedDisplay = document.getElementById('variance-explained');
+        const eigenvaluesDisplay = document.getElementById('eigenvalues');
+        const currentStepDisplay = document.getElementById('current-step');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 400;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Data visualization constants
+        const DATA_WIDTH = WIDTH - MARGIN * 2;
+        const DATA_HEIGHT = HEIGHT - MARGIN * 2;
+        const DATA_X = MARGIN;
+        const DATA_Y = MARGIN;
+        
+        // Variance plot constants
+        const VAR_WIDTH = 500;
+        const VAR_HEIGHT = 300;
+        const VAR_MARGIN = 40;
+        const VAR_PLOT_WIDTH = VAR_WIDTH - 2 * VAR_MARGIN;
+        const VAR_PLOT_HEIGHT = VAR_HEIGHT - 2 * VAR_MARGIN;
+        
+        // Data ranges
+        const X_MIN = -5;
+        const X_MAX = 5;
+        const Y_MIN = -5;
+        const Y_MAX = 5;
+        
+        // Colors
+        const POINT_COLORS = [
+            '#EF4444', // Red
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#8B5CF6', // Purple
+            '#F59E0B', // Amber
+            '#EC4899', // Pink
+            '#6366F1'  // Indigo
+        ];
+        const EIGENVECTOR_COLORS = [
+            '#DC2626', // Bright Red
+            '#2563EB', // Bright Blue
+            '#059669', // Bright Green
+            '#7C3AED', // Bright Purple
+        ];
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and algorithm parameters
+        let originalData = [];       // Original high-dimensional data
+        let standardizedData = [];   // Standardized data
+        let projectedData = [];      // Data projected onto principal components
+        let meanVector = [];         // Mean vector for standardization
+        let stdVector = [];          // Standard deviation vector for standardization
+        let covarianceMatrix = [];   // Covariance matrix of the data
+        let eigenvalues = [];        // Eigenvalues of the covariance matrix
+        let eigenvectors = [];       // Eigenvectors of the covariance matrix
+        let explainedVarianceRatio = []; // Ratio of variance explained by each component
+        let cumulativeVariance = []; // Cumulative explained variance
+        let principalComponents = []; // Selected principal components for projection
+        let dimensions = 3;          // Original dimensionality of the data
+        let targetDimensions = 2;    // Target dimensionality after PCA
+        let varianceRatio = 4.0;     // Variance ratio between the first two principal components
+        let stepByStepMode = false;  // Flag for step-by-step execution
+        let currentStep = 0;         // Current step in the step-by-step execution
+        let gridPoints = [];         // Points for the grid visualization
+        let transformedGridPoints = []; // Transformed grid points
+        let animationInProgress = false; // Flag to prevent multiple simultaneous animations
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            originalSvg.innerHTML = '';
+            reducedSvg.innerHTML = '';
+            variancePlotSvg.innerHTML = '';
+            
+            // Add background for original space visualization
+            const originalBackground = document.createElementNS(svgNS, 'rect');
+            originalBackground.setAttribute('width', WIDTH);
+            originalBackground.setAttribute('height', HEIGHT);
+            originalBackground.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            originalSvg.appendChild(originalBackground);
+            
+            // Add background for reduced space visualization
+            const reducedBackground = document.createElementNS(svgNS, 'rect');
+            reducedBackground.setAttribute('width', WIDTH);
+            reducedBackground.setAttribute('height', HEIGHT);
+            reducedBackground.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            reducedSvg.appendChild(reducedBackground);
+            
+            // Add grid lines for original space visualization
+            addGridLines(originalSvg);
+            
+            // Add grid lines for reduced space visualization
+            addGridLines(reducedSvg);
+            
+            // Add axes for original space
+            addAxes(originalSvg, 3);
+            
+            // Add axes for reduced space
+            addAxes(reducedSvg, 2);
+            
+            // Initialize variance plot
+            initVariancePlot();
+        }
+        
+        // Add grid lines to SVG
+        function addGridLines(svgElement) {
+            const numVerticalLines = 10;
+            const numHorizontalLines = 10;
+            const verticalSpacing = DATA_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = DATA_X + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                vLine.setAttribute('class', 'grid-line');
+                svgElement.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', DATA_X);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', DATA_X + DATA_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                hLine.setAttribute('class', 'grid-line');
+                svgElement.appendChild(hLine);
+            }
+        }
+        
+        // Add axes to SVG
+        function addAxes(svgElement, numAxes) {
+            // Add x and y axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', DATA_X);
+            xAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT / 2);
+            xAxis.setAttribute('x2', DATA_X + DATA_WIDTH);
+            xAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT / 2);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            xAxis.setAttribute('class', 'axis-line');
+            svgElement.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', DATA_X + DATA_WIDTH / 2);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', DATA_X + DATA_WIDTH / 2);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            yAxis.setAttribute('class', 'axis-line');
+            svgElement.appendChild(yAxis);
+            
+            // Add z-axis if needed (for 3D visualization)
+            if (numAxes > 2) {
+                // Simulate a z-axis with a diagonal line
+                const zAxis = document.createElementNS(svgNS, 'line');
+                zAxis.setAttribute('x1', DATA_X + DATA_WIDTH / 2);
+                zAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT / 2);
+                zAxis.setAttribute('x2', DATA_X + DATA_WIDTH / 2 + 100);
+                zAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT / 2 - 100);
+                zAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                zAxis.setAttribute('stroke-width', '2');
+                zAxis.setAttribute('class', 'axis-line');
+                svgElement.appendChild(zAxis);
+            }
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', DATA_X + DATA_WIDTH);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2 - 10);
+            xLabel.setAttribute('text-anchor', 'end');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.setAttribute('class', 'axis-label');
+            xLabel.textContent = 'X';
+            svgElement.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2 + 10);
+            yLabel.setAttribute('y', DATA_Y + 15);
+            yLabel.setAttribute('text-anchor', 'start');
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.setAttribute('class', 'axis-label');
+            yLabel.textContent = 'Y';
+            svgElement.appendChild(yLabel);
+            
+            if (numAxes > 2) {
+                const zLabel = document.createElementNS(svgNS, 'text');
+                zLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2 + 110);
+                zLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2 - 110);
+                zLabel.setAttribute('text-anchor', 'middle');
+                zLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                zLabel.setAttribute('class', 'axis-label');
+                zLabel.textContent = 'Z';
+                svgElement.appendChild(zLabel);
+            }
+            
+            // Add axis ticks and values
+            // X-axis ticks
+            for (let i = -4; i <= 4; i += 2) {
+                const x = mapX(i);
+                
+                // Skip the center
+                if (i === 0) continue;
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', DATA_Y + DATA_HEIGHT / 2 - 5);
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', DATA_Y + DATA_HEIGHT / 2 + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                tickLine.setAttribute('class', 'tick-line');
+                svgElement.appendChild(tickLine);
+                
+                // Tick label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2 + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.setAttribute('class', 'tick-label');
+                tickLabel.textContent = i.toString();
+                svgElement.appendChild(tickLabel);
+            }
+            
+            // Y-axis ticks
+            for (let i = -4; i <= 4; i += 2) {
+                const y = mapY(i);
+                
+                // Skip the center
+                if (i === 0) continue;
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', DATA_X + DATA_WIDTH / 2 - 5);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', DATA_X + DATA_WIDTH / 2 + 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                tickLine.setAttribute('class', 'tick-line');
+                svgElement.appendChild(tickLine);
+                
+                // Tick label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2 - 15);
+                tickLabel.setAttribute('y', y + 5);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.setAttribute('class', 'tick-label');
+                tickLabel.textContent = i.toString();
+                svgElement.appendChild(tickLabel);
+            }
+        }
+        
+        // Initialize the variance plot
+        function initVariancePlot() {
+            // Clear existing SVG
+            variancePlotSvg.innerHTML = '';
+            
+            // Add background
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', VAR_WIDTH);
+            background.setAttribute('height', VAR_HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            variancePlotSvg.appendChild(background);
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', VAR_MARGIN);
+            xAxis.setAttribute('y1', VAR_HEIGHT - VAR_MARGIN);
+            xAxis.setAttribute('x2', VAR_WIDTH - VAR_MARGIN);
+            xAxis.setAttribute('y2', VAR_HEIGHT - VAR_MARGIN);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            variancePlotSvg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', VAR_MARGIN);
+            yAxis.setAttribute('y1', VAR_MARGIN);
+            yAxis.setAttribute('x2', VAR_MARGIN);
+            yAxis.setAttribute('y2', VAR_HEIGHT - VAR_MARGIN);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            variancePlotSvg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', VAR_WIDTH / 2);
+            xLabel.setAttribute('y', VAR_HEIGHT - 5);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Principal Component';
+            variancePlotSvg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', 15);
+            yLabel.setAttribute('y', VAR_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, 15, ${VAR_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Explained Variance (%)';
+            variancePlotSvg.appendChild(yLabel);
+            
+            // Add title
+            const title = document.createElementNS(svgNS, 'text');
+            title.setAttribute('x', VAR_WIDTH / 2);
+            title.setAttribute('y', VAR_MARGIN / 2);
+            title.setAttribute('text-anchor', 'middle');
+            title.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            title.setAttribute('font-weight', 'bold');
+            title.textContent = 'Explained Variance by Principal Component';
+            variancePlotSvg.appendChild(title);
+            
+            // Add placeholder text
+            const placeholderText = document.createElementNS(svgNS, 'text');
+            placeholderText.setAttribute('x', VAR_WIDTH / 2);
+            placeholderText.setAttribute('y', VAR_HEIGHT / 2);
+            placeholderText.setAttribute('text-anchor', 'middle');
+            placeholderText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            placeholderText.setAttribute('font-style', 'italic');
+            placeholderText.setAttribute('class', 'variance-placeholder');
+            placeholderText.textContent = 'Run PCA to see variance explained';
+            variancePlotSvg.appendChild(placeholderText);
+        }
+        
+        // Generate synthetic data
+        function generateData() {
+            const numPoints = parseInt(numPointsInput.value);
+            const distribution = dataDistributionSelect.value;
+            dimensions = parseInt(dimensionalitySelect.value);
+            varianceRatio = parseFloat(varianceRatioInput.value);
+            targetDimensions = parseInt(targetDimensionsSelect.value);
+            
+            // Update variance ratio display
+            varianceValueDisplay.textContent = varianceRatio.toFixed(1);
+            
+            // Clear existing data
+            originalData = [];
+            standardizedData = [];
+            projectedData = [];
+            
+            // Generate data based on selected distribution
+            switch (distribution) {
+                case 'gaussian':
+                    generateGaussianData(numPoints, dimensions, varianceRatio);
+                    break;
+                case 'swiss-roll':
+                    generateSwissRollData(numPoints);
+                    break;
+                case 's-curve':
+                    generateSCurveData(numPoints);
+                    break;
+                case 'blob-clusters':
+                    generateBlobClusters(numPoints, dimensions);
+                    break;
+                case 'noisy':
+                    generateNoisyData(numPoints, dimensions);
+                    break;
+                default:
+                    generateGaussianData(numPoints, dimensions, varianceRatio);
+            }
+            
+            // Reset algorithm state
+            resetAlgorithmState();
+            
+            // Visualize original data
+            visualizeOriginalData();
+            
+            // Clear reduced space visualization
+            clearReducedVisualization();
+            
+            // Reset step display
+            currentStepDisplay.textContent = 'Not Started';
+        }
+        
+        // Generate multivariate Gaussian data
+        function generateGaussianData(numPoints, dimensions, varianceRatio) {
+            // Create covariance matrix with specified variance ratio
+            // Start with an identity matrix
+            const covMatrix = Array(dimensions).fill().map(() => Array(dimensions).fill(0));
+            
+            // Set diagonal elements (variances)
+            for (let i = 0; i < dimensions; i++) {
+                if (i === 0) {
+                    covMatrix[i][i] = varianceRatio; // Higher variance for first dimension
+                } else {
+                    covMatrix[i][i] = 1; // Unit variance for other dimensions
+                }
+            }
+            
+            // Add some covariance between dimensions
+            if (dimensions >= 2) {
+                covMatrix[0][1] = 0.7 * Math.sqrt(covMatrix[0][0] * covMatrix[1][1]);
+                covMatrix[1][0] = covMatrix[0][1];
+            }
+            
+            // Generate data points from the multivariate Gaussian
+            for (let i = 0; i < numPoints; i++) {
+                const point = [];
+                
+                // Generate independent standard normal variables
+                const independent = Array(dimensions).fill().map(() => randomNormal());
+                
+                // Transform to correlated variables using Cholesky decomposition
+                // For simplicity, we'll use a simpler approach here
+                for (let j = 0; j < dimensions; j++) {
+                    let value = 0;
+                    for (let k = 0; k <= j; k++) {
+                        value += independent[k] * Math.sqrt(covMatrix[j][j]);
+                    }
+                    point.push(value);
+                }
+                
+                originalData.push(point);
+            }
+            
+            // Generate grid points for visualization (only in 2D or 3D)
+            generateGridPoints(dimensions);
+        }
+        
+        // Generate Swiss Roll data (3D)
+        function generateSwissRollData(numPoints) {
+            // Swiss roll is a classic 3D dataset with 2D intrinsic structure
+            dimensions = 3; // Override dimensions for Swiss Roll
+            
+            for (let i = 0; i < numPoints; i++) {
+                const t = 1.5 * Math.PI * (1 + 2 * Math.random());
+                const height = 10 * Math.random();
+                const x = t * Math.cos(t);
+                const y = height;
+                const z = t * Math.sin(t);
+                
+                originalData.push([x, y, z]);
+            }
+            
+            // Generate grid points for visualization
+            generateGridPoints(3);
+        }
+        
+        // Generate S-Curve data (3D)
+        function generateSCurveData(numPoints) {
+            // S-Curve is another classic 3D dataset with 2D intrinsic structure
+            dimensions = 3; // Override dimensions for S-Curve
+            
+            for (let i = 0; i < numPoints; i++) {
+                const t = 3 * Math.PI * (Math.random() - 0.5);
+                const height = 10 * Math.random();
+                const x = Math.sin(t);
+                const y = height;
+                const z = Math.sign(t) * Math.cos(t);
+                
+                originalData.push([x, y, z]);
+            }
+            
+            // Generate grid points for visualization
+            generateGridPoints(3);
+        }
+        
+        // Generate blob clusters data
+        function generateBlobClusters(numPoints, dimensions) {
+            const numClusters = 3;
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            
+            // Generate cluster centers
+            const centers = [];
+            for (let i = 0; i < numClusters; i++) {
+                const center = Array(dimensions).fill().map(() => (Math.random() - 0.5) * 8);
+                centers.push(center);
+            }
+            
+            // Generate points around cluster centers
+            for (let i = 0; i < numClusters; i++) {
+                const center = centers[i];
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    const point = [];
+                    
+                    for (let k = 0; k < dimensions; k++) {
+                        point.push(center[k] + randomNormal() * 0.8);
+                    }
+                    
+                    originalData.push(point);
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - originalData.length;
+            if (remaining > 0) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = centers[clusterIndex];
+                
+                for (let i = 0; i < remaining; i++) {
+                    const point = [];
+                    
+                    for (let k = 0; k < dimensions; k++) {
+                        point.push(center[k] + randomNormal() * 0.8);
+                    }
+                    
+                    originalData.push(point);
+                }
+            }
+            
+            // Generate grid points for visualization
+            generateGridPoints(dimensions);
+        }
+        
+        // Generate noisy data
+        function generateNoisyData(numPoints, dimensions) {
+            // Generate random data with some structure and added noise
+            for (let i = 0; i < numPoints; i++) {
+                const point = [];
+                
+                // First two dimensions have structure (e.g., a line or curve)
+                const t = Math.random() * 10 - 5;
+                point.push(t);
+                point.push(0.5 * t * t + randomNormal() * 2);
+                
+                // Remaining dimensions are mostly noise
+                for (let j = 2; j < dimensions; j++) {
+                    point.push(randomNormal() * 3);
+                }
+                
+                originalData.push(point);
+            }
+            
+            // Generate grid points for visualization
+            generateGridPoints(dimensions);
+        }
+        
+        // Generate a grid of points for visualizing transformations
+        function generateGridPoints(dimensions) {
+            gridPoints = [];
+            
+            if (dimensions <= 3) {
+                // Create a 2D grid in the first two dimensions
+                const gridSize = 5;
+                const gridSpacing = 2;
+                
+                for (let i = -gridSize; i <= gridSize; i += 1) {
+                    for (let j = -gridSize; j <= gridSize; j += 1) {
+                        const point = Array(dimensions).fill(0);
+                        point[0] = i * gridSpacing;
+                        point[1] = j * gridSpacing;
+                        gridPoints.push(point);
+                    }
+                }
+            }
+        }
+        
+        // Generate a random normal (Gaussian) number using Box-Muller transform
+        function randomNormal() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random(); // Exclude 0
+            while (v === 0) v = Math.random(); // Exclude 0
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+        
+        // Map data coordinates to SVG coordinates for original space
+        function mapX(x) {
+            return DATA_X + DATA_WIDTH / 2 + (x / (X_MAX - X_MIN)) * DATA_WIDTH / 2;
+        }
+        
+        function mapY(y) {
+            return DATA_Y + DATA_HEIGHT / 2 - (y / (Y_MAX - Y_MIN)) * DATA_HEIGHT / 2;
+        }
+        
+        // Map points to color (for consistent coloring across visualizations)
+        function getPointColor(point, index) {
+            if (colorByOriginalCheckbox.checked && dimensions >= 2) {
+                // Color based on position in the first two original dimensions
+                const x = originalData[index][0];
+                const y = originalData[index][1];
+                
+                // Map to color components (hue based on angle in xy-plane)
+                const angle = Math.atan2(y, x);
+                const hue = ((angle + Math.PI) / (2 * Math.PI)) * 360;
+                
+                // Distance from center affects saturation
+                const distance = Math.sqrt(x*x + y*y);
+                const saturation = Math.min(100, 30 + distance * 15);
+                
+                return `hsl(${hue}, ${saturation}%, 50%)`;
+            } else {
+                // Use palette color
+                return POINT_COLORS[index % POINT_COLORS.length];
+            }
+        }
+        
+        // Map variance plot coordinates
+        function mapVarX(index, totalComponents) {
+            return VAR_MARGIN + (index / (totalComponents - 1)) * VAR_PLOT_WIDTH;
+        }
+        
+        function mapVarY(value) {
+            return VAR_HEIGHT - VAR_MARGIN - (value * VAR_PLOT_HEIGHT);
+        }
+        
+        // Reset algorithm state
+        function resetAlgorithmState() {
+            standardizedData = [];
+            projectedData = [];
+            meanVector = [];
+            stdVector = [];
+            covarianceMatrix = [];
+            eigenvalues = [];
+            eigenvectors = [];
+            explainedVarianceRatio = [];
+            cumulativeVariance = [];
+            principalComponents = [];
+            transformedGridPoints = [];
+            currentStep = 0;
+            stepByStepMode = false;
+            
+            // Update UI
+            varianceExplainedDisplay.textContent = '-';
+            eigenvaluesDisplay.textContent = '-';
+            currentStepDisplay.textContent = 'Not Started';
+        }
+        
+        // Visualize original data in higher dimensions
+        function visualizeOriginalData() {
+            // Clear existing visualization
+            clearOriginalVisualization();
+            
+            // Project the data to 2D/3D for visualization
+            // For simplicity, we just use the first 2 or 3 dimensions
+            const visibleDims = Math.min(3, dimensions);
+            
+            // Draw grid if enabled
+            if (showGridCheckbox.checked && gridPoints.length > 0) {
+                const gridSize = 5;
+                const gridSpacing = 2;
+                
+                // Draw grid lines
+                for (let i = -gridSize; i <= gridSize; i += 1) {
+                    // Horizontal grid line
+                    const horizLine = document.createElementNS(svgNS, 'path');
+                    let pathData = '';
+                    
+                    for (let j = -gridSize; j <= gridSize; j += 1) {
+                        const point = [j * gridSpacing, i * gridSpacing, 0];
+                        const x = mapX(point[0]);
+                        const y = mapY(point[1]);
+                        
+                        if (j === -gridSize) {
+                            pathData = `M ${x} ${y}`;
+                        } else {
+                            pathData += ` L ${x} ${y}`;
+                        }
+                    }
+                    
+                    horizLine.setAttribute('d', pathData);
+                    horizLine.setAttribute('fill', 'none');
+                    horizLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                    horizLine.setAttribute('stroke-width', '1');
+                    horizLine.setAttribute('class', 'grid-line original-element');
+                    originalSvg.appendChild(horizLine);
+                    
+                    // Vertical grid line
+                    const vertLine = document.createElementNS(svgNS, 'path');
+                    pathData = '';
+                    
+                    for (let j = -gridSize; j <= gridSize; j += 1) {
+                        const point = [i * gridSpacing, j * gridSpacing, 0];
+                        const x = mapX(point[0]);
+                        const y = mapY(point[1]);
+                        
+                        if (j === -gridSize) {
+                            pathData = `M ${x} ${y}`;
+                        } else {
+                            pathData += ` L ${x} ${y}`;
+                        }
+                    }
+                    
+                    vertLine.setAttribute('d', pathData);
+                    vertLine.setAttribute('fill', 'none');
+                    vertLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                    vertLine.setAttribute('stroke-width', '1');
+                    vertLine.setAttribute('class', 'grid-line original-element');
+                    originalSvg.appendChild(vertLine);
+                }
+            }
+            
+            // Draw data points
+            originalData.forEach((point, index) => {
+                // Project to visible dimensions
+                const visiblePoint = point.slice(0, visibleDims);
+                
+                // Add zero padding if needed
+                while (visiblePoint.length < 3) {
+                    visiblePoint.push(0);
+                }
+                
+                // Calculate position in SVG
+                const x = mapX(visiblePoint[0]);
+                const y = mapY(visiblePoint[1]);
+                
+                // Create point circle
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', '4');
+                circle.setAttribute('fill', getPointColor(point, index));
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point original-element');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                originalSvg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point.original-element',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(5),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Clear original space visualization
+        function clearOriginalVisualization() {
+            const existingElements = originalSvg.querySelectorAll('.original-element');
+            existingElements.forEach(element => element.remove());
+        }
+        
+        // Clear reduced space visualization
+        function clearReducedVisualization() {
+            const existingElements = reducedSvg.querySelectorAll('.reduced-element');
+            existingElements.forEach(element => element.remove());
+        }
+        
+        // Run full PCA algorithm
+        async function runPCA() {
+            if (originalData.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during processing
+            runPcaBtn.disabled = true;
+            stepPcaBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            targetDimensions = parseInt(targetDimensionsSelect.value);
+            
+            // Reset algorithm state (but keep original data)
+            resetAlgorithmState();
+            
+            // Run PCA steps
+            await standardizeData();
+            await computeCovarianceMatrix();
+            await computeEigendecomposition();
+            await selectPrincipalComponents();
+            await projectData();
+            
+            // Visualize results
+            visualizeVarianceExplained();
+            visualizeTransformedGrid();
+            visualizeReducedData(true);
+            
+            // Update status
+            currentStepDisplay.textContent = 'Complete';
+            
+            // Re-enable buttons
+            runPcaBtn.disabled = false;
+            stepPcaBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Step through PCA algorithm
+        async function stepPCA() {
+            if (originalData.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during step
+            runPcaBtn.disabled = true;
+            stepPcaBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            targetDimensions = parseInt(targetDimensionsSelect.value);
+            
+            // Initialize if this is the first step
+            if (currentStep === 0) {
+                stepByStepMode = true;
+                
+                // Reset algorithm state (but keep original data)
+                resetAlgorithmState();
+                
+                // Execute standardization step
+                await standardizeData();
+                
+                // Update UI
+                currentStep = 1;
+                currentStepDisplay.textContent = 'Step 1: Data Standardization';
+            }
+            // Next step: compute covariance matrix
+            else if (currentStep === 1) {
+                await computeCovarianceMatrix();
+                
+                // Update UI
+                currentStep = 2;
+                currentStepDisplay.textContent = 'Step 2: Covariance Matrix';
+            }
+            // Next step: eigendecomposition
+            else if (currentStep === 2) {
+                await computeEigendecomposition();
+                
+                // Update UI
+                currentStep = 3;
+                currentStepDisplay.textContent = 'Step 3: Eigendecomposition';
+                
+                // Visualize variance explained
+                visualizeVarianceExplained();
+            }
+            // Next step: select principal components
+            else if (currentStep === 3) {
+                await selectPrincipalComponents();
+                
+                // Update UI
+                currentStep = 4;
+                currentStepDisplay.textContent = 'Step 4: Principal Components Selection';
+                
+                // Visualize eigenvectors in original space
+                visualizeEigenvectors();
+            }
+            // Next step: project data
+            else if (currentStep === 4) {
+                await projectData();
+                
+                // Update UI
+                currentStep = 5;
+                currentStepDisplay.textContent = 'Step 5: Data Projection';
+                
+                // Visualize transformed grid
+                visualizeTransformedGrid();
+                
+                // Visualize reduced data
+                visualizeReducedData(animateProjectionCheckbox.checked);
+            }
+            // Last step: complete
+            else if (currentStep === 5) {
+                // Reset step counter if we want to run again
+                currentStep = 0;
+                currentStepDisplay.textContent = 'Complete';
+            }
+            
+            // Re-enable buttons
+            runPcaBtn.disabled = false;
+            stepPcaBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Step 1: Standardize the data
+        async function standardizeData() {
+            // Get standardization option
+            const shouldStandardize = standardizeDataCheckbox.checked;
+            
+            // Calculate mean and standard deviation for each dimension
+            meanVector = Array(dimensions).fill(0);
+            stdVector = Array(dimensions).fill(1);
+            
+            if (shouldStandardize) {
+                // Calculate mean vector
+                for (const point of originalData) {
+                    for (let i = 0; i < dimensions; i++) {
+                        meanVector[i] += point[i] || 0;
+                    }
+                }
+                
+                for (let i = 0; i < dimensions; i++) {
+                    meanVector[i] /= originalData.length;
+                }
+                
+                // Calculate standard deviation vector
+                for (const point of originalData) {
+                    for (let i = 0; i < dimensions; i++) {
+                        stdVector[i] += Math.pow((point[i] || 0) - meanVector[i], 2);
+                    }
+                }
+                
+                for (let i = 0; i < dimensions; i++) {
+                    stdVector[i] = Math.sqrt(stdVector[i] / originalData.length);
+                    // Avoid division by zero
+                    if (stdVector[i] < 1e-10) {
+                        stdVector[i] = 1;
+                    }
+                }
+            }
+            
+            // Standardize the data
+            standardizedData = [];
+            
+            for (const point of originalData) {
+                const standardized = [];
+                
+                for (let i = 0; i < dimensions; i++) {
+                    standardized.push((point[i] || 0 - meanVector[i]) / stdVector[i]);
+                }
+                
+                standardizedData.push(standardized);
+            }
+            
+            // Update visualization if in step-by-step mode
+            if (stepByStepMode) {
+                // Add animation delay
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Step 2: Compute the covariance matrix
+        async function computeCovarianceMatrix() {
+            // Initialize covariance matrix with zeros
+            covarianceMatrix = Array(dimensions).fill().map(() => Array(dimensions).fill(0));
+            
+            // Compute covariance matrix
+            for (const point of standardizedData) {
+                for (let i = 0; i < dimensions; i++) {
+                    for (let j = 0; j < dimensions; j++) {
+                        covarianceMatrix[i][j] += point[i] * point[j];
+                    }
+                }
+            }
+            
+            // Normalize by number of data points
+            for (let i = 0; i < dimensions; i++) {
+                for (let j = 0; j < dimensions; j++) {
+                    covarianceMatrix[i][j] /= (standardizedData.length - 1);
+                }
+            }
+            
+            // Update visualization if in step-by-step mode
+            if (stepByStepMode) {
+                // Add animation delay
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Step 3: Compute eigendecomposition
+        async function computeEigendecomposition() {
+            // Use numeric.js for eigendecomposition
+            try {
+                // Ensure the covariance matrix is symmetric (numerical issues can cause slight asymmetry)
+                for (let i = 0; i < dimensions; i++) {
+                    for (let j = i + 1; j < dimensions; j++) {
+                        const avg = (covarianceMatrix[i][j] + covarianceMatrix[j][i]) / 2;
+                        covarianceMatrix[i][j] = avg;
+                        covarianceMatrix[j][i] = avg;
+                    }
+                }
+                
+                // Add a small epsilon to the diagonal for numerical stability
+                const epsilon = 1e-10;
+                for (let i = 0; i < dimensions; i++) {
+                    covarianceMatrix[i][i] += epsilon;
+                }
+                
+                // Compute eigendecomposition
+                const result = numeric.eig(covarianceMatrix);
+                
+                // Extract eigenvalues (they are complex, we need to get the real parts)
+                eigenvalues = result.lambda.x;
+                
+                // Check for negative eigenvalues (numerical errors)
+                for (let i = 0; i < eigenvalues.length; i++) {
+                    if (eigenvalues[i] < 0) {
+                        eigenvalues[i] = Math.abs(eigenvalues[i]); // Use absolute value as a workaround
+                    }
+                }
+                
+                // Extract eigenvectors
+                eigenvectors = [];
+                for (let i = 0; i < dimensions; i++) {
+                    const eigenvector = [];
+                    for (let j = 0; j < dimensions; j++) {
+                        // Get real part of the complex eigenvector
+                        eigenvector.push(result.E.x[j][i]);
+                    }
+                    eigenvectors.push(eigenvector);
+                }
+                
+                // Create pairs of eigenvalues and indices
+                const pairs = eigenvalues.map((value, index) => ({ value, index }));
+                
+                // Sort by eigenvalue in descending order
+                pairs.sort((a, b) => b.value - a.value);
+                
+                // Reorder eigenvalues and eigenvectors
+                eigenvalues = pairs.map(pair => pair.value);
+                eigenvectors = pairs.map(pair => eigenvectors[pair.index]);
+                
+                // Compute explained variance ratio
+                const totalVariance = eigenvalues.reduce((a, b) => a + b, 0);
+                explainedVarianceRatio = eigenvalues.map(val => val / totalVariance);
+                
+                // Compute cumulative explained variance
+                cumulativeVariance = [];
+                let cumulative = 0;
+                
+                for (const ratio of explainedVarianceRatio) {
+                    cumulative += ratio;
+                    cumulativeVariance.push(cumulative);
+                }
+                
+                // Update UI with eigenvalues and explained variance
+                eigenvaluesDisplay.textContent = eigenvalues.slice(0, 3).map(v => v.toFixed(2)).join(', ');
+                varianceExplainedDisplay.textContent = explainedVarianceRatio.slice(0, 3).map(v => (v * 100).toFixed(1) + '%').join(', ');
+                
+                // Update visualization if in step-by-step mode
+                if (stepByStepMode) {
+                    // Add animation delay
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Visualize eigenvectors
+                    visualizeEigenvectors();
+                }
+            } catch (error) {
+                console.error('Error in eigendecomposition:', error);
+                
+                // Fallback: generate simple principal components
+                console.log("Using fallback principal components");
+                eigenvalues = [];
+                eigenvectors = [];
+                
+                // Create identity-like eigenvectors
+                for (let i = 0; i < dimensions; i++) {
+                    const eigenvector = Array(dimensions).fill(0);
+                    eigenvector[i] = 1;
+                    eigenvectors.push(eigenvector);
+                    
+                    // Decreasing eigenvalues
+                    eigenvalues.push(dimensions - i);
+                }
+                
+                // Compute explained variance ratio
+                const totalVariance = eigenvalues.reduce((a, b) => a + b, 0);
+                explainedVarianceRatio = eigenvalues.map(val => val / totalVariance);
+                
+                // Compute cumulative explained variance
+                cumulativeVariance = [];
+                let cumulative = 0;
+                
+                for (const ratio of explainedVarianceRatio) {
+                    cumulative += ratio;
+                    cumulativeVariance.push(cumulative);
+                }
+                
+                // Update UI with eigenvalues and explained variance
+                eigenvaluesDisplay.textContent = eigenvalues.slice(0, 3).map(v => v.toFixed(2)).join(', ');
+                varianceExplainedDisplay.textContent = explainedVarianceRatio.slice(0, 3).map(v => (v * 100).toFixed(1) + '%').join(', ');
+                
+                // Update visualization if in step-by-step mode
+                if (stepByStepMode) {
+                    visualizeEigenvectors();
+                }
+            }
+        }
+        
+        // Step 4: Select principal components
+        async function selectPrincipalComponents() {
+            // Select the top k eigenvectors as principal components
+            principalComponents = eigenvectors.slice(0, targetDimensions);
+            
+            // Update visualization if in step-by-step mode
+            if (stepByStepMode) {
+                // Add animation delay
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Step 5: Project data onto principal components
+        async function projectData() {
+            // Project standardized data onto principal components
+            projectedData = [];
+            
+            for (const point of standardizedData) {
+                const projected = [];
+                
+                for (const component of principalComponents) {
+                    // Dot product of point and principal component
+                    let dotProduct = 0;
+                    for (let i = 0; i < dimensions; i++) {
+                        dotProduct += point[i] * component[i];
+                    }
+                    projected.push(dotProduct);
+                }
+                
+                projectedData.push(projected);
+            }
+            
+            // Project grid points if any
+            if (gridPoints.length > 0) {
+                transformedGridPoints = [];
+                
+                for (const point of gridPoints) {
+                    // Standardize grid point
+                    const standardized = [];
+                    for (let i = 0; i < dimensions; i++) {
+                        standardized.push((point[i] - meanVector[i]) / stdVector[i]);
+                    }
+                    
+                    // Project onto principal components
+                    const projected = [];
+                    for (const component of principalComponents) {
+                        // Dot product of point and principal component
+                        let dotProduct = 0;
+                        for (let i = 0; i < dimensions; i++) {
+                            dotProduct += standardized[i] * component[i];
+                        }
+                        projected.push(dotProduct);
+                    }
+                    
+                    transformedGridPoints.push(projected);
+                }
+            }
+            
+            // Update visualization if in step-by-step mode
+            if (stepByStepMode) {
+                // Add animation delay
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Visualize eigenvectors in original space
+        function visualizeEigenvectors() {
+            if (showEigenvectorsCheckbox.checked) {
+                // Get the first 2 or 3 eigenvectors depending on visualization dimensions
+                const visibleDims = Math.min(3, dimensions);
+                const visibleEigenvectors = eigenvectors.slice(0, Math.min(3, dimensions));
+                
+                // Get center of visualization
+                const centerX = mapX(0);
+                const centerY = mapY(0);
+                
+                // Scale factor for eigenvector visualization
+                const scaleFactor = 50 * Math.sqrt(eigenvalues[0]);
+                
+                // Draw eigenvectors as arrows from center
+                visibleEigenvectors.forEach((eigenvector, index) => {
+                    // Get visible dimensions of eigenvector
+                    const visibleVector = eigenvector.slice(0, visibleDims);
+                    
+                    // Add zero padding if needed
+                    while (visibleVector.length < 3) {
+                        visibleVector.push(0);
+                    }
+                    
+                    // Calculate end point of arrow
+                    const endX = centerX + visibleVector[0] * scaleFactor;
+                    const endY = centerY - visibleVector[1] * scaleFactor;
+                    
+                    // Create arrow line
+                    const arrow = document.createElementNS(svgNS, 'line');
+                    arrow.setAttribute('x1', centerX);
+                    arrow.setAttribute('y1', centerY);
+                    arrow.setAttribute('x2', endX);
+                    arrow.setAttribute('y2', endY);
+                    arrow.setAttribute('stroke', EIGENVECTOR_COLORS[index % EIGENVECTOR_COLORS.length]);
+                    arrow.setAttribute('stroke-width', 3);
+                    arrow.setAttribute('marker-end', 'url(#arrowhead)');
+                    arrow.setAttribute('class', 'eigenvector original-element');
+                    
+                    // Add animation
+                    arrow.style.opacity = '0';
+                    
+                    originalSvg.appendChild(arrow);
+                    
+                    // Add variance explanation label
+                    const labelX = centerX + visibleVector[0] * scaleFactor * 1.2;
+                    const labelY = centerY - visibleVector[1] * scaleFactor * 1.2;
+                    
+                    const label = document.createElementNS(svgNS, 'text');
+                    label.setAttribute('x', labelX);
+                    label.setAttribute('y', labelY);
+                    label.setAttribute('text-anchor', 'middle');
+                    label.setAttribute('fill', EIGENVECTOR_COLORS[index % EIGENVECTOR_COLORS.length]);
+                    label.setAttribute('font-weight', 'bold');
+                    label.setAttribute('class', 'eigenvector-label original-element');
+                    label.textContent = `PC${index+1}: ${(explainedVarianceRatio[index] * 100).toFixed(1)}%`;
+                    
+                    // Add animation
+                    label.style.opacity = '0';
+                    
+                    originalSvg.appendChild(label);
+                });
+                
+                // Add arrowhead marker definition if not already present
+                if (!originalSvg.querySelector('defs')) {
+                    const defs = document.createElementNS(svgNS, 'defs');
+                    const marker = document.createElementNS(svgNS, 'marker');
+                    marker.setAttribute('id', 'arrowhead');
+                    marker.setAttribute('markerWidth', '10');
+                    marker.setAttribute('markerHeight', '7');
+                    marker.setAttribute('refX', '10');
+                    marker.setAttribute('refY', '3.5');
+                    marker.setAttribute('orient', 'auto');
+                    
+                    const polygon = document.createElementNS(svgNS, 'polygon');
+                    polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+                    polygon.setAttribute('fill', '#000');
+                    
+                    marker.appendChild(polygon);
+                    defs.appendChild(marker);
+                    originalSvg.appendChild(defs);
+                }
+                
+                // Animate eigenvectors
+                anime({
+                    targets: '.eigenvector',
+                    opacity: 1,
+                    delay: anime.stagger(200),
+                    easing: 'easeInOutQuad',
+                    duration: 800
+                });
+                
+                // Animate labels
+                anime({
+                    targets: '.eigenvector-label',
+                    opacity: 1,
+                    delay: anime.stagger(200, {start: 200}),
+                    easing: 'easeInOutQuad',
+                    duration: 800
+                });
+            }
+        }
+        
+        // Visualize variance explained
+        function visualizeVarianceExplained() {
+            // Remove placeholder text
+            const placeholder = variancePlotSvg.querySelector('.variance-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Remove existing variance visualization
+            const existingBars = variancePlotSvg.querySelectorAll('.variance-element');
+            existingBars.forEach(element => element.remove());
+            
+            // Add variance bars
+            const numComponents = Math.min(10, dimensions);
+            const barWidth = Math.min(40, VAR_PLOT_WIDTH / (numComponents * 1.5));
+            
+            // Add bars for explained variance
+            for (let i = 0; i < numComponents; i++) {
+                const x = VAR_MARGIN + (i + 0.5) * (VAR_PLOT_WIDTH / numComponents);
+                const barHeight = explainedVarianceRatio[i] * VAR_PLOT_HEIGHT;
+                const y = VAR_HEIGHT - VAR_MARGIN - barHeight;
+                
+                // Create bar
+                const bar = document.createElementNS(svgNS, 'rect');
+                bar.setAttribute('x', x - barWidth / 2);
+                bar.setAttribute('y', y);
+                bar.setAttribute('width', barWidth);
+                bar.setAttribute('height', barHeight);
+                bar.setAttribute('fill', EIGENVECTOR_COLORS[i % EIGENVECTOR_COLORS.length]);
+                bar.setAttribute('class', 'variance-bar variance-element');
+                
+                // Add animation
+                bar.style.opacity = '0';
+                bar.style.height = '0';
+                bar.style.y = VAR_HEIGHT - VAR_MARGIN;
+                
+                variancePlotSvg.appendChild(bar);
+                
+                // Add value label
+                const label = document.createElementNS(svgNS, 'text');
+                label.setAttribute('x', x);
+                label.setAttribute('y', y - 5);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('font-size', '12');
+                label.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                label.setAttribute('class', 'variance-value variance-element');
+                label.textContent = `${(explainedVarianceRatio[i] * 100).toFixed(1)}%`;
+                
+                // Add animation
+                label.style.opacity = '0';
+                
+                variancePlotSvg.appendChild(label);
+                
+                // Add component label
+                const componentLabel = document.createElementNS(svgNS, 'text');
+                componentLabel.setAttribute('x', x);
+                componentLabel.setAttribute('y', VAR_HEIGHT - VAR_MARGIN + 20);
+                componentLabel.setAttribute('text-anchor', 'middle');
+                componentLabel.setAttribute('font-size', '12');
+                componentLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                componentLabel.setAttribute('class', 'variance-label variance-element');
+                componentLabel.textContent = `PC${i+1}`;
+                
+                variancePlotSvg.appendChild(componentLabel);
+            }
+            
+            // Add cumulative variance line
+            let pathData = '';
+            
+            for (let i = 0; i < numComponents; i++) {
+                const x = VAR_MARGIN + (i + 0.5) * (VAR_PLOT_WIDTH / numComponents);
+                const y = VAR_HEIGHT - VAR_MARGIN - cumulativeVariance[i] * VAR_PLOT_HEIGHT;
+                
+                if (i === 0) {
+                    pathData = `M ${x} ${y}`;
+                } else {
+                    pathData += ` L ${x} ${y}`;
+                }
+                
+                // Add cumulative variance point
+                const point = document.createElementNS(svgNS, 'circle');
+                point.setAttribute('cx', x);
+                point.setAttribute('cy', y);
+                point.setAttribute('r', 4);
+                point.setAttribute('fill', '#F59E0B'); // Amber
+                point.setAttribute('class', 'cumulative-point variance-element');
+                
+                // Add animation
+                point.style.opacity = '0';
+                
+                variancePlotSvg.appendChild(point);
+                
+                // Add cumulative label for every other point
+                if (i % 2 === 0 || i === numComponents - 1) {
+                    const cumLabel = document.createElementNS(svgNS, 'text');
+                    cumLabel.setAttribute('x', x);
+                    cumLabel.setAttribute('y', y - 10);
+                    cumLabel.setAttribute('text-anchor', 'middle');
+                    cumLabel.setAttribute('font-size', '10');
+                    cumLabel.setAttribute('fill', '#F59E0B'); // Amber
+                    cumLabel.setAttribute('class', 'cumulative-label variance-element');
+                    cumLabel.textContent = `${(cumulativeVariance[i] * 100).toFixed(0)}%`;
+                    
+                    // Add animation
+                    cumLabel.style.opacity = '0';
+                    
+                    variancePlotSvg.appendChild(cumLabel);
+                }
+            }
+            
+            // Create cumulative variance line
+            const cumLine = document.createElementNS(svgNS, 'path');
+            cumLine.setAttribute('d', pathData);
+            cumLine.setAttribute('fill', 'none');
+            cumLine.setAttribute('stroke', '#F59E0B'); // Amber
+            cumLine.setAttribute('stroke-width', 2);
+            cumLine.setAttribute('class', 'cumulative-line variance-element');
+            
+            // Add animation
+            cumLine.style.opacity = '0';
+            
+            // Insert line before points
+            const firstPoint = variancePlotSvg.querySelector('.cumulative-point');
+            if (firstPoint) {
+                variancePlotSvg.insertBefore(cumLine, firstPoint);
+            } else {
+                variancePlotSvg.appendChild(cumLine);
+            }
+            
+            // Add legend
+            const legendX = VAR_WIDTH - VAR_MARGIN - 100;
+            const legendY = VAR_MARGIN + 20;
+            
+            // Bar legend
+            const barLegend = document.createElementNS(svgNS, 'rect');
+            barLegend.setAttribute('x', legendX);
+            barLegend.setAttribute('y', legendY - 10);
+            barLegend.setAttribute('width', 15);
+            barLegend.setAttribute('height', 10);
+            barLegend.setAttribute('fill', EIGENVECTOR_COLORS[0]);
+            barLegend.setAttribute('class', 'variance-element');
+            variancePlotSvg.appendChild(barLegend);
+            
+            const barLabel = document.createElementNS(svgNS, 'text');
+            barLabel.setAttribute('x', legendX + 20);
+            barLabel.setAttribute('y', legendY);
+            barLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            barLabel.setAttribute('font-size', '12');
+            barLabel.setAttribute('class', 'variance-element');
+            barLabel.textContent = 'Explained Variance';
+            variancePlotSvg.appendChild(barLabel);
+            
+            // Line legend
+            const lineLegend = document.createElementNS(svgNS, 'line');
+            lineLegend.setAttribute('x1', legendX);
+            lineLegend.setAttribute('y1', legendY + 15);
+            lineLegend.setAttribute('x2', legendX + 15);
+            lineLegend.setAttribute('y2', legendY + 15);
+            lineLegend.setAttribute('stroke', '#F59E0B');
+            lineLegend.setAttribute('stroke-width', 2);
+            lineLegend.setAttribute('class', 'variance-element');
+            variancePlotSvg.appendChild(lineLegend);
+            
+            const lineDot = document.createElementNS(svgNS, 'circle');
+            lineDot.setAttribute('cx', legendX + 7.5);
+            lineDot.setAttribute('cy', legendY + 15);
+            lineDot.setAttribute('r', 3);
+            lineDot.setAttribute('fill', '#F59E0B');
+            lineDot.setAttribute('class', 'variance-element');
+            variancePlotSvg.appendChild(lineDot);
+            
+            const lineLabel = document.createElementNS(svgNS, 'text');
+            lineLabel.setAttribute('x', legendX + 20);
+            lineLabel.setAttribute('y', legendY + 20);
+            lineLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            lineLabel.setAttribute('font-size', '12');
+            lineLabel.setAttribute('class', 'variance-element');
+            lineLabel.textContent = 'Cumulative Variance';
+            variancePlotSvg.appendChild(lineLabel);
+            
+            // Animate bars
+            anime({
+                targets: '.variance-bar',
+                opacity: 1,
+                height: (el) => el.getAttribute('height'),
+                y: (el) => el.getAttribute('y'),
+                delay: anime.stagger(100),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1500
+            });
+            
+            // Animate values
+            anime({
+                targets: '.variance-value',
+                opacity: 1,
+                delay: anime.stagger(100, {start: 500}),
+                easing: 'easeInOutQuad',
+                duration: 800
+            });
+            
+            // Animate cumulative line
+            anime({
+                targets: '.cumulative-line',
+                opacity: 1,
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 1500,
+                delay: 800
+            });
+            
+            // Animate cumulative points
+            anime({
+                targets: '.cumulative-point',
+                opacity: 1,
+                delay: anime.stagger(100, {start: 1000}),
+                easing: 'easeInOutQuad',
+                duration: 800
+            });
+            
+            // Animate cumulative labels
+            anime({
+                targets: '.cumulative-label',
+                opacity: 1,
+                delay: anime.stagger(200, {start: 1200}),
+                easing: 'easeInOutQuad',
+                duration: 800
+            });
+        }
+        
+        // Visualize transformed grid
+        function visualizeTransformedGrid() {
+            if (showGridCheckbox.checked && transformedGridPoints.length > 0) {
+                // Clear existing grid in reduced space
+                const existingGrid = reducedSvg.querySelectorAll('.grid-line.reduced-element');
+                existingGrid.forEach(line => line.remove());
+                
+                // Map grid points to reduced space
+                const gridSize = 5;
+                const gridSpacing = 2;
+                
+                // Draw grid lines
+                for (let i = -gridSize; i <= gridSize; i += 1) {
+                    // Horizontal grid line
+                    const horizLine = document.createElementNS(svgNS, 'path');
+                    let pathData = '';
+                    
+                    for (let j = -gridSize; j <= gridSize; j += 1) {
+                        const index = (i + gridSize) * (2 * gridSize + 1) + (j + gridSize);
+                        if (index < transformedGridPoints.length) {
+                            const point = transformedGridPoints[index];
+                            const x = mapX(point[0]);
+                            const y = mapY(point.length > 1 ? point[1] : 0);
+                            
+                            if (j === -gridSize) {
+                                pathData = `M ${x} ${y}`;
+                            } else {
+                                pathData += ` L ${x} ${y}`;
+                            }
+                        }
+                    }
+                    
+                    horizLine.setAttribute('d', pathData);
+                    horizLine.setAttribute('fill', 'none');
+                    horizLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                    horizLine.setAttribute('stroke-width', '1');
+                    horizLine.setAttribute('class', 'grid-line reduced-element');
+                    reducedSvg.appendChild(horizLine);
+                    
+                    // Vertical grid line
+                    const vertLine = document.createElementNS(svgNS, 'path');
+                    pathData = '';
+                    
+                    for (let j = -gridSize; j <= gridSize; j += 1) {
+                        const index = (j + gridSize) * (2 * gridSize + 1) + (i + gridSize);
+                        if (index < transformedGridPoints.length) {
+                            const point = transformedGridPoints[index];
+                            const x = mapX(point[0]);
+                            const y = mapY(point.length > 1 ? point[1] : 0);
+                            
+                            if (j === -gridSize) {
+                                pathData = `M ${x} ${y}`;
+                            } else {
+                                pathData += ` L ${x} ${y}`;
+                            }
+                        }
+                    }
+                    
+                    vertLine.setAttribute('d', pathData);
+                    vertLine.setAttribute('fill', 'none');
+                    vertLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                    vertLine.setAttribute('stroke-width', '1');
+                    vertLine.setAttribute('class', 'grid-line reduced-element');
+                    reducedSvg.appendChild(vertLine);
+                }
+            }
+            
+            // Add principal component arrows in reduced space
+            if (showEigenvectorsCheckbox.checked) {
+                // Get center of visualization
+                const centerX = mapX(0);
+                const centerY = mapY(0);
+                
+                // Scale factor for eigenvector visualization
+                const scaleFactor = 50;
+                
+                // Draw eigenvectors as arrows from center
+                for (let i = 0; i < targetDimensions; i++) {
+                    // For reduced space, the principal components are just the basis vectors
+                    const vector = Array(targetDimensions).fill(0);
+                    vector[i] = 1;
+                    
+                    // Calculate end point of arrow
+                    const endX = centerX + vector[0] * scaleFactor;
+                    const endY = centerY - (vector.length > 1 ? vector[1] * scaleFactor : 0);
+                    
+                    // Create arrow line
+                    const arrow = document.createElementNS(svgNS, 'line');
+                    arrow.setAttribute('x1', centerX);
+                    arrow.setAttribute('y1', centerY);
+                    arrow.setAttribute('x2', endX);
+                    arrow.setAttribute('y2', endY);
+                    arrow.setAttribute('stroke', EIGENVECTOR_COLORS[i % EIGENVECTOR_COLORS.length]);
+                    arrow.setAttribute('stroke-width', 3);
+                    arrow.setAttribute('marker-end', 'url(#arrowhead-reduced)');
+                    arrow.setAttribute('class', 'eigenvector reduced-element');
+                    
+                    // Add animation
+                    arrow.style.opacity = '0';
+                    
+                    reducedSvg.appendChild(arrow);
+                    
+                    // Add variance explanation label
+                    const labelX = centerX + vector[0] * scaleFactor * 1.2;
+                    const labelY = centerY - (vector.length > 1 ? vector[1] * scaleFactor * 1.2 : 0);
+                    
+                    const label = document.createElementNS(svgNS, 'text');
+                    label.setAttribute('x', labelX);
+                    label.setAttribute('y', labelY);
+                    label.setAttribute('text-anchor', 'middle');
+                    label.setAttribute('fill', EIGENVECTOR_COLORS[i % EIGENVECTOR_COLORS.length]);
+                    label.setAttribute('font-weight', 'bold');
+                    label.setAttribute('class', 'eigenvector-label reduced-element');
+                    label.textContent = `PC${i+1}: ${(explainedVarianceRatio[i] * 100).toFixed(1)}%`;
+                    
+                    // Add animation
+                    label.style.opacity = '0';
+                    
+                    reducedSvg.appendChild(label);
+                }
+                
+                // Add arrowhead marker definition if not already present
+                if (!reducedSvg.querySelector('defs')) {
+                    const defs = document.createElementNS(svgNS, 'defs');
+                    const marker = document.createElementNS(svgNS, 'marker');
+                    marker.setAttribute('id', 'arrowhead-reduced');
+                    marker.setAttribute('markerWidth', '10');
+                    marker.setAttribute('markerHeight', '7');
+                    marker.setAttribute('refX', '10');
+                    marker.setAttribute('refY', '3.5');
+                    marker.setAttribute('orient', 'auto');
+                    
+                    const polygon = document.createElementNS(svgNS, 'polygon');
+                    polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+                    polygon.setAttribute('fill', '#000');
+                    
+                    marker.appendChild(polygon);
+                    defs.appendChild(marker);
+                    reducedSvg.appendChild(defs);
+                }
+                
+                // Animate eigenvectors
+                anime({
+                    targets: '.eigenvector.reduced-element',
+                    opacity: 1,
+                    delay: anime.stagger(200),
+                    easing: 'easeInOutQuad',
+                    duration: 800
+                });
+                
+                // Animate labels
+                anime({
+                    targets: '.eigenvector-label.reduced-element',
+                    opacity: 1,
+                    delay: anime.stagger(200, {start: 200}),
+                    easing: 'easeInOutQuad',
+                    duration: 800
+                });
+            }
+        }
+        
+        // Visualize data in reduced space
+        function visualizeReducedData(animate) {
+            // Clear existing points in reduced space
+            const existingPoints = reducedSvg.querySelectorAll('.data-point.reduced-element');
+            existingPoints.forEach(point => point.remove());
+            
+            // Draw projected data points
+            projectedData.forEach((point, index) => {
+                // Map point to 2D coordinates
+                const x = mapX(point[0]);
+                const y = mapY(point.length > 1 ? point[1] : 0);
+                
+                // Create point circle
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', '4');
+                circle.setAttribute('fill', getPointColor(point, index));
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point reduced-element');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                reducedSvg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            if (animate) {
+                anime({
+                    targets: '.data-point.reduced-element',
+                    opacity: 1,
+                    scale: 1,
+                    delay: anime.stagger(5),
+                    easing: 'easeOutElastic(1, .5)',
+                    duration: 1000
+                });
+            } else {
+                // Instant appearance
+                const points = reducedSvg.querySelectorAll('.data-point.reduced-element');
+                points.forEach(point => {
+                    point.style.opacity = '1';
+                    point.style.transform = 'scale(1)';
+                });
+            }
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        runPcaBtn.addEventListener('click', runPCA);
+        stepPcaBtn.addEventListener('click', stepPCA);
+        
+        varianceRatioInput.addEventListener('input', () => {
+            varianceRatio = parseFloat(varianceRatioInput.value);
+            varianceValueDisplay.textContent = varianceRatio.toFixed(1);
+        });
+        
+        showEigenvectorsCheckbox.addEventListener('change', () => {
+            if (eigenvalues.length > 0) {
+                visualizeEigenvectors();
+                visualizeTransformedGrid();
+            }
+        });
+        
+        showGridCheckbox.addEventListener('change', () => {
+            if (originalData.length > 0) {
+                visualizeOriginalData();
+            }
+            if (transformedGridPoints.length > 0) {
+                visualizeTransformedGrid();
+            }
+        });
+        
+        colorByOriginalCheckbox.addEventListener('change', () => {
+            if (originalData.length > 0) {
+                // If projected data exists, refresh it with new colors
+                if (projectedData.length > 0) {
+                    visualizeReducedData(false);
+                }
+            }
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Linear Regression Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Linear Regression Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-2/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <div class="w-full h-[600px] relative" id="visualization-container">
+                    <svg id="visualization" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                </div>
+                <div class="mt-2 flex flex-wrap justify-between items-center text-sm gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+                        <span>Data Points</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-red-500"></span>
+                        <span>Regression Line</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-purple-500 dashed-line"></span>
+                        <span>True Relationship</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-green-500 dashed-line"></span>
+                        <span>Residuals</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel -->
+            <div class="w-full lg:w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                
+                <div class="space-y-6">
+                    <!-- Data Generation -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="num-points" class="mr-2">Number of Points:</label>
+                                <input type="number" id="num-points" min="10" max="200" value="50" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="data-distribution" class="mr-2">Data Distribution:</label>
+                                <select id="data-distribution" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="linear" selected>Linear</option>
+                                    <option value="heteroscedastic">Heteroscedastic</option>
+                                    <option value="quadratic">Quadratic</option>
+                                    <option value="outliers">With Outliers</option>
+                                    <option value="clusters">Clustered</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="slope-value" class="mr-2">Slope (m):</label>
+                                <input type="number" id="slope-value" min="-5" max="5" step="0.1" value="2" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="intercept-value" class="mr-2">Intercept (b):</label>
+                                <input type="number" id="intercept-value" min="-5" max="5" step="0.1" value="1" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="noise-level" class="mr-2">Noise Level:</label>
+                                <input type="range" id="noise-level" min="0" max="3" step="0.1" value="1" class="w-40">
+                                <span id="noise-value" class="text-sm">1.0</span>
+                            </div>
+                            <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Linear Regression -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Linear Regression</h3>
+                        <div class="flex flex-col gap-2">
+                            <button id="fit-line" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Fit Regression Line</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Visualization Options -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-residuals" class="w-4 h-4" checked>
+                                <label for="show-residuals">Show Residuals</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-true-line" class="w-4 h-4" checked>
+                                <label for="show-true-line">Show True Relationship</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status and Info -->
+                    <div id="regression-result" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h3 class="text-lg font-medium mb-2">Regression Stats</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>True Relationship:</span>
+                                <span id="true-equation" class="font-mono">y = 2x + 1</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Fitted Equation:</span>
+                                <span id="model-equation" class="font-mono">y = ?</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>MSE (Mean Squared Error):</span>
+                                <span id="mse-value">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>R² Value:</span>
+                                <span id="r-squared">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Sum of Squared Residuals:</span>
+                                <span id="ssr-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Linear Regression Works (And When It Fails)</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>Linear Regression Assumptions:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Linearity:</strong> The relationship between X and Y is linear</li>
+                    <li><strong>Homoscedasticity:</strong> The variance of residual is the same for any value of X</li>
+                    <li><strong>Independence:</strong> Observations are independent of each other</li>
+                    <li><strong>No outliers:</strong> Extreme values can have disproportionate influence on the model</li>
+                </ul>
+                
+                <p><strong>Common Failure Cases:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Heteroscedastic Data:</strong> When variance increases with X, simple OLS is inefficient</li>
+                    <li><strong>Non-linear Relationships:</strong> Linear models can't capture curvature (e.g., quadratic patterns)</li>
+                    <li><strong>Outliers:</strong> Extreme values pull the line toward them, distorting the fit</li>
+                    <li><strong>Clustered Data:</strong> May indicate a need for separate models or additional features</li>
+                </ul>
+                
+                <p><strong>Metrics:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Mean Squared Error (MSE):</strong> Average of squared residuals (lower is better)</li>
+                    <li><strong>R² Value:</strong> Proportion of variance explained by the model (higher is better, max 1.0)</li>
+                    <li><strong>Sum of Squared Residuals:</strong> Total squared vertical distance between points and the line</li>
+                </ul>
+                
+                <p>Try different data distributions to see how well linear regression performs in each scenario!</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .dashed-line {
+            border-top: 2px dashed;
+            height: 0;
+        }
+    </style>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const svg = document.getElementById('visualization');
+        const generateDataBtn = document.getElementById('generate-data');
+        const fitLineBtn = document.getElementById('fit-line');
+        const numPointsInput = document.getElementById('num-points');
+        const dataDistributionSelect = document.getElementById('data-distribution');
+        const slopeInput = document.getElementById('slope-value');
+        const interceptInput = document.getElementById('intercept-value');
+        const noiseLevelInput = document.getElementById('noise-level');
+        const noiseValueDisplay = document.getElementById('noise-value');
+        const showResidualsCheckbox = document.getElementById('show-residuals');
+        const showTrueLineCheckbox = document.getElementById('show-true-line');
+        const trueEquationDisplay = document.getElementById('true-equation');
+        const modelEquationDisplay = document.getElementById('model-equation');
+        const mseValueDisplay = document.getElementById('mse-value');
+        const rSquaredDisplay = document.getElementById('r-squared');
+        const ssrValueDisplay = document.getElementById('ssr-value');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 600;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Data visualization constants
+        const DATA_WIDTH = WIDTH - MARGIN * 2;
+        const DATA_HEIGHT = HEIGHT - MARGIN * 2;
+        const DATA_X = MARGIN;
+        const DATA_Y = MARGIN;
+        
+        // Data range - adjusted to prevent stacking at the edges
+        const X_MIN = 0;
+        const X_MAX = 10;
+        const Y_MIN = -5;
+        const Y_MAX = 15;
+        
+        // Colors
+        const DATA_POINT_COLOR = '#3B82F6'; // Blue
+        const REGRESSION_LINE_COLOR = '#EF4444'; // Red
+        const TRUE_LINE_COLOR = '#8B5CF6'; // Purple
+        const RESIDUAL_COLOR = '#84CC16'; // Green
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and model parameters
+        let data = [];
+        let noiseLevel = 1.0;
+        let trueSlope = 2;
+        let trueIntercept = 1;
+        let fittedSlope = 0;
+        let fittedIntercept = 0;
+        let residualSquaredSum = 0;
+        let dataDistribution = 'linear';
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVG
+            svg.innerHTML = '';
+            
+            // Add background for main visualization
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            svg.appendChild(background);
+            
+            // Add grid lines for data visualization
+            const numVerticalLines = 10;
+            const numHorizontalLines = 20;
+            const verticalSpacing = DATA_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = DATA_X + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                svg.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', DATA_X);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', DATA_X + DATA_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                svg.appendChild(hLine);
+            }
+            
+            // Add axes for data visualization
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', DATA_X);
+            xAxis.setAttribute('y1', mapY(0)); // Draw x-axis at y=0
+            xAxis.setAttribute('x2', DATA_X + DATA_WIDTH);
+            xAxis.setAttribute('y2', mapY(0));
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', DATA_X);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', DATA_X);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 30);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'X';
+            svg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', DATA_X - 30);
+            yLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, ${DATA_X - 30}, ${DATA_Y + DATA_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Y';
+            svg.appendChild(yLabel);
+            
+            // Add x-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const x = mapX(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', mapY(0));
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', mapY(0) + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', mapY(0) + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Add y-axis ticks and labels (with extended range)
+            for (let i = Y_MIN; i <= Y_MAX; i += 5) {
+                const y = mapY(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', DATA_X);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', DATA_X - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', DATA_X - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+        }
+        
+        // Generate synthetic data for linear regression
+        function generateData() {
+            const numPoints = parseInt(numPointsInput.value);
+            trueSlope = parseFloat(slopeInput.value);
+            trueIntercept = parseFloat(interceptInput.value);
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            dataDistribution = dataDistributionSelect.value;
+            data = [];
+            
+            // Update the noise value display
+            noiseValueDisplay.textContent = noiseLevel.toFixed(1);
+            
+            // Update true equation display based on distribution
+            updateTrueEquationDisplay();
+            
+            // Function to add noise
+            const addNoise = (baseValue, x) => {
+                // For heteroscedastic data, noise increases with x
+                const noiseScale = dataDistribution === 'heteroscedastic' ? (0.2 + x / 5) * noiseLevel : noiseLevel;
+                return baseValue + (Math.random() * 2 - 1) * noiseScale;
+            };
+            
+            // Generate data based on selected distribution
+            switch (dataDistribution) {
+                case 'linear':
+                    // Simple linear relationship
+                    for (let i = 0; i < numPoints; i++) {
+                        let x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                        let y = trueSlope * x + trueIntercept;
+                        y = addNoise(y, x);
+                        data.push({ x, y });
+                    }
+                    break;
+                    
+                case 'heteroscedastic':
+                    // Variance increases with x
+                    for (let i = 0; i < numPoints; i++) {
+                        let x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                        let y = trueSlope * x + trueIntercept;
+                        y = addNoise(y, x);
+                        data.push({ x, y });
+                    }
+                    break;
+                    
+                case 'quadratic':
+                    // Quadratic relationship
+                    for (let i = 0; i < numPoints; i++) {
+                        let x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                        // Use trueSlope and trueIntercept for consistency in the UI
+                        let y = trueSlope * x * x / 10 + trueIntercept;
+                        y = addNoise(y, x);
+                        data.push({ x, y });
+                    }
+                    break;
+                    
+                case 'outliers':
+                    // Linear data with a few outliers
+                    for (let i = 0; i < numPoints; i++) {
+                        let x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                        let y = trueSlope * x + trueIntercept;
+                        
+                        // Add regular noise to most points
+                        y = addNoise(y, x);
+                        
+                        // Add extreme outliers to ~10% of points
+                        if (Math.random() < 0.1) {
+                            y += (Math.random() < 0.5 ? -1 : 1) * (5 + Math.random() * 5);
+                        }
+                        
+                        data.push({ x, y });
+                    }
+                    break;
+                    
+                case 'clusters':
+                    // Data in distinct clusters
+                    const numClusters = 3;
+                    const pointsPerCluster = Math.ceil(numPoints / numClusters);
+                    
+                    for (let c = 0; c < numClusters; c++) {
+                        // Create cluster center
+                        const centerX = X_MIN + (X_MAX - X_MIN) * (c + 0.5) / numClusters;
+                        const centerY = trueSlope * centerX + trueIntercept + (c % 2 === 0 ? 2 : -2);
+                        
+                        // Add points around cluster center
+                        for (let i = 0; i < pointsPerCluster; i++) {
+                            let x = centerX + (Math.random() * 2 - 1) * 1.2;
+                            let y = centerY + (Math.random() * 2 - 1) * 1.2;
+                            
+                            // Ensure x is within bounds
+                            x = Math.max(X_MIN, Math.min(X_MAX, x));
+                            
+                            data.push({ x, y });
+                        }
+                    }
+                    break;
+                    
+                default:
+                    // Default to linear
+                    for (let i = 0; i < numPoints; i++) {
+                        let x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                        let y = trueSlope * x + trueIntercept;
+                        y = addNoise(y, x);
+                        data.push({ x, y });
+                    }
+            }
+            
+            // Sort data by x for better visualization
+            data.sort((a, b) => a.x - b.x);
+            
+            // Reset model
+            fittedSlope = 0;
+            fittedIntercept = 0;
+            modelEquationDisplay.textContent = 'y = ?';
+            mseValueDisplay.textContent = '-';
+            rSquaredDisplay.textContent = '-';
+            ssrValueDisplay.textContent = '-';
+            
+            // Visualize data
+            visualizeData();
+            
+            // Show true relationship if checkbox is checked
+            if (showTrueLineCheckbox.checked) {
+                showTrueRelationship();
+            }
+        }
+        
+        // Update the true equation display based on distribution
+        function updateTrueEquationDisplay() {
+            switch (dataDistribution) {
+                case 'linear':
+                case 'heteroscedastic':
+                case 'outliers':
+                case 'clusters':
+                    trueEquationDisplay.textContent = `y = ${trueSlope}x + ${trueIntercept}`;
+                    break;
+                    
+                case 'quadratic':
+                    trueEquationDisplay.textContent = `y = ${trueSlope/10}x² + ${trueIntercept}`;
+                    break;
+                    
+                default:
+                    trueEquationDisplay.textContent = `y = ${trueSlope}x + ${trueIntercept}`;
+            }
+        }
+        
+        // Map data coordinates to SVG coordinates
+        function mapX(x) {
+            return DATA_X + ((x - X_MIN) / (X_MAX - X_MIN)) * DATA_WIDTH;
+        }
+        
+        function mapY(y) {
+            return DATA_Y + DATA_HEIGHT - ((y - Y_MIN) / (Y_MAX - Y_MIN)) * DATA_HEIGHT;
+        }
+        
+        // Visualize the data points
+        function visualizeData() {
+            // Remove existing data points
+            const existingPoints = svg.querySelectorAll('.data-point');
+            existingPoints.forEach(point => point.remove());
+            
+            // Remove regression line and residuals
+            clearRegressionLine();
+            clearResiduals();
+            
+            // Add new data points
+            data.forEach((point, index) => {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', mapX(point.x));
+                circle.setAttribute('cy', mapY(point.y));
+                circle.setAttribute('r', '5');
+                circle.setAttribute('fill', DATA_POINT_COLOR);
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                svg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(20),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1500
+            });
+        }
+        
+        // Clear regression line
+        function clearRegressionLine() {
+            // Remove regression line
+            const existingLine = svg.querySelector('.regression-line');
+            if (existingLine) {
+                existingLine.remove();
+            }
+            
+            // Remove true relationship line
+            const trueLine = svg.querySelector('.true-line');
+            if (trueLine) {
+                trueLine.remove();
+            }
+        }
+        
+        // Clear residuals
+        function clearResiduals() {
+            const existingResiduals = svg.querySelectorAll('.residual');
+            existingResiduals.forEach(r => r.remove());
+        }
+        
+        // Get y value for the true relationship at a given x
+        function getTrueY(x) {
+            switch (dataDistribution) {
+                case 'linear':
+                case 'heteroscedastic':
+                case 'outliers':
+                case 'clusters':
+                    return trueSlope * x + trueIntercept;
+                    
+                case 'quadratic':
+                    return trueSlope * x * x / 10 + trueIntercept;
+                    
+                default:
+                    return trueSlope * x + trueIntercept;
+            }
+        }
+        
+        // Show the true relationship curve
+        function showTrueRelationship() {
+            // Remove existing true line
+            const existingLine = svg.querySelector('.true-line');
+            if (existingLine) {
+                existingLine.remove();
+            }
+            
+            // Create path data for the true relationship
+            let pathData = '';
+            for (let x = X_MIN; x <= X_MAX; x += 0.1) {
+                const y = getTrueY(x);
+                
+                if (pathData === '') {
+                    pathData = `M ${mapX(x)} ${mapY(y)}`;
+                } else {
+                    pathData += ` L ${mapX(x)} ${mapY(y)}`;
+                }
+            }
+            
+            // Add the true relationship path
+            const trueLine = document.createElementNS(svgNS, 'path');
+            trueLine.setAttribute('d', pathData);
+            trueLine.setAttribute('fill', 'none');
+            trueLine.setAttribute('stroke', TRUE_LINE_COLOR);
+            trueLine.setAttribute('stroke-width', '2');
+            trueLine.setAttribute('stroke-dasharray', '5,5');
+            trueLine.setAttribute('class', 'true-line');
+            
+            // Add animation
+            trueLine.style.opacity = '0';
+            
+            svg.appendChild(trueLine);
+            
+            // Animate the appearance of the true line
+            anime({
+                targets: '.true-line',
+                opacity: 0.8,
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+        }
+        
+        // Predict y value based on fitted model
+        function predict(x) {
+            return fittedSlope * x + fittedIntercept;
+        }
+        
+        // Calculate Mean Squared Error
+        function calculateMSE() {
+            let sumSquaredError = 0;
+            for (const point of data) {
+                const predicted = predict(point.x);
+                const error = point.y - predicted;
+                sumSquaredError += error * error;
+            }
+            return sumSquaredError / data.length;
+        }
+        
+        // Calculate R-squared (coefficient of determination)
+        function calculateRSquared() {
+            // Calculate mean of observed data
+            const mean = data.reduce((sum, point) => sum + point.y, 0) / data.length;
+            
+            // Calculate total sum of squares
+            let totalSumSquares = 0;
+            for (const point of data) {
+                totalSumSquares += Math.pow(point.y - mean, 2);
+            }
+            
+            // Calculate residual sum of squares
+            let residualSumSquares = 0;
+            for (const point of data) {
+                const predicted = predict(point.x);
+                residualSumSquares += Math.pow(point.y - predicted, 2);
+            }
+            
+            // Calculate R-squared
+            return 1 - (residualSumSquares / totalSumSquares);
+        }
+        
+        // Fit the regression line
+        function fitRegressionLine() {
+            if (data.length === 0) return;
+            
+            // Implement Ordinary Least Squares
+            const n = data.length;
+            const sumX = data.reduce((sum, point) => sum + point.x, 0);
+            const sumY = data.reduce((sum, point) => sum + point.y, 0);
+            const sumXX = data.reduce((sum, point) => sum + point.x * point.x, 0);
+            const sumXY = data.reduce((sum, point) => sum + point.x * point.y, 0);
+            
+            fittedSlope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            fittedIntercept = (sumY - fittedSlope * sumX) / n;
+            
+            // Update model equation display
+            modelEquationDisplay.textContent = `y = ${fittedSlope.toFixed(2)}x + ${fittedIntercept.toFixed(2)}`;
+            
+            // Draw the regression line
+            drawRegressionLine();
+            
+            // Draw residuals if enabled
+            if (showResidualsCheckbox.checked) {
+                drawResiduals();
+            }
+            
+            // Calculate performance metrics
+            const mse = calculateMSE();
+            const r2 = calculateRSquared();
+            
+            // Calculate sum of squared residuals
+            let sumSquaredResiduals = 0;
+            for (const point of data) {
+                const predicted = predict(point.x);
+                const error = point.y - predicted;
+                sumSquaredResiduals += error * error;
+            }
+            
+            // Update info displays
+            mseValueDisplay.textContent = mse.toFixed(4);
+            rSquaredDisplay.textContent = r2.toFixed(4);
+            ssrValueDisplay.textContent = sumSquaredResiduals.toFixed(4);
+        }
+        
+        // Draw the regression line
+        function drawRegressionLine() {
+            // Remove existing regression line
+            const existingLine = svg.querySelector('.regression-line');
+            if (existingLine) {
+                existingLine.remove();
+            }
+            
+            // Create path data for the regression line
+            let pathData = '';
+            for (let x = X_MIN; x <= X_MAX; x += 0.1) {
+                const y = predict(x);
+                
+                if (pathData === '') {
+                    pathData = `M ${mapX(x)} ${mapY(y)}`;
+                } else {
+                    pathData += ` L ${mapX(x)} ${mapY(y)}`;
+                }
+            }
+            
+            // Add the regression line path
+            const regressionLine = document.createElementNS(svgNS, 'path');
+            regressionLine.setAttribute('d', pathData);
+            regressionLine.setAttribute('fill', 'none');
+            regressionLine.setAttribute('stroke', REGRESSION_LINE_COLOR);
+            regressionLine.setAttribute('stroke-width', '3');
+            regressionLine.setAttribute('class', 'regression-line');
+            
+            // Add animation
+            regressionLine.style.opacity = '0';
+            
+            svg.appendChild(regressionLine);
+            
+            // Animate the appearance of the regression line
+            anime({
+                targets: '.regression-line',
+                opacity: 1,
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 1500
+            });
+        }
+        
+        // Draw residuals (vertical lines from data points to the regression line)
+        function drawResiduals() {
+            // Remove existing residuals
+            const existingResiduals = svg.querySelectorAll('.residual');
+            existingResiduals.forEach(r => r.remove());
+            
+            data.forEach((point, index) => {
+                const predictedY = predict(point.x);
+                
+                const residual = document.createElementNS(svgNS, 'line');
+                residual.setAttribute('x1', mapX(point.x));
+                residual.setAttribute('y1', mapY(point.y));
+                residual.setAttribute('x2', mapX(point.x));
+                residual.setAttribute('y2', mapY(predictedY));
+                residual.setAttribute('stroke', RESIDUAL_COLOR);
+                residual.setAttribute('stroke-width', '1.5');
+                residual.setAttribute('stroke-dasharray', '3,3');
+                residual.setAttribute('class', 'residual');
+                residual.setAttribute('data-index', index);
+                
+                // Add animation
+                residual.style.opacity = '0';
+                
+                svg.appendChild(residual);
+            });
+            
+            // Animate residuals
+            anime({
+                targets: '.residual',
+                opacity: 0.7,
+                delay: anime.stagger(10),
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        fitLineBtn.addEventListener('click', fitRegressionLine);
+        
+        noiseLevelInput.addEventListener('input', () => {
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            noiseValueDisplay.textContent = noiseLevel.toFixed(1);
+        });
+        
+        showResidualsCheckbox.addEventListener('change', () => {
+            if (showResidualsCheckbox.checked && fittedSlope !== 0) {
+                drawResiduals();
+            } else {
+                const existingResiduals = svg.querySelectorAll('.residual');
+                existingResiduals.forEach(r => r.remove());
+            }
+        });
+        
+        showTrueLineCheckbox.addEventListener('change', () => {
+            if (showTrueLineCheckbox.checked) {
+                showTrueRelationship();
+            } else {
+                const trueLine = svg.querySelector('.true-line');
+                if (trueLine) {
+                    trueLine.remove();
+                }
+            }
+        });
+        
+        dataDistributionSelect.addEventListener('change', () => {
+            // Update data distribution and regenerate data
+            dataDistribution = dataDistributionSelect.value;
+            generateData();
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

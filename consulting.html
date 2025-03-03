@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ozeye - Consulting</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+	/* Hero styles specific to consulting.html */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-end;
+            text-align: center;
+            padding: 120px 20% 0 0;
+            overflow: hidden;
+        }
+
+        .hero-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            filter: grayscale(100%);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+
+        .hero-text-container {
+            max-width: 600px;
+        }
+
+        .scramble-text {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        #scramble-text2 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #3498db;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .bottom-left-content {
+            position: absolute;
+            bottom: 5rem;
+            left: 5rem;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+
+        .bottom-left-content .static-text {
+            font-size: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .bottom-left-content .cycling-text {
+            font-size: 2rem;
+            font-family: 'Roboto Mono', monospace;
+            color: #3498db;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #aaa;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: row;
+            gap: 2rem;
+            align-items: center;
+            justify-content: flex-end;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: #fff;
+            font-size: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateX(5px);
+        }
+
+        .btn-icon {
+            width: 35px;
+            height: 35px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: #000;
+            stroke-width: 2;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: flex-start;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .hero {
+                align-items: center;
+                text-align: center;
+                padding: 120px 5% 0 5%;
+            }
+
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .bottom-left-content {
+                bottom: 2rem;
+                left: 2rem;
+            }
+
+            .bottom-left-content .static-text,
+            .bottom-left-content .cycling-text {
+                font-size: 1.8rem;
+            }
+
+            .scramble-text {
+                font-size: 3rem;
+            }
+        }
+	/* About Section */
+        .about-section {
+            padding: 8rem 5%;
+            background: #1a1a1a;
+            position: relative;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .about-text h2 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .about-text p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #aaa;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-text .highlight {
+            color: #3498db;
+            font-weight: 500;
+        }
+
+        .about-image {
+            position: relative;
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .code-block {
+            font-family: 'Roboto Mono', monospace;
+            background: #282828;
+            padding: 2rem;
+            border-radius: 10px;
+            color: #f8f8f2;
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .code-block::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(52,152,219,0.05) 1px, transparent 1px),
+                linear-gradient(rgba(52,152,219,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 0;
+        }
+
+        .code-text {
+            position: relative;
+            z-index: 1;
+            font-size: 0.9rem;
+        }
+
+        .code-keyword {
+            color: #ff79c6;
+        }
+
+        .code-string {
+            color: #f1fa8c;
+        }
+
+        .code-function {
+            color: #50fa7b;
+        }
+
+        .code-comment {
+            color: #6272a4;
+      
+	/* Work Section */
+        .work-section {
+            background-color: var(--dark-bg);
+            position: relative;
+        }
+        
+        .work-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom right, rgba(52, 152, 219, 0.03), transparent);
+            z-index: 0;
+        }
+        
+        .work-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .work-card {
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(5px);
+            padding: 2.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(52, 152, 219, 0.15);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .work-card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(52, 152, 219, 0.1), transparent);
+            transition: all 0.6s ease;
+        }
+        
+        .work-card:hover {
+            border-color: rgba(52, 152, 219, 0.4);
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .work-card:hover::before {
+            top: 100%;
+            left: 100%;
+        }
+        
+        .work-card h3 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .work-card p {
+            color: var(--text-dim);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .work-card ul {
+            list-style: none;
+            color: var(--text-medium);
+        }
+        
+        .work-card li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .work-card li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+        }
+	/* Footer */
+        footer {
+            background-color: #0a0a0a;
+            padding: 80px 0 40px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 5%;
+            text-align: center;
+        }
+        
+        .footer-logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+        }
+        
+        .footer-tagline {
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .footer-link {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-family: 'Roboto Mono', monospace;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        .footer-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: #3498db;
+        }
+        
+        .footer-link:hover::after {
+            width: 100%;
+        }
+        
+        .footer-copyright {
+            color: rgba(255, 255, 255, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 2rem;
+            font-size: 0.9rem;
+        }
+
+
+
+
+</style>
+
+</head>
+<body>
+	<!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html" class="logo-link">Ozeye</a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="consulting.html" class="active" style="color: #3498db;">Consulting</a>
+                <a href="algorithms.html">Algorithms</a>
+                <a href="about.html">About Me</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </nav>
+    </header>
+
+
+    <svg style="display: none;">
+        <defs>
+            <filter id="glow">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+    </svg>
+    <section class="hero">
+        <video class="hero-video" autoplay loop muted playsinline>
+            <source src="hero-video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="hero-text-container">
+            <div class="scramble-text" data-scramble="Make AI Work For Your Business">!@#$%^&*()</div>
+            <div id = "scramble-text2" div class="scramble-text" data-scramble="Not Vice Versa">!@#$%^</div>
+            <div class="button-container">
+                <a href="contact.html" class="btn">
+                    <div class="btn-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    <span>Contact Us</span>
+                </a>
+            </div>
+        </div>
+	<div class="bottom-left-content">
+    	    <div class="static-text">Ozeye saves</div>
+    	    <div class="cycling-text" data-cycling="true">!@#$%^&*()</div>
+	</div>
+    </section>
+
+    <svg style="display: none;">
+        <defs>
+            <filter id="glow">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+    </svg>
+    
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="about-grid">
+            <div class="about-text fade-in">
+                <h2>AI Expertise That Drives Results</h2>
+                <p>Ozeye is a specialized consulting firm focused on helping organizations navigate the complex landscape of artificial intelligence implementation.</p>
+                <p>Our team combines <span class="highlight">deep technical knowledge</span> with <span class="highlight">strategic business insight</span> to deliver AI solutions that drive measurable results.</p>
+                <p>We understand that successful AI adoption requires more than just advanced algorithms—it demands thoughtful integration with existing systems, proper security measures, and comprehensive training for your team.</p>
+            </div>
+            <div class="about-image fade-in">
+                <div class="code-block">
+                    <div class="code-text">
+                        <span class="code-comment">// Ozeye's approach to AI implementation</span><br>
+                        <span class="code-keyword">const</span> <span class="code-function">ozeyeMethod</span> = {<br>
+                        &nbsp;&nbsp;<span class="code-keyword">analyze</span>: <span class="code-function">function</span>(business) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opportunities: business.findAIOpportunities(),<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;challenges: business.assessTechnicalReadiness(),<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roadmap: <span class="code-keyword">this</span>.createStrategicRoadmap(business)<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+                        &nbsp;&nbsp;},<br><br>
+                        &nbsp;&nbsp;<span class="code-keyword">implement</span>: <span class="code-function">function</span>(strategy) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">const</span> solution = <span class="code-keyword">new</span> AIIntegration(strategy);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;solution.secureData();<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;solution.integrateWithExistingSystems();<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;solution.trainTeam();<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> solution;<br>
+                        &nbsp;&nbsp;},<br><br>
+                        &nbsp;&nbsp;<span class="code-keyword">measure</span>: <span class="code-function">function</span>(implementation) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;roi: implementation.calculateROI(),<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;efficiency: implementation.measureProductivityGains(),<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;satisfaction: implementation.getUserFeedback()<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+                        &nbsp;&nbsp;}<br>
+                        };<br><br>
+                        <span class="code-comment">// Let's transform your business with AI</span><br>
+                        ozeyeMethod.analyze(yourBusiness);<br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="graphic-section">
+        <div class="graphic-grid">
+            <div class="graphic-left fade-in">
+                <h2 class="section-heading">We Are Here To Help</h2>
+                <div class="service-list">
+                    <div class="service-item">
+                        <h3>LLM Workshops</h3>
+                        <p>Empower your workforce through hands-on training in Large Language Models. Learn to safely and effectively use AI tools to boost productivity.</p>
+                    </div>
+                    <div class="service-item">
+                        <h3>AI-Enhanced Solutions</h3>
+                        <p>Access our suite of specialized programs designed to increase effectiveness, enable secure employee collaboration, and protect company data.</p>
+                    </div>
+                    <div class="service-item">
+                        <h3>AI Consulting</h3>
+                        <p>Get expert guidance on AI strategy and implementation to ensure successful adoption and maximum return on investment.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="graphic-right fade-in">
+                <div class="circuit-grid">
+
+                    <div class="line-draw"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+<footer>
+    <div class="footer-container">
+        <div class="footer-logo">Ozeye</div>
+        <p class="footer-tagline">Exploring the intersection of AI, algorithms, and human creativity.</p>
+        <div class="footer-links">
+            <a href="contact.html" class="footer-link">Contact</a>
+        </div>
+        <div class="footer-copyright">
+            <p>© 2025 Ozeye. All rights reserved.</p>
+        </div>
+    </div>
+</footer>    <script src="scripts.js"></script>
+    
+    <!-- Additional script for progress bars -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize circular progress
+            document.querySelectorAll('.progress-bar').forEach(circle => {
+                const value = circle.dataset.value;
+                circle.style.setProperty('--value', value);
+            });
+
+            // Initialize bars
+            document.querySelectorAll('.bar').forEach(bar => {
+                const value = bar.dataset.value;
+                bar.style.setProperty('--value', value);
+            });
+        });
+    </script>
+</body>
+</html>

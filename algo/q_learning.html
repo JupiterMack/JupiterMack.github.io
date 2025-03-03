@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Q-Learning Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Q-Learning Reinforcement Learning</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Environment Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- Grid World Environment -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Grid World Environment</h2>
+                    <div class="w-full h-[500px] flex justify-center items-center relative" id="grid-world-container">
+                        <canvas id="grid-world-canvas" width="500" height="500" class="border border-gray-300 dark:border-gray-600"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Agent learning to navigate through the environment to reach a goal</span>
+                    </div>
+                    
+                    <!-- Environment Legend -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-4">
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-blue-500 rounded-sm mr-2"></div>
+                            <span>Agent</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-green-500 rounded-sm mr-2"></div>
+                            <span>Goal</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-red-500 rounded-sm mr-2"></div>
+                            <span>Trap</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-gray-700 dark:bg-gray-500 rounded-sm mr-2"></div>
+                            <span>Wall</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-gradient-to-r from-yellow-100 to-yellow-400 rounded-sm mr-2"></div>
+                            <span>Q-Value Intensity</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Learning Progress Chart -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Learning Progress</h2>
+                    <div class="w-full h-[250px]">
+                        <canvas id="learning-chart" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Performance metrics over training episodes</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel and Q-Table Visualization -->
+            <div class="w-full lg:w-2/5">
+                <!-- Controls Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Environment Setup -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Environment Setup</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="grid-size" class="mr-2">Grid Size:</label>
+                                    <select id="grid-size" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="4">4×4</option>
+                                        <option value="5" selected>5×5</option>
+                                        <option value="6">6×6</option>
+                                        <option value="8">8×8</option>
+                                        <option value="10">10×10</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="environment-type" class="mr-2">Environment Type:</label>
+                                    <select id="environment-type" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="empty" selected>Empty Room</option>
+                                        <option value="maze">Simple Maze</option>
+                                        <option value="obstacles">Random Obstacles</option>
+                                        <option value="cliff">Cliff Walking</option>
+                                        <option value="ice">Slippery Ice (Stochastic)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="edit-mode" class="w-4 h-4">
+                                    <label for="edit-mode">Edit Environment</label>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="wall-tool" value="wall" class="w-4 h-4" checked>
+                                        <label for="wall-tool">Wall</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="start-tool" value="start" class="w-4 h-4">
+                                        <label for="start-tool">Start</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="goal-tool" value="goal" class="w-4 h-4">
+                                        <label for="goal-tool">Goal</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="trap-tool" value="trap" class="w-4 h-4">
+                                        <label for="trap-tool">Trap</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="erase-tool" value="erase" class="w-4 h-4">
+                                        <label for="erase-tool">Erase</label>
+                                    </div>
+                                </div>
+                                
+                                <button id="reset-environment" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Reset Environment</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Q-Learning Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Q-Learning Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="learning-rate" class="mr-2">Learning Rate (α):</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="learning-rate" min="0.01" max="1" step="0.01" value="0.1" class="w-32">
+                                        <span id="learning-rate-value" class="ml-2 w-12 text-sm">0.10</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="discount-factor" class="mr-2">Discount Factor (γ):</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="discount-factor" min="0.1" max="0.99" step="0.01" value="0.9" class="w-32">
+                                        <span id="discount-factor-value" class="ml-2 w-12 text-sm">0.90</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="exploration-rate" class="mr-2">Exploration Rate (ε):</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="exploration-rate" min="0" max="1" step="0.01" value="0.1" class="w-32">
+                                        <span id="exploration-rate-value" class="ml-2 w-12 text-sm">0.10</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="episodes" class="mr-2">Training Episodes:</label>
+                                    <input type="number" id="episodes" min="1" max="10000" value="500" class="w-24 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-2">
+                                    <button id="run-qlearning" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Train</button>
+                                    <button id="step-qlearning" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step</button>
+                                    <button id="reset-qlearning" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition flex-1">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visualization Options -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-q-values" class="w-4 h-4" checked>
+                                    <label for="show-q-values">Show Q-Values</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-policy" class="w-4 h-4" checked>
+                                    <label for="show-policy">Show Policy</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-heatmap" class="w-4 h-4">
+                                    <label for="show-heatmap">Show Visit Heatmap</label>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label for="animation-speed" class="mr-2">Animation Speed:</label>
+                                    <input type="range" id="animation-speed" min="1" max="100" step="1" value="50" class="w-32">
+                                </div>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <button id="run-agent" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition flex-1">Run Agent</button>
+                                    <button id="step-agent" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition flex-1">Step Agent</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Status -->
+                        <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <h3 class="text-lg font-medium mb-2">Status</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Episode:</span>
+                                    <span id="current-episode">0/0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Step:</span>
+                                    <span id="current-step">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Total Reward:</span>
+                                    <span id="total-reward">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Status:</span>
+                                    <span id="algorithm-status-text">Not Started</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Q-Table Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db] flex justify-between items-center">
+                        <span>Q-Table</span>
+                        <select id="q-table-view" class="text-sm px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white font-normal">
+                            <option value="state-action">State-Action Values</option>
+                            <option value="max">Max Q-Values</option>
+                            <option value="policy">Policy</option>
+                        </select>
+                    </h2>
+                    <div class="w-full overflow-x-auto">
+                        <div id="q-table-container" class="min-w-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Q-Learning Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>Q-Learning</strong> is a model-free reinforcement learning algorithm that learns the value of actions in states by iteratively updating a Q-table. It's designed to find the optimal action-selection policy for any given Markov Decision Process (MDP).</p>
+                
+                <p><strong>The Q-Learning Algorithm:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Initialize Q-table:</strong> Set all Q(s,a) values to zero (or small random values)</li>
+                    <li><strong>For each episode:</strong>
+                        <ul class="list-disc ml-6">
+                            <li>Initialize state s</li>
+                            <li>For each step in the episode:
+                                <ul class="list-disc ml-6">
+                                    <li>Choose action a from s using policy derived from Q (e.g., ε-greedy)</li>
+                                    <li>Take action a, observe reward r and next state s'</li>
+                                    <li>Update Q(s,a) ← Q(s,a) + α[r + γ·max<sub>a'</sub>Q(s',a') - Q(s,a)]</li>
+                                    <li>s ← s'</li>
+                                    <li>If s is terminal, end episode</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+                
+                <p><strong>Key Parameters:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Learning Rate (α):</strong> Controls how much new information overrides old information. Higher values make the agent learn faster but might lead to instability.</li>
+                    <li><strong>Discount Factor (γ):</strong> Determines the importance of future rewards. A value close to 0 makes the agent "myopic" (focused on immediate rewards), while values close to 1 make it strive for long-term rewards.</li>
+                    <li><strong>Exploration Rate (ε):</strong> Controls the exploration-exploitation trade-off. Higher values encourage more random exploration.</li>
+                </ul>
+                
+                <p><strong>Benefits of Q-Learning:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Model-free: Learns directly from interaction with the environment</li>
+                    <li>Off-policy: Can learn the optimal policy independently of the agent's actions</li>
+                    <li>Can handle stochastic transitions and rewards</li>
+                    <li>Guaranteed to converge to the optimal policy (given sufficient exploration)</li>
+                </ul>
+                
+                <p><strong>Limitations:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Suffers from the curse of dimensionality - Q-table grows exponentially with state/action space</li>
+                    <li>Struggles with continuous state or action spaces without discretization</li>
+                    <li>Slow convergence in complex environments</li>
+                    <li>Can overestimate Q-values in stochastic environments</li>
+                </ul>
+                
+                <p><strong>Extensions and Variations:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Deep Q-Network (DQN):</strong> Uses neural networks to approximate the Q-function for large state spaces</li>
+                    <li><strong>Double Q-Learning:</strong> Reduces overestimation bias by decoupling action selection from evaluation</li>
+                    <li><strong>SARSA:</strong> On-policy variant that updates based on the actual next action taken</li>
+                    <li><strong>Expected SARSA:</strong> Updates using the expected value of next state-action pairs</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const gridWorldCanvas = document.getElementById('grid-world-canvas');
+        const learningChart = document.getElementById('learning-chart');
+        const gridSizeSelect = document.getElementById('grid-size');
+        const environmentTypeSelect = document.getElementById('environment-type');
+        const editModeCheckbox = document.getElementById('edit-mode');
+        const editTools = document.querySelectorAll('input[name="edit-tool"]');
+        const resetEnvironmentBtn = document.getElementById('reset-environment');
+        const learningRateInput = document.getElementById('learning-rate');
+        const learningRateValue = document.getElementById('learning-rate-value');
+        const discountFactorInput = document.getElementById('discount-factor');
+        const discountFactorValue = document.getElementById('discount-factor-value');
+        const explorationRateInput = document.getElementById('exploration-rate');
+        const explorationRateValue = document.getElementById('exploration-rate-value');
+        const episodesInput = document.getElementById('episodes');
+        const runQLearningBtn = document.getElementById('run-qlearning');
+        const stepQLearningBtn = document.getElementById('step-qlearning');
+        const resetQLearningBtn = document.getElementById('reset-qlearning');
+        const showQValuesCheckbox = document.getElementById('show-q-values');
+        const showPolicyCheckbox = document.getElementById('show-policy');
+        const showHeatmapCheckbox = document.getElementById('show-heatmap');
+        const animationSpeedInput = document.getElementById('animation-speed');
+        const runAgentBtn = document.getElementById('run-agent');
+        const stepAgentBtn = document.getElementById('step-agent');
+        const currentEpisodeDisplay = document.getElementById('current-episode');
+        const currentStepDisplay = document.getElementById('current-step');
+        const totalRewardDisplay = document.getElementById('total-reward');
+        const algorithmStatusDisplay = document.getElementById('algorithm-status-text');
+        const qTableViewSelect = document.getElementById('q-table-view');
+        const qTableContainer = document.getElementById('q-table-container');
+        
+        // Canvas context
+        const ctx = gridWorldCanvas.getContext('2d');
+        
+        // Colors
+        const COLORS = {
+            empty: { light: '#f8fafc', dark: '#1F2937' },
+            agent: { light: '#3B82F6', dark: '#3B82F6' }, // Blue
+            goal: { light: '#10B981', dark: '#10B981' },  // Green
+            trap: { light: '#EF4444', dark: '#EF4444' },  // Red
+            wall: { light: '#4B5563', dark: '#9CA3AF' },  // Gray
+            start: { light: '#8B5CF6', dark: '#8B5CF6' }, // Purple
+            text: { light: '#1F2937', dark: '#F3F4F6' },
+            arrow: { light: '#000000', dark: '#FFFFFF' },
+            grid: { light: '#E2E8F0', dark: '#374151' },
+            qvalue: { light: '#FBBF24', dark: '#FBBF24' } // Amber
+        };
+        
+        // Q-Learning parameters
+        let learningRate = 0.1;      // α (alpha)
+        let discountFactor = 0.9;    // γ (gamma)
+        let explorationRate = 0.1;   // ε (epsilon)
+        let maxEpisodes = 500;
+        
+        // Environment and grid parameters
+        let gridSize = 5;
+        let cellSize = gridWorldCanvas.width / gridSize;
+        let environment = [];
+        let startPosition = { x: 0, y: 0 };
+        let agentPosition = { x: 0, y: 0 };
+        let goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+        let stateCount = gridSize * gridSize;
+        let actionCount = 4; // Up, Right, Down, Left
+        
+        // Q-Learning algorithm state
+        let qTable = [];              // Q(s,a) values
+        let stateVisits = [];         // Count of visits to each state
+        let currentEpisode = 0;
+        let stepCount = 0;
+        let totalReward = 0;
+        let episodeRewards = [];      // Rewards for each episode
+        let episodeSteps = [];        // Steps for each episode
+        let isTraining = false;
+        let isRunningAgent = false;
+        let animationSpeed = 50;
+        let stepByStepMode = false;
+        let editMode = false;
+        let currentTool = 'wall';
+        
+        // Rewards
+        const REWARDS = {
+            step: -0.1,   // Small negative reward for each step
+            goal: 1.0,    // Positive reward for reaching the goal
+            trap: -1.0,   // Negative reward for falling into a trap
+            wall: -0.3    // Negative reward for hitting a wall
+        };
+        
+        // Action mapping (0: Up, 1: Right, 2: Down, 3: Left)
+        const ACTIONS = [
+            { dx: 0, dy: -1 }, // Up
+            { dx: 1, dy: 0 },  // Right
+            { dx: 0, dy: 1 },  // Down
+            { dx: -1, dy: 0 }  // Left
+        ];
+        
+        // Action names for display
+        const ACTION_NAMES = ['Up', 'Right', 'Down', 'Left'];
+        
+        // Initialize learning chart
+        let learningChartInstance;
+        
+        // Initialize application
+        function initializeApp() {
+            // Set up the grid
+            resetEnvironment();
+            
+            // Initialize Q-table with zeros
+            resetQLearning();
+            
+            // Initialize learning chart
+            initializeLearningChart();
+            
+            // Set initial parameter values
+            updateLearningRateDisplay();
+            updateDiscountFactorDisplay();
+            updateExplorationRateDisplay();
+            
+            // Add event listeners
+            addEventListeners();
+            
+            // Render the initial state
+            render();
+            
+            // Render Q-table
+            renderQTable();
+        }
+        
+        // Initialize learning chart
+        function initializeLearningChart() {
+            const ctx = learningChart.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (learningChartInstance) {
+                learningChartInstance.destroy();
+            }
+            
+            const textColor = document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937';
+            const gridColor = document.body.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            learningChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Reward per Episode',
+                            data: [],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Steps per Episode',
+                            data: [],
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                            tension: 0.1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Episode',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Total Reward',
+                                color: textColor
+                            },
+                            position: 'left',
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        y1: {
+                            title: {
+                                display: true,
+                                text: 'Steps',
+                                color: textColor
+                            },
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Add event listeners
+        function addEventListeners() {
+            // Grid size change
+            gridSizeSelect.addEventListener('change', () => {
+                gridSize = parseInt(gridSizeSelect.value);
+                cellSize = gridWorldCanvas.width / gridSize;
+                stateCount = gridSize * gridSize;
+                resetEnvironment();
+                resetQLearning();
+                render();
+                renderQTable();
+            });
+            
+            // Environment type change
+            environmentTypeSelect.addEventListener('change', () => {
+                resetEnvironment();
+                render();
+            });
+            
+            // Edit mode toggle
+            editModeCheckbox.addEventListener('change', () => {
+                editMode = editModeCheckbox.checked;
+                
+                // Enable/disable tool options
+                document.querySelectorAll('.edit-tool-container').forEach(container => {
+                    const input = container.querySelector('input');
+                    input.disabled = !editMode;
+                    if (editMode) {
+                        container.classList.remove('opacity-50');
+                    } else {
+                        container.classList.add('opacity-50');
+                    }
+                });
+                
+                render();
+            });
+            
+            // Edit tools
+            editTools.forEach(tool => {
+                tool.addEventListener('change', () => {
+                    currentTool = tool.value;
+                });
+            });
+            
+            // Reset environment
+            resetEnvironmentBtn.addEventListener('click', () => {
+                resetEnvironment();
+                render();
+                renderQTable();
+            });
+            
+            // Parameter changes
+            learningRateInput.addEventListener('input', () => {
+                learningRate = parseFloat(learningRateInput.value);
+                updateLearningRateDisplay();
+            });
+            
+            discountFactorInput.addEventListener('input', () => {
+                discountFactor = parseFloat(discountFactorInput.value);
+                updateDiscountFactorDisplay();
+            });
+            
+            explorationRateInput.addEventListener('input', () => {
+                explorationRate = parseFloat(explorationRateInput.value);
+                updateExplorationRateDisplay();
+            });
+            
+            episodesInput.addEventListener('change', () => {
+                maxEpisodes = parseInt(episodesInput.value);
+            });
+            
+            // Animation speed
+            animationSpeedInput.addEventListener('input', () => {
+                animationSpeed = parseInt(animationSpeedInput.value);
+            });
+            
+            // Q-learning controls
+            runQLearningBtn.addEventListener('click', runQLearning);
+            stepQLearningBtn.addEventListener('click', stepQLearning);
+            resetQLearningBtn.addEventListener('click', () => {
+                resetQLearning();
+                render();
+                renderQTable();
+                updateLearningChart();
+            });
+            
+            // Agent controls
+            runAgentBtn.addEventListener('click', runAgent);
+            stepAgentBtn.addEventListener('click', stepAgent);
+            
+            // Visualization options
+            showQValuesCheckbox.addEventListener('change', render);
+            showPolicyCheckbox.addEventListener('change', render);
+            showHeatmapCheckbox.addEventListener('change', render);
+            
+            // Q-table view selection
+            qTableViewSelect.addEventListener('change', renderQTable);
+            
+            // Canvas click event for editing
+            gridWorldCanvas.addEventListener('click', handleCanvasClick);
+        }
+        
+        // Handle canvas click for editing
+        function handleCanvasClick(event) {
+            if (!editMode) return;
+            
+            const rect = gridWorldCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            // Convert to grid coordinates
+            const gridX = Math.floor(x / cellSize);
+            const gridY = Math.floor(y / cellSize);
+            
+            // Check if within bounds
+            if (gridX < 0 || gridX >= gridSize || gridY < 0 || gridY >= gridSize) {
+                return;
+            }
+            
+            // Apply the current tool
+            switch (currentTool) {
+                case 'wall':
+                    environment[gridY][gridX] = 'wall';
+                    break;
+                case 'start':
+                    // Remove old start position
+                    environment[startPosition.y][startPosition.x] = 'empty';
+                    // Set new start position
+                    startPosition = { x: gridX, y: gridY };
+                    agentPosition = { x: gridX, y: gridY };
+                    environment[gridY][gridX] = 'start';
+                    break;
+                case 'goal':
+                    // Remove old goal position
+                    environment[goalPosition.y][goalPosition.x] = 'empty';
+                    // Set new goal position
+                    goalPosition = { x: gridX, y: gridY };
+                    environment[gridY][gridX] = 'goal';
+                    break;
+                case 'trap':
+                    environment[gridY][gridX] = 'trap';
+                    break;
+                case 'erase':
+                    // Don't erase start or goal
+                    if ((gridX === startPosition.x && gridY === startPosition.y) || 
+                        (gridX === goalPosition.x && gridY === goalPosition.y)) {
+                        return;
+                    }
+                    environment[gridY][gridX] = 'empty';
+                    break;
+            }
+            
+            // Redraw
+            render();
+        }
+        
+        // Reset the environment
+        function resetEnvironment() {
+            // Initialize the grid with empty cells
+            environment = Array(gridSize).fill().map(() => Array(gridSize).fill('empty'));
+            
+            // Set up environment based on selected type
+            const envType = environmentTypeSelect.value;
+            
+            switch (envType) {
+                case 'empty':
+                    // Just an empty room with start and goal
+                    startPosition = { x: 0, y: 0 };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    break;
+                    
+                case 'maze':
+                    // Simple maze with some walls
+                    startPosition = { x: 0, y: 0 };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    
+                    // Add some walls to form a simple maze
+                    for (let i = 1; i < gridSize - 1; i += 2) {
+                        for (let j = 0; j < gridSize; j++) {
+                            // Skip some positions to create paths
+                            if (Math.random() > 0.3) {
+                                environment[i][j] = 'wall';
+                            }
+                        }
+                    }
+                    
+                    // Ensure start and goal are accessible
+                    environment[startPosition.y][startPosition.x] = 'empty';
+                    environment[goalPosition.y][goalPosition.x] = 'empty';
+                    break;
+                    
+                case 'obstacles':
+                    // Random obstacles
+                    startPosition = { x: 0, y: 0 };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    
+                    // Add random walls and traps
+                    for (let i = 0; i < gridSize; i++) {
+                        for (let j = 0; j < gridSize; j++) {
+                            // Skip start and goal positions
+                            if ((i === startPosition.y && j === startPosition.x) || 
+                                (i === goalPosition.y && j === goalPosition.x)) {
+                                continue;
+                            }
+                            
+                            const rand = Math.random();
+                            if (rand < 0.2) {
+                                environment[i][j] = 'wall';
+                            } else if (rand < 0.25) {
+                                environment[i][j] = 'trap';
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'cliff':
+                    // Cliff walking problem
+                    startPosition = { x: 0, y: gridSize - 1 };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    
+                    // Create a "cliff" (row of traps) along the bottom
+                    for (let j = 1; j < gridSize - 1; j++) {
+                        environment[gridSize - 1][j] = 'trap';
+                    }
+                    break;
+                    
+                case 'ice':
+                    // Slippery ice environment (will be implemented with stochastic transitions)
+                    startPosition = { x: Math.floor(gridSize / 2), y: Math.floor(gridSize / 2) };
+                    goalPosition = { x: gridSize - 1, y: gridSize - 1 };
+                    
+                    // Add some obstacles around the edges
+                    for (let i = 0; i < gridSize; i++) {
+                        if (i !== Math.floor(gridSize / 2)) {
+                            environment[0][i] = 'wall';
+                            environment[gridSize - 1][i] = 'wall';
+                            environment[i][0] = 'wall';
+                            environment[i][gridSize - 1] = 'wall';
+                        }
+                    }
+                    
+                    // Make sure goal is accessible
+                    environment[goalPosition.y][goalPosition.x] = 'empty';
+                    break;
+            }
+            
+            // Set start and goal in the environment
+            environment[startPosition.y][startPosition.x] = 'start';
+            environment[goalPosition.y][goalPosition.x] = 'goal';
+            
+            // Reset agent position to start
+            agentPosition = { ...startPosition };
+        }
+        
+        // Reset Q-learning
+        function resetQLearning() {
+            // Initialize Q-table with zeros
+            qTable = Array(stateCount).fill().map(() => Array(actionCount).fill(0));
+            
+            // Initialize state visits counter
+            stateVisits = Array(stateCount).fill(0);
+            
+            // Reset episode counter and rewards
+            currentEpisode = 0;
+            stepCount = 0;
+            totalReward = 0;
+            episodeRewards = [];
+            episodeSteps = [];
+            
+            // Reset agent position
+            agentPosition = { ...startPosition };
+            
+            // Reset UI displays
+            currentEpisodeDisplay.textContent = `${currentEpisode}/${maxEpisodes}`;
+            currentStepDisplay.textContent = stepCount;
+            totalRewardDisplay.textContent = totalReward.toFixed(2);
+            algorithmStatusDisplay.textContent = 'Reset';
+            
+            // Clear training flags
+            isTraining = false;
+            isRunningAgent = false;
+            stepByStepMode = false;
+        }
+        
+        // Update learning rate display
+        function updateLearningRateDisplay() {
+            learningRateValue.textContent = learningRate.toFixed(2);
+        }
+        
+        // Update discount factor display
+        function updateDiscountFactorDisplay() {
+            discountFactorValue.textContent = discountFactor.toFixed(2);
+        }
+        
+        // Update exploration rate display
+        function updateExplorationRateDisplay() {
+            explorationRateValue.textContent = explorationRate.toFixed(2);
+        }
+        
+        // Convert (x,y) coordinates to state index
+        function coordsToState(x, y) {
+            return y * gridSize + x;
+        }
+        
+        // Convert state index to (x,y) coordinates
+        function stateToCoords(state) {
+            const x = state % gridSize;
+            const y = Math.floor(state / gridSize);
+            return { x, y };
+        }
+        
+        // Get the type of cell at given coordinates
+        function getCellType(x, y) {
+            // Check if out of bounds
+            if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) {
+                return 'wall'; // Treat out of bounds as walls
+            }
+            return environment[y][x];
+        }
+        
+        // Check if state is terminal (goal or trap)
+        function isTerminalState(x, y) {
+            const cellType = getCellType(x, y);
+            return cellType === 'goal' || cellType === 'trap';
+        }
+        
+        // Get possible actions from a state (removes actions that lead to walls)
+        function getPossibleActions(x, y) {
+            const possibleActions = [];
+            
+            for (let action = 0; action < actionCount; action++) {
+                const { dx, dy } = ACTIONS[action];
+                const newX = x + dx;
+                const newY = y + dy;
+                
+                // Check if the new position is valid (not a wall and not out of bounds)
+                if (getCellType(newX, newY) !== 'wall') {
+                    possibleActions.push(action);
+                }
+            }
+            
+            return possibleActions;
+        }
+        
+        // Get the best action from a state using the Q-table
+        function getBestAction(x, y) {
+            const state = coordsToState(x, y);
+            const qValues = qTable[state];
+            
+            // Get possible actions (eliminate walls)
+            const possibleActions = getPossibleActions(x, y);
+            
+            if (possibleActions.length === 0) {
+                return null; // No valid actions (should not happen in a well-formed grid)
+            }
+            
+            // Find the action with the highest Q-value among possible actions
+            let bestAction = possibleActions[0];
+            let bestValue = qValues[bestAction];
+            
+            for (let i = 1; i < possibleActions.length; i++) {
+                const action = possibleActions[i];
+                if (qValues[action] > bestValue) {
+                    bestValue = qValues[action];
+                    bestAction = action;
+                }
+            }
+            
+            return bestAction;
+        }
+        
+        // Choose an action using ε-greedy policy
+        function chooseAction(x, y) {
+            // With probability ε, choose a random action
+            if (Math.random() < explorationRate) {
+                const possibleActions = getPossibleActions(x, y);
+                return possibleActions[Math.floor(Math.random() * possibleActions.length)];
+            }
+            
+            // Otherwise, choose the best action
+            return getBestAction(x, y);
+        }
+        
+        // Take a step in the environment
+        function takeStep(x, y, action) {
+            const { dx, dy } = ACTIONS[action];
+            const newX = x + dx;
+            const newY = y + dy;
+            
+            let reward = REWARDS.step; // Default step reward
+            
+            // Check if the action leads to a wall
+            if (getCellType(newX, newY) === 'wall') {
+                reward = REWARDS.wall;
+                return { newX: x, newY: y, reward, done: false }; // Stay in place
+            }
+            
+            // Check for goal or trap
+            const cellType = getCellType(newX, newY);
+            if (cellType === 'goal') {
+                reward = REWARDS.goal;
+                return { newX, newY, reward, done: true };
+            } else if (cellType === 'trap') {
+                reward = REWARDS.trap;
+                return { newX, newY, reward, done: true };
+            }
+            
+            // Add environment-specific mechanics
+            if (environmentTypeSelect.value === 'ice' && Math.random() < 0.2) {
+                // Slippery ice: 20% chance to move in a random direction
+                const randomAction = Math.floor(Math.random() * actionCount);
+                const randomMove = ACTIONS[randomAction];
+                const slipX = x + randomMove.dx;
+                const slipY = y + randomMove.dy;
+                
+                // Check if slipped into a wall
+                if (getCellType(slipX, slipY) === 'wall') {
+                    return { newX, newY, reward, done: false }; // Use the original move
+                }
+                
+                return { newX: slipX, newY: slipY, reward, done: false };
+            }
+            
+            return { newX, newY, reward, done: false };
+        }
+        
+        // Update Q-value using the Q-learning update rule
+        function updateQValue(state, action, nextState, reward) {
+            // Q(s,a) = Q(s,a) + α[r + γ·max_a'Q(s',a') - Q(s,a)]
+            const currentQ = qTable[state][action];
+            
+            // Get max Q-value for next state
+            const nextStateQValues = qTable[nextState];
+            const maxNextQ = Math.max(...nextStateQValues);
+            
+            // Calculate new Q-value
+            const newQ = currentQ + learningRate * (reward + discountFactor * maxNextQ - currentQ);
+            
+            // Update Q-table
+            qTable[state][action] = newQ;
+        }
+        
+        // Run a complete Q-learning training session
+        async function runQLearning() {
+            if (isTraining) return;
+            
+            isTraining = true;
+            stepByStepMode = false;
+            currentEpisode = 0;
+            episodeRewards = [];
+            episodeSteps = [];
+            
+            algorithmStatusDisplay.textContent = 'Training...';
+            
+            // Disable buttons during training
+            setControlsEnabled(false);
+            
+            try {
+                // Run episodes
+                for (let episode = 0; episode < maxEpisodes; episode++) {
+                    currentEpisode = episode + 1;
+                    const episodeResult = await runEpisode();
+                    
+                    // Update tracking
+                    episodeRewards.push(episodeResult.totalReward);
+                    episodeSteps.push(episodeResult.steps);
+                    
+                    // Update UI
+                    currentEpisodeDisplay.textContent = `${currentEpisode}/${maxEpisodes}`;
+                    totalRewardDisplay.textContent = episodeResult.totalReward.toFixed(2);
+                    currentStepDisplay.textContent = episodeResult.steps;
+                    
+                    // Update learning chart every 10 episodes
+                    if (episode % 10 === 0 || episode === maxEpisodes - 1) {
+                        updateLearningChart();
+                        render();
+                        renderQTable();
+                        
+                        // Small delay to allow UI updates
+                        await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                }
+                
+                algorithmStatusDisplay.textContent = 'Training Complete';
+            } catch (err) {
+                console.error('Error during training:', err);
+                algorithmStatusDisplay.textContent = 'Training Error';
+            } finally {
+                // Re-enable controls
+                setControlsEnabled(true);
+                isTraining = false;
+                
+                // Final UI updates
+                updateLearningChart();
+                render();
+                renderQTable();
+            }
+        }
+        
+        // Run one episode of Q-learning
+        async function runEpisode() {
+            // Reset agent position to start
+            agentPosition = { ...startPosition };
+            let episodeReward = 0;
+            let done = false;
+            let steps = 0;
+            const maxSteps = gridSize * gridSize * 4; // Limit steps to avoid infinite loops
+            
+            while (!done && steps < maxSteps) {
+                steps++;
+                
+                // Choose action using ε-greedy policy
+                const state = coordsToState(agentPosition.x, agentPosition.y);
+                const action = chooseAction(agentPosition.x, agentPosition.y);
+                
+                // Take the action
+                const result = takeStep(agentPosition.x, agentPosition.y, action);
+                
+                // Update agent position
+                agentPosition.x = result.newX;
+                agentPosition.y = result.newY;
+                
+                // Update visit count for visualization
+                const newState = coordsToState(agentPosition.x, agentPosition.y);
+                stateVisits[newState]++;
+                
+                // Update Q-value
+                updateQValue(state, action, newState, result.reward);
+                
+                // Accumulate reward
+                episodeReward += result.reward;
+                
+                // Check if episode is done
+                done = result.done;
+                
+                // Render occasionally for visual feedback during training
+                if (steps % 100 === 0) {
+                    render();
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }
+            
+            return { totalReward: episodeReward, steps };
+        }
+        
+        // Step through Q-learning manually
+        async function stepQLearning() {
+            if (isTraining) return;
+            
+            stepByStepMode = true;
+            isTraining = true;
+            
+            try {
+                // If starting a new episode
+                if (currentEpisode === 0 || isTerminalState(agentPosition.x, agentPosition.y)) {
+                    currentEpisode++;
+                    agentPosition = { ...startPosition };
+                    totalReward = 0;
+                    stepCount = 0;
+                    
+                    currentEpisodeDisplay.textContent = `${currentEpisode}/${maxEpisodes}`;
+                    algorithmStatusDisplay.textContent = 'Episode Started';
+                }
+                
+                // Take one step
+                const state = coordsToState(agentPosition.x, agentPosition.y);
+                const action = chooseAction(agentPosition.x, agentPosition.y);
+                
+                const result = takeStep(agentPosition.x, agentPosition.y, action);
+                
+                // Update agent position
+                agentPosition.x = result.newX;
+                agentPosition.y = result.newY;
+                
+                // Update visit count
+                const newState = coordsToState(agentPosition.x, agentPosition.y);
+                stateVisits[newState]++;
+                
+                // Update Q-value
+                updateQValue(state, action, newState, result.reward);
+                
+                // Update tracking
+                totalReward += result.reward;
+                stepCount++;
+                
+                // Update UI
+                totalRewardDisplay.textContent = totalReward.toFixed(2);
+                currentStepDisplay.textContent = stepCount;
+                
+                if (result.done) {
+                    algorithmStatusDisplay.textContent = 'Episode Complete';
+                    
+                    // Record episode data
+                    episodeRewards.push(totalReward);
+                    episodeSteps.push(stepCount);
+                    
+                    // Update learning chart
+                    updateLearningChart();
+                } else {
+                    algorithmStatusDisplay.textContent = 'Stepping...';
+                }
+                
+                // Render
+                render();
+                renderQTable();
+            } catch (err) {
+                console.error('Error during step:', err);
+                algorithmStatusDisplay.textContent = 'Step Error';
+            } finally {
+                isTraining = false;
+            }
+        }
+        
+        // Run the agent using the learned policy
+        async function runAgent() {
+            if (isTraining || isRunningAgent) return;
+            
+            isRunningAgent = true;
+            agentPosition = { ...startPosition };
+            totalReward = 0;
+            stepCount = 0;
+            
+            algorithmStatusDisplay.textContent = 'Agent Running...';
+            
+            // Disable controls during agent run
+            setControlsEnabled(false);
+            
+            try {
+                let done = false;
+                const maxSteps = gridSize * gridSize * 4;
+                
+                while (!done && stepCount < maxSteps) {
+                    // Get best action according to Q-table (no exploration)
+                    const action = getBestAction(agentPosition.x, agentPosition.y);
+                    
+                    // Take the action
+                    const result = takeStep(agentPosition.x, agentPosition.y, action);
+                    
+                    // Update agent position
+                    agentPosition.x = result.newX;
+                    agentPosition.y = result.newY;
+                    
+                    // Update tracking
+                    totalReward += result.reward;
+                    stepCount++;
+                    
+                    // Update UI
+                    totalRewardDisplay.textContent = totalReward.toFixed(2);
+                    currentStepDisplay.textContent = stepCount;
+                    
+                    // Render
+                    render();
+                    
+                    // Delay based on animation speed
+                    await new Promise(resolve => setTimeout(resolve, 100 - animationSpeed));
+                    
+                    // Check if episode is done
+                    done = result.done;
+                }
+                
+                algorithmStatusDisplay.textContent = done ? 'Agent Reached Goal' : 'Agent Max Steps';
+            } catch (err) {
+                console.error('Error during agent run:', err);
+                algorithmStatusDisplay.textContent = 'Agent Run Error';
+            } finally {
+                // Re-enable controls
+                setControlsEnabled(true);
+                isRunningAgent = false;
+            }
+        }
+        
+        // Step the agent manually
+        async function stepAgent() {
+            if (isTraining || isRunningAgent) return;
+            
+            // Reset if in terminal state
+            if (isTerminalState(agentPosition.x, agentPosition.y)) {
+                agentPosition = { ...startPosition };
+                totalReward = 0;
+                stepCount = 0;
+                
+                totalRewardDisplay.textContent = totalReward.toFixed(2);
+                currentStepDisplay.textContent = stepCount;
+                algorithmStatusDisplay.textContent = 'Agent Reset';
+                
+                render();
+                return;
+            }
+            
+            // Get best action according to Q-table (no exploration)
+            const action = getBestAction(agentPosition.x, agentPosition.y);
+            
+            // Take the action
+            const result = takeStep(agentPosition.x, agentPosition.y, action);
+            
+            // Update agent position
+            agentPosition.x = result.newX;
+            agentPosition.y = result.newY;
+            
+            // Update tracking
+            totalReward += result.reward;
+            stepCount++;
+            
+            // Update UI
+            totalRewardDisplay.textContent = totalReward.toFixed(2);
+            currentStepDisplay.textContent = stepCount;
+            
+            if (result.done) {
+                algorithmStatusDisplay.textContent = 'Agent Reached Terminal State';
+            } else {
+                algorithmStatusDisplay.textContent = 'Agent Stepped';
+            }
+            
+            // Render
+            render();
+        }
+        
+        // Update learning chart with episode data
+        function updateLearningChart() {
+            if (!learningChartInstance) return;
+            
+            // Create labels for episodes
+            const labels = Array.from({ length: episodeRewards.length }, (_, i) => i + 1);
+            
+            // Update chart data
+            learningChartInstance.data.labels = labels;
+            learningChartInstance.data.datasets[0].data = episodeRewards;
+            learningChartInstance.data.datasets[1].data = episodeSteps;
+            
+            // Update chart
+            learningChartInstance.update();
+        }
+        
+        // Render the Q-table
+        function renderQTable() {
+            qTableContainer.innerHTML = '';
+            
+            const viewMode = qTableViewSelect.value;
+            
+            // Create table
+            const table = document.createElement('table');
+            table.className = 'min-w-full border-collapse';
+            
+            // Create header row with column labels
+            const headerRow = document.createElement('tr');
+            
+            // Add corner cell
+            const cornerCell = document.createElement('th');
+            cornerCell.className = 'border border-gray-300 dark:border-gray-600 px-2 py-1 bg-gray-100 dark:bg-gray-700';
+            cornerCell.textContent = viewMode === 'state-action' ? 'State\\Action' : 'State';
+            headerRow.appendChild(cornerCell);
+            
+            // Add action headers for state-action view
+            if (viewMode === 'state-action') {
+                for (let action = 0; action < actionCount; action++) {
+                    const th = document.createElement('th');
+                    th.className = 'border border-gray-300 dark:border-gray-600 px-2 py-1 bg-gray-100 dark:bg-gray-700';
+                    th.textContent = ACTION_NAMES[action];
+                    headerRow.appendChild(th);
+                }
+            } else {
+                // For max value or policy view, add a single column
+                const th = document.createElement('th');
+                th.className = 'border border-gray-300 dark:border-gray-600 px-2 py-1 bg-gray-100 dark:bg-gray-700';
+                th.textContent = viewMode === 'max' ? 'Max Q-Value' : 'Best Action';
+                headerRow.appendChild(th);
+            }
+            
+            table.appendChild(headerRow);
+            
+            // Add rows for each state
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const state = coordsToState(x, y);
+                    const stateType = environment[y][x];
+                    
+                    // Skip wall states as they can't be visited
+                    if (stateType === 'wall') continue;
+                    
+                    const row = document.createElement('tr');
+                    
+                    // Add state label
+                    const stateCell = document.createElement('td');
+                    stateCell.className = 'border border-gray-300 dark:border-gray-600 px-2 py-1 bg-gray-50 dark:bg-gray-800';
+                    stateCell.textContent = `(${x},${y})`;
+                    
+                    // Add color indicator for state type
+                    if (stateType === 'goal') {
+                        stateCell.classList.add('bg-green-100', 'dark:bg-green-900');
+                    } else if (stateType === 'trap') {
+                        stateCell.classList.add('bg-red-100', 'dark:bg-red-900');
+                    } else if (stateType === 'start') {
+                        stateCell.classList.add('bg-purple-100', 'dark:bg-purple-900');
+                    }
+                    
+                    row.appendChild(stateCell);
+                    
+                    if (viewMode === 'state-action') {
+                        // Add cells for each action's Q-value
+                        for (let action = 0; action < actionCount; action++) {
+                            const cell = document.createElement('td');
+                            cell.className = 'border border-gray-300 dark:border-gray-600 px-2 py-1 text-center';
+                            
+                            // Check if action is valid (not into a wall)
+                            const { dx, dy } = ACTIONS[action];
+                            const newX = x + dx;
+                            const newY = y + dy;
+                            
+                            if (getCellType(newX, newY) === 'wall') {
+                                cell.textContent = '—'; // Action leads to wall
+                                cell.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-400', 'dark:text-gray-500');
+                            } else {
+                                const qValue = qTable[state][action].toFixed(2);
+                                cell.textContent = qValue;
+                                
+                                // Highlight best action
+                                if (action === getBestAction(x, y)) {
+                                    cell.classList.add('bg-yellow-100', 'dark:bg-yellow-900', 'font-bold');
+                                }
+                            }
+                            
+                            row.appendChild(cell);
+                        }
+                    } else if (viewMode === 'max') {
+                        // Show max Q-value for the state
+                        const cell = document.createElement('td');
+                        cell.className = 'border border-gray-300 dark:border-gray-600 px-2 py-1 text-center';
+                        
+                        // Get the best action and its Q-value
+                        const bestAction = getBestAction(x, y);
+                        if (bestAction !== null) {
+                            const maxQ = qTable[state][bestAction].toFixed(2);
+                            cell.textContent = maxQ;
+                            
+                            // Color based on value
+                            const value = qTable[state][bestAction];
+                            const normalizedValue = Math.max(0, Math.min(1, (value + 1) / 2)); // Scale to 0-1
+                            cell.style.backgroundColor = getHeatmapColor(normalizedValue);
+                        } else {
+                            cell.textContent = '—';
+                        }
+                        
+                        row.appendChild(cell);
+                    } else if (viewMode === 'policy') {
+                        // Show best action (policy)
+                        const cell = document.createElement('td');
+                        cell.className = 'border border-gray-300 dark:border-gray-600 px-2 py-1 text-center';
+                        
+                        // Get the best action
+                        const bestAction = getBestAction(x, y);
+                        if (bestAction !== null) {
+                            cell.textContent = ACTION_NAMES[bestAction];
+                            
+                            // Direction arrow
+                            const arrow = document.createElement('span');
+                            arrow.className = 'ml-2';
+                            switch(bestAction) {
+                                case 0: arrow.innerHTML = '↑'; break;
+                                case 1: arrow.innerHTML = '→'; break;
+                                case 2: arrow.innerHTML = '↓'; break;
+                                case 3: arrow.innerHTML = '←'; break;
+                            }
+                            cell.appendChild(arrow);
+                            
+                            // Color based on confidence
+                            const bestQ = qTable[state][bestAction];
+                            const secondBestQ = Math.max(...qTable[state].filter((q, i) => i !== bestAction));
+                            const qDiff = bestQ - secondBestQ;
+                            const confidence = Math.min(1, Math.max(0, qDiff / 2)); // Scale and clamp
+                            
+                            cell.classList.add(confidence > 0.5 ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900');
+                        } else {
+                            cell.textContent = '—';
+                        }
+                        
+                        row.appendChild(cell);
+                    }
+                    
+                    table.appendChild(row);
+                }
+            }
+            
+            qTableContainer.appendChild(table);
+        }
+        
+        // Get heatmap color based on normalized value (0-1)
+        function getHeatmapColor(value) {
+            // Yellow to red gradient
+            const r = Math.min(255, Math.floor(255 * value) + 180);
+            const g = Math.min(255, Math.floor(180 * (1 - value)));
+            const b = 0;
+            
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        
+        // Enable or disable controls during processing
+        function setControlsEnabled(enabled) {
+            runQLearningBtn.disabled = !enabled;
+            stepQLearningBtn.disabled = !enabled;
+            resetQLearningBtn.disabled = !enabled;
+            runAgentBtn.disabled = !enabled;
+            stepAgentBtn.disabled = !enabled;
+            gridSizeSelect.disabled = !enabled;
+            environmentTypeSelect.disabled = !enabled;
+            resetEnvironmentBtn.disabled = !enabled;
+        }
+        
+        // Get normalized visit count for heatmap
+        function getNormalizedVisitCount(state) {
+            if (stateVisits.length === 0) return 0;
+            
+            const maxVisits = Math.max(...stateVisits);
+            return maxVisits > 0 ? stateVisits[state] / maxVisits : 0;
+        }
+        
+        // Render the grid world
+        function render() {
+            const isDarkMode = document.body.classList.contains('dark');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, gridWorldCanvas.width, gridWorldCanvas.height);
+            
+            // Draw grid cells
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cellType = environment[y][x];
+                    const state = coordsToState(x, y);
+                    
+                    // Cell position
+                    const cellX = x * cellSize;
+                    const cellY = y * cellSize;
+                    
+                    // Set cell color based on type
+                    let cellColor;
+                    switch (cellType) {
+                        case 'wall':
+                            cellColor = isDarkMode ? COLORS.wall.dark : COLORS.wall.light;
+                            break;
+                        case 'goal':
+                            cellColor = COLORS.goal.light;
+                            break;
+                        case 'trap':
+                            cellColor = COLORS.trap.light;
+                            break;
+                        case 'start':
+                            cellColor = isDarkMode ? COLORS.empty.dark : COLORS.empty.light;
+                            break;
+                        default:
+                            cellColor = isDarkMode ? COLORS.empty.dark : COLORS.empty.light;
+                    }
+                    
+                    // Show heatmap if enabled (for non-wall cells)
+                    if (showHeatmapCheckbox.checked && cellType !== 'wall') {
+                        const visitCount = getNormalizedVisitCount(state);
+                        if (visitCount > 0) {
+                            // Apply heatmap color with transparency
+                            ctx.fillStyle = `rgba(255, 0, 0, ${visitCount * 0.6})`;
+                            ctx.fillRect(cellX, cellY, cellSize, cellSize);
+                        }
+                    }
+                    
+                    // Fill cell with base color
+                    if (!showHeatmapCheckbox.checked || cellType === 'wall') {
+                        ctx.fillStyle = cellColor;
+                        ctx.fillRect(cellX, cellY, cellSize, cellSize);
+                    }
+                    
+                    // Draw cell border
+                    ctx.strokeStyle = isDarkMode ? COLORS.grid.dark : COLORS.grid.light;
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(cellX, cellY, cellSize, cellSize);
+                    
+                    // Draw special markers for start and goal
+                    if (cellType === 'start') {
+                        ctx.fillStyle = COLORS.start.light;
+                        const padding = cellSize * 0.2;
+                        ctx.beginPath();
+                        ctx.arc(cellX + cellSize/2, cellY + cellSize/2, cellSize/2 - padding, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Draw 'S' in the start cell
+                        ctx.fillStyle = isDarkMode ? COLORS.text.dark : COLORS.text.light;
+                        ctx.font = `${cellSize * 0.6}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('S', cellX + cellSize/2, cellY + cellSize/2);
+                    } else if (cellType === 'goal') {
+                        // Draw 'G' in the goal cell
+                        ctx.fillStyle = isDarkMode ? COLORS.text.dark : COLORS.text.light;
+                        ctx.font = `${cellSize * 0.6}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('G', cellX + cellSize/2, cellY + cellSize/2);
+                    } else if (cellType === 'trap') {
+                        // Draw 'T' in the trap cell
+                        ctx.fillStyle = isDarkMode ? COLORS.text.dark : COLORS.text.light;
+                        ctx.font = `${cellSize * 0.6}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('T', cellX + cellSize/2, cellY + cellSize/2);
+                    }
+                    
+                    // Show Q-values if enabled (for non-wall cells)
+                    if (showQValuesCheckbox.checked && cellType !== 'wall') {
+                        drawQValues(x, y, cellX, cellY);
+                    }
+                    
+                    // Show policy arrows if enabled (for non-wall cells)
+                    if (showPolicyCheckbox.checked && cellType !== 'wall' && !isTerminalState(x, y)) {
+                        drawPolicyArrow(x, y, cellX, cellY);
+                    }
+                }
+            }
+            
+            // Draw agent
+            const agentX = agentPosition.x * cellSize;
+            const agentY = agentPosition.y * cellSize;
+            
+            ctx.fillStyle = COLORS.agent.light;
+            const padding = cellSize * 0.15;
+            ctx.fillRect(agentX + padding, agentY + padding, cellSize - 2*padding, cellSize - 2*padding);
+            
+            // Draw eyes to make it look like a character
+            ctx.fillStyle = isDarkMode ? COLORS.text.dark : COLORS.text.light;
+            const eyeSize = cellSize * 0.1;
+            const eyeY = agentY + cellSize * 0.35;
+            ctx.fillRect(agentX + cellSize * 0.3, eyeY, eyeSize, eyeSize);
+            ctx.fillRect(agentX + cellSize * 0.6, eyeY, eyeSize, eyeSize);
+            
+            // Draw mouth
+            ctx.beginPath();
+            ctx.moveTo(agentX + cellSize * 0.3, agentY + cellSize * 0.65);
+            ctx.lineTo(agentX + cellSize * 0.7, agentY + cellSize * 0.65);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Draw Q-values for a cell
+        function drawQValues(x, y, cellX, cellY) {
+            const state = coordsToState(x, y);
+            const fontSize = Math.max(8, Math.min(12, cellSize / 5));
+            
+            ctx.font = `${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Draw Q-values for each action
+            for (let action = 0; action < actionCount; action++) {
+                const qValue = qTable[state][action];
+                const { dx, dy } = ACTIONS[action];
+                
+                // Skip if action leads to wall
+                if (getCellType(x + dx, y + dy) === 'wall') continue;
+                
+                // Position for Q-value text
+                let textX, textY;
+                
+                switch (action) {
+                    case 0: // Up
+                        textX = cellX + cellSize / 2;
+                        textY = cellY + cellSize * 0.2;
+                        break;
+                    case 1: // Right
+                        textX = cellX + cellSize * 0.8;
+                        textY = cellY + cellSize / 2;
+                        break;
+                    case 2: // Down
+                        textX = cellX + cellSize / 2;
+                        textY = cellY + cellSize * 0.8;
+                        break;
+                    case 3: // Left
+                        textX = cellX + cellSize * 0.2;
+                        textY = cellY + cellSize / 2;
+                        break;
+                }
+                
+                // Normalize Q-value for color (scale from -1 to +1)
+                const normalizedQ = Math.max(0, Math.min(1, (qValue + 1) / 2));
+                
+                // Set color based on Q-value
+                if (qValue >= 0) {
+                    // Positive values: green to yellow
+                    const g = Math.floor(255 - normalizedQ * 100);
+                    ctx.fillStyle = `rgb(${Math.floor(normalizedQ * 255)}, ${g}, 0)`;
+                } else {
+                    // Negative values: red
+                    const intensity = Math.floor(Math.abs(normalizedQ) * 255);
+                    ctx.fillStyle = `rgb(${intensity}, 0, 0)`;
+                }
+                
+                // Draw background circle for better visibility
+                ctx.beginPath();
+                ctx.arc(textX, textY, fontSize * 0.8, 0, Math.PI * 2);
+                ctx.fillStyle = document.body.classList.contains('dark') ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)';
+                ctx.fill();
+                
+                // Draw Q-value text
+                ctx.fillStyle = document.body.classList.contains('dark') ? '#FFFFFF' : '#000000';
+                ctx.fillText(qValue.toFixed(1), textX, textY);
+            }
+        }
+        
+        // Draw policy arrow for a cell
+        function drawPolicyArrow(x, y, cellX, cellY) {
+            const bestAction = getBestAction(x, y);
+            if (bestAction === null) return;
+            
+            const { dx, dy } = ACTIONS[bestAction];
+            
+            // Skip if best action leads to wall (shouldn't happen with proper Q-learning)
+            if (getCellType(x + dx, y + dy) === 'wall') return;
+            
+            const centerX = cellX + cellSize / 2;
+            const centerY = cellY + cellSize / 2;
+            
+            // Get Q-value to determine arrow confidence
+            const state = coordsToState(x, y);
+            const qValue = qTable[state][bestAction];
+            
+            // Normalize Q-value for opacity
+            const normalizedQ = Math.max(0, Math.min(1, (qValue + 1) / 2));
+            
+            // Draw arrow
+            ctx.beginPath();
+            
+            // Move to center of cell
+            ctx.moveTo(centerX, centerY);
+            
+            // Move in direction of best action
+            const arrowLength = cellSize * 0.3;
+            const endX = centerX + dx * arrowLength;
+            const endY = centerY + dy * arrowLength;
+            ctx.lineTo(endX, endY);
+            
+            // Arrow head
+            const headSize = cellSize * 0.15;
+            let angle;
+            
+            switch (bestAction) {
+                case 0: angle = -Math.PI / 2; break; // Up
+                case 1: angle = 0; break;           // Right
+                case 2: angle = Math.PI / 2; break; // Down
+                case 3: angle = Math.PI; break;     // Left
+            }
+            
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle - Math.PI / 6),
+                endY - headSize * Math.sin(angle - Math.PI / 6)
+            );
+            
+            ctx.moveTo(endX, endY);
+            
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle + Math.PI / 6),
+                endY - headSize * Math.sin(angle + Math.PI / 6)
+            );
+            
+            // Set arrow properties
+            ctx.strokeStyle = document.body.classList.contains('dark') ? COLORS.arrow.dark : COLORS.arrow.light;
+            ctx.lineWidth = 2 * normalizedQ + 1; // Width based on Q-value confidence
+            
+            // Set opacity based on Q-value confidence
+            ctx.globalAlpha = 0.3 + 0.7 * normalizedQ;
+            
+            // Draw the arrow
+            ctx.stroke();
+            
+            // Reset opacity
+            ctx.globalAlpha = 1.0;
+        }
+        
+        // Initialize the application
+        initializeApp();
+    </script>
+</body>
+</html>

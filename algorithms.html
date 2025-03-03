@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ozeye - ML</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Additional styles specific to algorithms page */
+        .hero {
+            position: relative;
+            height: 50vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 10% 0;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: -1;
+        }
+	.algo-hero-title {
+            transform: scale(1.4); /* Increases size while preserving scramble effect */
+            margin-bottom: 2rem;
+        }
+        
+        /* Animation styles */
+        .animation-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+        
+        .new-visualizer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-origin: center center;
+        }
+        
+        .new-visualizer .shapes-wrapper {
+            transform: translateZ(0);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .new-visualizer .shape {
+            position: relative;
+            z-index: 1;
+            width: 15px;
+            height: 15px;
+            margin: 12px;
+            background: rgb(50, 50, 50);
+            border-radius: 10%;
+            transform: skew(20deg);
+            animation: colors 10s infinite alternate;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        
+        .new-visualizer .cursor {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 25px;
+            height: 25px;
+            margin: 9px;
+            background-color: rgba(52, 152, 219, 0.9);
+            border-radius: 10%;
+            z-index: 2;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.7);
+        }
+        
+        .source-note-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+            padding: 0 1rem;
+        }
+        
+        .source-note {
+            padding: 1.5rem;
+            background: linear-gradient(145deg, rgba(26,26,26,0.8), rgba(42,42,42,0.4));
+            border-radius: 10px;
+            border: 1px solid rgba(52,152,219,0.2);
+            max-width: 800px;
+            text-align: center;
+        }
+        
+        .source-note p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #aaa;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .source-note strong {
+            color: #3498db;
+        }        
+        @keyframes colors {
+            0% { background: rgba(50, 50, 50, 0.7); }
+            20% { background: rgba(70, 70, 10, 0.7); }
+            40% { background: rgba(10, 70, 70, 0.7); }
+            60% { background: rgba(10, 90, 10, 0.7); }
+            80% { background: rgba(70, 30, 60, 0.7); }
+            100% { background: rgba(20, 70, 90, 0.7); }
+        }
+
+        .algorithms-container {
+            padding: 2rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .algorithm-section {
+            padding: 3rem 0;
+            border-bottom: 1px solid rgba(52,152,219,0.2);
+        }
+
+        .algorithm-section:last-child {
+            border-bottom: none;
+        }
+
+        .algorithm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .algorithm-card {
+            background: linear-gradient(145deg, rgba(26,26,26,0.8), rgba(42,42,42,0.4));
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(52,152,219,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .algorithm-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #3498db;
+            opacity: 0.5;
+        }
+
+        .algorithm-card:hover {
+            border-color: rgba(52,152,219,0.3);
+            transform: translateY(-5px);
+        }
+
+        .algorithm-card:hover::before {
+            opacity: 1;
+        }
+
+        .algorithm-link {
+            text-decoration: none;
+            color: #fff;
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .algorithm-link:hover {
+            color: #3498db;
+        }
+
+        .algorithm-description {
+            color: #888;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1200px) {
+            .algorithm-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .algorithm-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero {
+                height: 40vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+    <nav>
+        <div class="logo">
+            <a href="index.html" class="logo-link">Ozeye</a>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="consulting.html">Consulting</a>
+            <a href="algorithms.html" class="active" style="color: #3498db;">Algorithms</a>
+            <a href="about.html">About Me</a>
+            <a href="contact.html">Contact</a>
+        </div>
+    </nav>
+</header>
+
+
+    <main>
+        <section class="hero">
+            <div class="animation-wrapper">
+                <div class="new-visualizer">
+                    <div class="cursor"></div>
+                    <div class="shapes-wrapper"></div>
+                </div>
+            </div>
+	<div class="algo-hero-title">
+            <h1 class="scramble-text" data-scramble="Interactive ML Algorithms">1001001011001()</h1>
+	</div>
+            <p>Explore cutting-edge machine learning algorithms through interactive demos</p>
+        </section>
+	<div class="source-note-container">
+	<div class="source-note">
+        	<p><strong>Note:</strong> All these interactive demos were created independently by me. The source code can be found by inspecting your browser. Feel free to explore how they work!</p>
+    	</div>
+	</div>
+
+        <div class="algorithms-container">
+            <!-- Classification Algorithms -->
+            <section class="algorithm-section fade-in">
+                <h2 class="section-title">Classification Algorithms</h2>
+                <div class="algorithm-grid">
+                    <div class="algorithm-card">
+                        <a href="algo/logistic_regression.html" class="algorithm-link">Logistic Regression</a>
+                        <p class="algorithm-description">A statistical method for analyzing a dataset with one or more independent variables that determine an outcome.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/neural_network.html" class="algorithm-link">Neural Network</a>
+                        <p class="algorithm-description">Computing systems inspired by the biological neural networks that constitute animal brains.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/svm.html" class="algorithm-link">Support Vector Machine</a>
+                        <p class="algorithm-description">A supervised learning model that analyzes data for classification and regression analysis.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/knn.html" class="algorithm-link">K-Nearest Neighbors</a>
+                        <p class="algorithm-description">A non-parametric method used for classification and regression that predicts based on closest training examples.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Regression Algorithms -->
+            <section class="algorithm-section fade-in">
+                <h2 class="section-title">Regression Algorithms</h2>
+                <div class="algorithm-grid">
+                    <div class="algorithm-card">
+                        <a href="algo/linear_regression.html" class="algorithm-link">Linear Regression</a>
+                        <p class="algorithm-description">A linear approach to modeling the relationship between a dependent variable and one or more independent variables.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/polynomial_regression.html" class="algorithm-link">Polynomial Regression</a>
+                        <p class="algorithm-description">A form of regression analysis in which the relationship is modeled as an nth degree polynomial.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/random_forest.html" class="algorithm-link">Random Forest Regression</a>
+                        <p class="algorithm-description">An ensemble learning method for regression that operates by constructing multiple decision trees.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clustering Algorithms -->
+            <section class="algorithm-section fade-in">
+                <h2 class="section-title">Clustering Algorithms</h2>
+                <div class="algorithm-grid">
+                    <div class="algorithm-card">
+                        <a href="algo/k-means.html" class="algorithm-link">K-Means</a>
+                        <p class="algorithm-description">A method of vector quantization that aims to partition observations into k clusters.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/hcluster.html" class="algorithm-link">Hierarchical Clustering</a>
+                        <p class="algorithm-description">A method of cluster analysis which seeks to build a hierarchy of clusters.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/dbscan.html" class="algorithm-link">DBSCAN</a>
+                        <p class="algorithm-description">A density-based clustering algorithm that groups together points that are closely packed together.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dimensionality Reduction -->
+            <section class="algorithm-section fade-in">
+                <h2 class="section-title">Dimensionality Reduction</h2>
+                <div class="algorithm-grid">
+                    <div class="algorithm-card">
+                        <a href="algo/pca.html" class="algorithm-link">PCA</a>
+                        <p class="algorithm-description">Principal Component Analysis - A technique used to emphasize variation and bring out strong patterns in a dataset.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/ica.html" class="algorithm-link">ICA</a>
+                        <p class="algorithm-description">Independent Component Analysis - A computational method for separating a multivariate signal into additive subcomponents.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/t-sne.html" class="algorithm-link">t-SNE</a>
+                        <p class="algorithm-description">t-Distributed Stochastic Neighbor Embedding - A machine learning algorithm for dimensionality reduction.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/umap.html" class="algorithm-link">UMAP</a>
+                        <p class="algorithm-description">Uniform Manifold Approximation and Projection - A dimension reduction technique that preserves more of the global structure.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reinforcement Learning -->
+            <section class="algorithm-section fade-in">
+                <h2 class="section-title">Reinforcement Learning</h2>
+                <div class="algorithm-grid">
+                    <div class="algorithm-card">
+                        <a href="algo/q_learning.html" class="algorithm-link">Q-Learning</a>
+                        <p class="algorithm-description">A model-free reinforcement learning algorithm to learn the value of an action in a particular state.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/dqn.html" class="algorithm-link">Deep Q-Network</a>
+                        <p class="algorithm-description">A combination of Q-learning with deep neural networks to handle high-dimensional observation spaces.</p>
+                    </div>
+                    <div class="algorithm-card">
+                        <a href="algo/policy_gradient.html" class="algorithm-link">Policy Gradient Methods</a>
+                        <p class="algorithm-description">A family of reinforcement learning techniques that rely on optimizing parametrized policies with respect to the expected return.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Search Algorithms -->
+            <section class="algorithm-section fade-in">
+                <h2 class="section-title">Search Algorithms</h2>
+                <div class="algorithm-grid">
+                    <div class="algorithm-card">
+                        <a href="algo/search.html" class="algorithm-link">Search Algorithms</a>
+                        <p class="algorithm-description">Explore various search algorithms including BFS, DFS, A*, Dijkstra's, and more in one interactive environment.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+	<footer>
+    <div class="footer-container">
+        <div class="footer-logo">Ozeye</div>
+        <p class="footer-tagline">Exploring the intersection of AI, algorithms, and human creativity.</p>
+        <div class="footer-links">
+            <a href="contact.html" class="footer-link">Contact</a>
+        </div>
+        <div class="footer-copyright">
+            <p>© 2025 Ozeye. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+    </main>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="scripts.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('header');
+            const scrambleElements = document.querySelectorAll('[data-scramble]');
+            
+            // Initial scramble texts
+            scrambleElements.forEach((element, index) => {
+                setTimeout(() => {
+                    new TextScramble(element);
+                }, index * 800);
+            });
+
+            // Fade in elements
+            setTimeout(() => {
+                header.style.opacity = '1';
+            }, 1000);
+
+            handleScrollAnimations();
+            
+            // Initialize anime.js animation
+            initGridAnimation();
+        });
+
+        function fitElementToParent(el, padding) {
+            var timeout = null;
+            function resize() {
+                if (timeout) clearTimeout(timeout);
+                anime.set(el, {scale: 1});
+                var pad = padding || 0;
+                var parentEl = el.parentNode;
+                var elOffsetWidth = el.offsetWidth - pad;
+                var parentOffsetWidth = parentEl.offsetWidth;
+                var ratio = parentOffsetWidth / elOffsetWidth;
+                timeout = setTimeout(anime.set(el, {scale: ratio}), 10);
+            }
+            resize();
+            window.addEventListener('resize', resize);
+        }
+
+        function initGridAnimation() {
+            var staggerVisualizerEl = document.querySelector('.new-visualizer');
+            var shapesWrapperEl = staggerVisualizerEl.querySelector('.shapes-wrapper');
+            var shapesFragment = document.createDocumentFragment();
+            var grid = [16, 8];
+            var cell = 55;
+            var numberOfElements = grid[0] * grid[1];
+            var animation;
+            
+            fitElementToParent(staggerVisualizerEl, 0);
+
+            // Create grid elements
+            for (var i = 0; i < numberOfElements; i++) {
+                var shapeEl = document.createElement('div');
+                shapeEl.classList.add('shape');
+                shapesFragment.appendChild(shapeEl);
+            }
+
+            shapesWrapperEl.appendChild(shapesFragment);
+
+            var index = anime.random(0, numberOfElements-1);
+            var nextIndex = 0;
+
+            anime.set('.new-visualizer .cursor', {
+                translateX: anime.stagger(-cell, {grid: grid, from: index, axis: 'x'}),
+                translateY: anime.stagger(-cell, {grid: grid, from: index, axis: 'y'}),
+                translateZ: 0,
+                scale: 1.5,
+            });
+
+            function play() {
+                nextIndex = anime.random(0, numberOfElements-1);
+
+                animation = anime.timeline({
+                    easing: 'easeInOutQuad',
+                    complete: play
+                })
+                .add({
+                    targets: '.new-visualizer .cursor',
+                    keyframes: [
+                        { scale: .75, duration: 120}, 
+                        { scale: 2.5, duration: 220},
+                        { scale: 1.5, duration: 450},
+                    ],
+                    duration: 300
+                })
+                .add({
+                    targets: '.new-visualizer .shape',
+                    keyframes: [
+                        {
+                            translateX: anime.stagger('-2px', {grid: grid, from: index, axis: 'x'}),
+                            translateY: anime.stagger('-2px', {grid: grid, from: index, axis: 'y'}),
+                            duration: 100
+                        }, {
+                            translateX: anime.stagger('4px', {grid: grid, from: index, axis: 'x'}),
+                            translateY: anime.stagger('4px', {grid: grid, from: index, axis: 'y'}),
+                            scale: anime.stagger([2.6, 1], {grid: grid, from: index}),
+                            duration: 225
+                        }, {
+                            translateX: 0,
+                            translateY: 0,
+                            scale: 1,
+                            duration: 1200,
+                        }
+                    ],
+                    delay: anime.stagger(80, {grid: grid, from: index})
+                }, 30)
+                .add({
+                    targets: '.new-visualizer .cursor',
+                    translateX: { value: anime.stagger(-cell, {grid: grid, from: nextIndex, axis: 'x'}) },
+                    translateY: { value: anime.stagger(-cell, {grid: grid, from: nextIndex, axis: 'y'}) },
+                    scale: 1.5,
+                    easing: 'cubicBezier(.075, .2, .165, 1)'
+                }, '-=800');
+
+                index = nextIndex;
+            }
+
+            play();
+        }
+    </script>
+</body>
+</html>

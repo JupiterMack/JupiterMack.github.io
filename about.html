@@ -3,133 +3,1476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ozeye - About Us</title>
-    <meta name="description" content="Learn about Ozeye's journey in AI consulting, our expert team, and our commitment to innovation and client success.">
-    <meta name="keywords" content="AI consulting, about us, AI experts, company values">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Ozeye - About Me</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    
+    <!-- Import fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        
+        /* Basic reset and global styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header styles */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: rgba(40, 40, 40, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            height: 65px;
+            transition: opacity 1s ease-in;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10%;
+            height: 100%;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo-link {
+            text-decoration: none;
+            color: inherit;
+            transition: opacity 0.3s ease;
+        }
+        
+        .logo-link:hover {
+            opacity: 0.9;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            letter-spacing: -0.3px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            padding: 0 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a::before,
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a::before {
+            left: 0;
+            top: 40%;
+            border-left: 2px solid #fff;
+            border-top: 2px solid #fff;
+        }
+        
+        .nav-links a::after {
+            right: 0;
+            bottom: 40%;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+        }
+        
+        .nav-links a:hover::before,
+        .nav-links a:hover::after {
+            opacity: 1;
+            width: 12px;
+            height: 12px;
+        }
+        
+        .nav-links a:hover::before {
+            top: 35%;
+        }
+        
+        .nav-links a:hover::after {
+            bottom: 35%;
+        }
+        
+        .nav-links a.active {
+            color: #3498db;
+        }
+        
+        /* Main content */
+        .main-content {
+            margin-top: 65px;
+            min-height: 100vh;
+        }
+        
+        /* Hero section */
+        .about-hero {
+            position: relative;
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #0a0a0a;
+        }
+        
+        .about-hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .about-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: -1px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .about-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -15px;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, rgba(52, 152, 219, 0) 0%, rgba(52, 152, 219, 1) 50%, rgba(52, 152, 219, 0) 100%);
+        }
+        
+        .about-subtitle {
+            font-size: 1.3rem;
+            margin: 2rem auto;
+            max-width: 700px;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .grid-line {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        
+        .grid-line-horizontal {
+            height: 1px;
+            width: 100%;
+        }
+        
+        .grid-line-vertical {
+            width: 1px;
+            height: 100%;
+        }
+        
+        /* About sections */
+        .about-section {
+            padding: 100px 0;
+            position: relative;
+        }
+        
+        .about-section:nth-child(odd) {
+            background-color: #0a0a0a;
+        }
+        
+        .about-section:nth-child(even) {
+            background-color: #050505;
+        }
+        
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 5%;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+        
+        .section-content {
+            position: relative;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #fff;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: #3498db;
+        }
+        
+        .section-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-text p {
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-text strong {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 400px;
+            border-radius: 10px;
+            background-color: rgba(52, 152, 219, 0.05);
+            border: 1px solid rgba(52, 152, 219, 0.1);
+            overflow: hidden;
+        }
+        
+        .animation-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Skills section */
+        .skills-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .skill-category {
+            background-color: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            border-radius: 10px;
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .skill-category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .skill-category h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        
+        .skill-list {
+            list-style-type: none;
+        }
+        
+        .skill-list li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .skill-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #3498db;
+        }
+        
+        /* Expanded Skills Section */
+        .skills-expanded {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-top: 50px;
+        }
+        
+        .skill-group {
+            margin-bottom: 40px;
+        }
+        
+        .skill-group-title {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .skill-group-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background: #3498db;
+        }
+        
+        .skill-bar {
+            margin-bottom: 20px;
+        }
+        
+        .skill-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .skill-name {
+            font-weight: 500;
+        }
+        
+        .skill-percentage {
+            color: #3498db;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .skill-progress {
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .skill-progress-bar {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 3px;
+            transition: width 1.5s ease-in-out;
+            width: 0;
+        }
+        
+        /* Interests section */
+        .interests-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .interest-card {
+            background-color: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .interest-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .interest-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        
+        .interest-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .interest-description {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Projects showcase */
+        .projects-showcase {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+        
+        .project-card {
+            background-color: rgba(52, 152, 219, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .project-content {
+            padding: 25px;
+        }
+        
+        .project-title {
+            font-size: 1.3rem;
+            font-family: 'Space Grotesk', sans-serif;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .project-description {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px;
+        }
+        
+        .project-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .tech-tag {
+            padding: 4px 10px;
+            background-color: rgba(52, 152, 219, 0.2);
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-family: 'Roboto Mono', monospace;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .project-link {
+            color: #3498db;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            font-family: 'Roboto Mono', monospace;
+            transition: color 0.3s ease;
+        }
+        
+        .project-link:hover {
+            color: #2980b9;
+        }
+        
+        /* Connect section */
+        .connect-section {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            overflow: hidden;
+            background-color: #080808;
+            text-align: center;
+            padding: 80px 5%;
+        }
+        
+        .connect-content {
+            max-width: 800px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .connect-title {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .connect-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 3rem;
+        }
+        
+        .connect-btn {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .connect-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: transform 0.5s;
+            transform: skewX(-15deg);
+        }
+        
+        .connect-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+        
+        .connect-btn:hover::before {
+            transform: skewX(-15deg) translateX(200%);
+        }
+        
+        .connect-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .connect-shape {
+            position: absolute;
+            opacity: 0.1;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #0a0a0a;
+            padding: 80px 0 40px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 5%;
+            text-align: center;
+        }
+        
+        .footer-logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+        }
+        
+        .footer-tagline {
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .footer-link {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-family: 'Roboto Mono', monospace;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        .footer-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: #3498db;
+        }
+        
+        .footer-link:hover::after {
+            width: 100%;
+        }
+        
+        .footer-copyright {
+            color: rgba(255, 255, 255, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 2rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Utilities */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 1024px) {
+            .section-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .skills-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .interests-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .projects-showcase {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .skills-expanded {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .about-title {
+                font-size: 3rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .connect-title {
+                font-size: 2.5rem;
+            }
+            
+            .footer-links {
+                flex-wrap: wrap;
+                gap: 1.5rem 3rem;
+            }
+            
+            .skills-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .interests-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .projects-showcase {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <header>
-        <div class="container">
-            <div class="logo">
-                <img src="ozeye_logo_draft3.png" alt="Logo" class="logo-image">
-            </div>
-            
-            <div class="hamburger-menu">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
-
-            <nav class="desktop-nav">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="services.html">Services</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </nav>
-
-            <nav class="mobile-nav">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="services.html">Services</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </nav>
+    <nav>
+        <div class="logo">
+            <a href="index.html" class="logo-link">Ozeye</a>
         </div>
-    </header>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="consulting.html">Consulting</a>
+            <a href="algorithms.html">Algorithms</a>
+            <a href="about.html" class="active">About Me</a>
+            <a href="contact.html">Contact</a>
+        </div>
+    </nav>
+</header>
 
-
-    <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h1>About Us</h1>
-                <p>Pioneering AI solutions for forward-thinking businesses</p>
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="about-hero">
+            <div class="hero-bg" id="heroBg"></div>
+            
+            <div class="about-hero-content">
+                <h1 class="about-title">Mack Jupiter</h1>
+                <p class="about-subtitle">AI researcher and software developer with a passion for exploring the fascinating intersections of human cognition, advanced algorithms, and real-world applications. I strive to create intelligent systems that enhance human capabilities and solve complex problems.</p>
             </div>
         </section>
 
-        <section class="about section">
-            <div class="container">
-                <h2 class="section-title">Why We Exist</h2>
-                <div class="about-container">
-                                        <div class="about-content">
-                        <p>In today's digital landscape, over two-thirds of organizations have embraced AI and large language models. Yet, a critical challenge persists: many businesses adopt these powerful tools without understanding the risks and implications.</p>
-    
-    <p>We've observed a concerning trend where employees unknowingly share sensitive business information through public AI platforms, creating significant security and compliance risks. This knowledge gap not only leads to inefficient use of AI but can result in serious legal and business consequences.</p>
-    
-    <p>At Ozeye, we exist to:</p>
-    
-    <ul>
-        <li>Protect your business data while maximizing AI benefits</li>
-        <li>Transform risky AI practices into secure, strategic advantages</li>
-        <li>Build deep understanding of AI capabilities and limitations</li>
-        <li>Ensure compliant and effective AI integration</li>
-    </ul>
-        </section>
-
-        <section class="team section">
-            <div class="container">
-                <h2 class="section-title">Meet Our Trainers</h2>
-                <div class="card-container">
-                    <div class="card">
-                        <img src="jupiter.jpg" class="team-member-image">
-                        <h3>Jupiter Maier</h3>
-                        <p>Co-Founder</p>
-                        <p>AI engineer with expertise in Human-Computer Interaction and AI Safety</p>
+        <!-- About Section -->
+        <section class="about-section">
+            <div class="section-container">
+                <div class="section-grid">
+                    <div class="section-content fade-in">
+                        <h2 class="section-title">My Journey</h2>
+                        <div class="section-text">
+                            <p>Born in Manhattan and raised with a curiosity about how things work, I've always been fascinated by the interplay between human intelligence and technology. My journey into artificial intelligence began with a simple question: <strong>"How can machines learn to understand the world the way we do?"</strong></p>
+                            
+                            <p>This question has guided me through my academic pursuits at Radboud University in the Netherlands, where I've been immersed in the multidisciplinary field of AI, combining computer science, psychology, neuroscience, and philosophy. My semester abroad at Yonsei University in Seoul expanded my perspective, exposing me to different approaches to AI research and development.</p>
+                            
+                            <p>What drives me is not just the technical implementation of algorithms, but understanding their broader implications for society and human cognition. I believe that responsible AI development requires both technical expertise and a deep appreciation for the human element.</p>
+                        </div>
                     </div>
-                    <div class="card">
-                        <img src="varun.jpg" class="team-member-image">
-                        <h3>Varun Thakkar</h3>
-                        <p>Co-Founder</p>
-                        <p>Expert in Computer Science and Machine Learning implementation</p>
-		    </div>
-
-            </div>
-        </section>
-
-        <section class="values section">
-            <div class="container">
-                <h2 class="section-title">Our Values</h2>
-                <div class="card-container">
-                    <div class="card">
-                        <i class="fas fa-lightbulb card-icon"></i>
-                        <h3>Innovation</h3>
-                        <p>We constantly push the boundaries of what's possible with AI</p>
-                    </div>
-                    <div class="card">
-                        <i class="fas fa-balance-scale card-icon"></i>
-                        <h3>Integrity</h3>
-                        <p>We uphold the highest ethical standards in all our work</p>
-                    </div>
-                    <div class="card">
-                        <i class="fas fa-users card-icon"></i>
-                        <h3>Client-focused</h3>
-                        <p>Your success is our success - we're committed to delivering results</p>
-                    </div>
-                    <div class="card">
-                        <i class="fas fa-book-reader card-icon"></i>
-                        <h3>Continuous learning</h3>
-                        <p>We stay at the forefront of AI advancements to serve you better</p>
+                    
+                    <div class="animation-container fade-in">
+                        <canvas id="journeyAnimation" class="animation-canvas"></canvas>
                     </div>
                 </div>
             </div>
-            </main>
+        </section>
+
+        <!-- Research Interests Section -->
+        <section class="about-section">
+            <div class="section-container">
+                <div class="section-grid">
+                    <div class="animation-container fade-in">
+                        <canvas id="researchAnimation" class="animation-canvas"></canvas>
+                    </div>
+                    
+                    <div class="section-content fade-in">
+                        <h2 class="section-title">Research Interests</h2>
+                        <div class="section-text">
+                            <p>My research focus lies at the intersection of neuroscience and artificial intelligence, specifically in Brain-Computer Interfaces (BCIs). At the Donders Institute, I explored adaptive deep brain stimulation techniques that could revolutionize treatment for neurological conditions.</p>
+                            
+                            <p>What fascinates me most about this field is how it bridges the gap between human cognition and machine learning. By understanding how our brains process information, we can develop more intuitive and responsive AI systems that work in harmony with human needs.</p>
+                            
+                            <p>Beyond neural interfaces, I'm deeply interested in ethical AI development, ensuring that the intelligent systems we create serve humanity's best interests while respecting autonomy and privacy. This involves not just technical considerations, but also philosophical and sociological perspectives on what it means for AI to be truly beneficial.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section class="about-section">
+            <div class="section-container">
+                <h2 class="section-title fade-in">Technical Expertise</h2>
+                <p class="section-text fade-in">My technical toolkit has been shaped by both academic research and practical implementation. While I enjoy exploring theoretical aspects of AI, I'm equally passionate about building systems that solve real-world problems.</p>
+                
+                <div class="skills-container">
+                    <div class="skill-category fade-in">
+                        <h3>AI & Machine Learning</h3>
+                        <ul class="skill-list">
+                            <li>Deep Learning Architectures</li>
+                            <li>Reinforcement Learning</li>
+                            <li>Natural Language Processing</li>
+                            <li>Computer Vision</li>
+                            <li>Neural Network Design</li>
+                            <li>Ethical AI Implementation</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="skill-category fade-in">
+                        <h3>Languages & Frameworks</h3>
+                        <ul class="skill-list">
+                            <li>Python (Advanced)</li>
+                            <li>Java & Scala</li>
+                            <li>TensorFlow & PyTorch</li>
+                            <li>SQL & Database Design</li>
+                            <li>Web Development</li>
+                            <li>Cloud Platforms (AWS, Azure)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="skill-category fade-in">
+                        <h3>Research & Analysis</h3>
+                        <ul class="skill-list">
+                            <li>Scientific Research Methods</li>
+                            <li>Statistical Analysis</li>
+                            <li>Data Visualization</li>
+                            <li>Experimental Design</li>
+                            <li>Literature Review</li>
+                            <li>Technical Writing</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Expanded skills section with animated progress bars -->
+                <div class="skills-expanded">
+                    <div class="fade-in">
+                        <div class="skill-group">
+                            <h3 class="skill-group-title">Programming</h3>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Python</span>
+                                    <span class="skill-percentage">95%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="95%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Java</span>
+                                    <span class="skill-percentage">85%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="85%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Scala</span>
+                                    <span class="skill-percentage">80%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="80%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">JavaScript</span>
+                                    <span class="skill-percentage">75%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="75%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="skill-group">
+                            <h3 class="skill-group-title">Frameworks</h3>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">TensorFlow</span>
+                                    <span class="skill-percentage">90%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="90%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">PyTorch</span>
+                                    <span class="skill-percentage">85%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="85%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Scikit-Learn</span>
+                                    <span class="skill-percentage">88%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="88%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="fade-in">
+                        <div class="skill-group">
+                            <h3 class="skill-group-title">AI & Machine Learning</h3>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Deep Learning</span>
+                                    <span class="skill-percentage">92%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="92%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Reinforcement Learning</span>
+                                    <span class="skill-percentage">85%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="85%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Natural Language Processing</span>
+                                    <span class="skill-percentage">80%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="80%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Computer Vision</span>
+                                    <span class="skill-percentage">78%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="78%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="skill-group">
+                            <h3 class="skill-group-title">Research Skills</h3>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Scientific Research</span>
+                                    <span class="skill-percentage">88%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="88%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Statistical Analysis</span>
+                                    <span class="skill-percentage">82%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="82%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-bar">
+                                <div class="skill-info">
+                                    <span class="skill-name">Data Visualization</span>
+                                    <span class="skill-percentage">85%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="skill-progress-bar" data-width="85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section class="about-section">
+            <div class="section-container">
+                <h2 class="section-title fade-in">Notable Projects</h2>
+                <p class="section-text fade-in">Here are some of the projects I've worked on that showcase my interests and technical abilities.</p>
+                
+                <div class="projects-showcase">
+                    <div class="project-card fade-in">
+                        <div class="project-content">
+                            <h3 class="project-title">Adaptive Neural Interface</h3>
+                            <p class="project-description">Developed a system for simulating non-stationary adaptive deep brain stimulation, with potential applications for treating neurological disorders through responsive neural interfaces.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">Python</span>
+                                <span class="tech-tag">TensorFlow</span>
+                                <span class="tech-tag">Deep Learning</span>
+                                <span class="tech-tag">Reinforcement Learning</span>
+                                <span class="tech-tag">Signal Processing</span>
+                                <span class="tech-tag">BCI</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card fade-in">
+                        <div class="project-content">
+                            <h3 class="project-title">Interactive ML Algorithms</h3>
+                            <p class="project-description">Developed a comprehensive suite of interactive visualizations for machine learning algorithms, including search algorithms, clustering methods, neural networks, and deep reinforcement learning techniques with dynamic training visualization.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">JavaScript</span>
+                                <span class="tech-tag">HTML/CSS</span>
+                                <span class="tech-tag">Anime.js</span>
+                                <span class="tech-tag">Deep RL</span>
+                                <span class="tech-tag">Neural Networks</span>
+                            </div>
+                            <a href="algorithms.html" class="project-link">
+                                View Demo
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card fade-in">
+                        <div class="project-content">
+                            <h3 class="project-title">AI Supply Chain Optimization</h3>
+                            <p class="project-description">Created machine learning models to optimize production and distribution for sustainable water bottle manufacturing, reducing waste and improving efficiency across retail networks.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">Python</span>
+                                <span class="tech-tag">Scikit-Learn</span>
+                                <span class="tech-tag">Predictive Modeling</span>
+                                <span class="tech-tag">Optimization</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card fade-in">
+                        <div class="project-content">
+                            <h3 class="project-title">Ethical AI Framework</h3>
+                            <p class="project-description">Developed a comprehensive framework for evaluating and implementing AI systems with ethical considerations at their core, focusing on transparency, fairness, and human autonomy.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">Research</span>
+                                <span class="tech-tag">AI Ethics</span>
+                                <span class="tech-tag">Policy</span>
+                                <span class="tech-tag">Human-Centered Design</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Philosophy & Approach Section -->
+        <section class="about-section">
+            <div class="section-container">
+                <h2 class="section-title fade-in">Philosophy & Approach</h2>
+                <p class="section-text fade-in">The development of artificial intelligence requires not just technical skill, but a clear framework of principles that guide how we build and deploy these systems.</p>
+                
+                <div class="principles-grid interests-grid">
+                    <div class="principle-card interest-card fade-in">
+                        <div class="interest-icon">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <h3 class="interest-title">Ethics-First Development</h3>
+                        <p class="interest-description">Ethics should be a fundamental consideration from the earliest stages of development, not an afterthought. I believe in designing systems that respect human autonomy and dignity.</p>
+                    </div>
+                    
+                    <div class="principle-card interest-card fade-in">
+                        <div class="interest-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <h3 class="interest-title">Iterative Improvement</h3>
+                        <p class="interest-description">The best solutions emerge through cycles of testing, feedback, and refinement. I embrace an iterative approach that continuously improves both process and outcomes.</p>
+                    </div>
+                    
+                    <div class="principle-card interest-card fade-in">
+                        <div class="interest-icon">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <h3 class="interest-title">Interdisciplinary Thinking</h3>
+                        <p class="interest-description">The most interesting problems exist at the intersection of disciplines. I draw insights from neuroscience, philosophy, and psychology to inform my technical implementations.</p>
+                    </div>
+                    
+                    <div class="principle-card interest-card fade-in">
+                        <div class="interest-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="interest-title">Collaborative Innovation</h3>
+                        <p class="interest-description">The best ideas rarely emerge in isolation. I value diverse perspectives and believe in creating environments where open collaboration leads to breakthrough innovation.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Connect Section -->
+        <section class="connect-section">
+            <div class="connect-bg" id="connectBg"></div>
+            
+            <div class="connect-content fade-in">
+                <h2 class="connect-title">Let's Connect</h2>
+                <p class="connect-text">I'm always open to discussing research collaborations, project ideas, or just chatting about the future of AI. Feel free to reach out!</p>
+                <a href="mailto:mackupiter@gmail.com" class="connect-btn">Get In Touch</a>
+            </div>
+        </section>
+    </main>
 
     <footer>
-        <div class="container">
-            <p>&copy; 2024 Ozeye. All rights reserved.</p>
-            <div class="social-links">
-                <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-            </div>
+    <div class="footer-container">
+        <div class="footer-logo">Ozeye</div>
+        <p class="footer-tagline">Exploring the intersection of AI, algorithms, and human creativity.</p>
+        <div class="footer-links">
+            <a href="contact.html" class="footer-link">Contact</a>
         </div>
-    </footer>
+        <div class="footer-copyright">
+            <p>© 2025 Ozeye. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
 
-    <script src="script.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        // Create hero background grid
+        function createHeroBackground() {
+            const heroBg = document.getElementById('heroBg');
+            
+            // Create horizontal grid lines
+            for (let i = 0; i < 10; i++) {
+                const line = document.createElement('div');
+                line.classList.add('grid-line', 'grid-line-horizontal');
+                line.style.top = `${(i + 1) * 10}%`;
+                heroBg.appendChild(line);
+            }
+            
+            // Create vertical grid lines
+            for (let i = 0; i < 10; i++) {
+                const line = document.createElement('div');
+                line.classList.add('grid-line', 'grid-line-vertical');
+                line.style.left = `${(i + 1) * 10}%`;
+                heroBg.appendChild(line);
+            }
+        }
+        
+        // Journey Animation - Neural network nodes
+        function initJourneyAnimation() {
+            const canvas = document.getElementById('journeyAnimation');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width = canvas.parentElement.offsetWidth;
+            const height = canvas.height = canvas.parentElement.offsetHeight;
+            
+            // Neural network nodes and connections
+            const nodes = [];
+            const connections = [];
+            const nodeCount = 30;
+            
+            // Create nodes
+            for (let i = 0; i < nodeCount; i++) {
+                nodes.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 4 + 2,
+                    speed: Math.random() * 0.5 + 0.1,
+                    angle: Math.random() * Math.PI * 2,
+                    color: `rgba(52, 152, 219, ${Math.random() * 0.5 + 0.5})`
+                });
+            }
+            
+            // Create connections
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    if (Math.random() < 0.1) { // Only connect some nodes
+                        connections.push({
+                            a: i,
+                            b: j
+                        });
+                    }
+                }
+            }
+            
+            // Animation function
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                
+                // Update and draw connections
+                ctx.strokeStyle = 'rgba(52, 152, 219, 0.2)';
+                ctx.lineWidth = 1;
+                
+                for (let i = 0; i < connections.length; i++) {
+                    const a = nodes[connections[i].a];
+                    const b = nodes[connections[i].b];
+                    
+                    const dx = b.x - a.x;
+                    const dy = b.y - a.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(a.x, a.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.globalAlpha = 1 - distance / 100;
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+                
+                // Update and draw nodes
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    
+                    // Move node
+                    node.x += Math.cos(node.angle) * node.speed;
+                    node.y += Math.sin(node.angle) * node.speed;
+                    
+                    // Bounce off edges
+                    if (node.x < 0 || node.x > width) node.angle = Math.PI - node.angle;
+                    if (node.y < 0 || node.y > height) node.angle = -node.angle;
+                    
+                    // Draw node
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = node.color;
+                    ctx.fill();
+                    
+                    // Randomly change direction occasionally
+                    if (Math.random() < 0.02) {
+                        node.angle += (Math.random() - 0.5) * Math.PI / 2;
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Start animation
+            animate();
+        }
+        
+        // Research Animation - Brain waves and connections
+        function initResearchAnimation() {
+            const canvas = document.getElementById('researchAnimation');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width = canvas.parentElement.offsetWidth;
+            const height = canvas.height = canvas.parentElement.offsetHeight;
+            
+            // Brain wave elements
+            const waves = [];
+            const waveCount = 5;
+            const waveWidth = width * 1.2;
+            
+            // Create waves
+            for (let i = 0; i < waveCount; i++) {
+                waves.push({
+                    y: height * (0.3 + i * 0.1),
+                    amplitude: Math.random() * 20 + 10,
+                    frequency: Math.random() * 0.02 + 0.02,
+                    speed: Math.random() * 0.05 + 0.02,
+                    offset: Math.random() * Math.PI * 2,
+                    color: `rgba(52, 152, 219, ${0.3 + i * 0.1})`
+                });
+            }
+            
+            // Nodes representing electrodes
+            const nodes = [];
+            const nodeCount = 8;
+            
+            for (let i = 0; i < nodeCount; i++) {
+                nodes.push({
+                    x: width * (0.2 + 0.6 * (i / (nodeCount - 1))),
+                    y: height * 0.25,
+                    radius: 4,
+                    pulseTime: Math.random() * 100,
+                    pulseSpeed: Math.random() * 0.02 + 0.02
+                });
+            }
+            
+            // Animation function
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                
+                // Update and draw waves
+                for (let i = 0; i < waves.length; i++) {
+                    const wave = waves[i];
+                    wave.offset += wave.speed;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, wave.y);
+                    
+                    for (let x = 0; x < waveWidth; x++) {
+                        const y = wave.y + Math.sin(x * wave.frequency + wave.offset) * wave.amplitude;
+                        ctx.lineTo(x, y);
+                    }
+                    
+                    ctx.strokeStyle = wave.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                
+                // Update and draw nodes
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    node.pulseTime += node.pulseSpeed;
+                    
+                    // Pulse effect
+                    const pulse = Math.sin(node.pulseTime) * 0.5 + 0.5;
+                    const radius = node.radius * (1 + pulse * 0.5);
+                    const alpha = 0.5 + pulse * 0.5;
+                    
+                    // Draw node
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(231, 76, 60, ${alpha})`;
+                    ctx.fill();
+                    
+                    // Draw connections to waves
+                    ctx.beginPath();
+                    ctx.moveTo(node.x, node.y);
+                    
+                    for (let j = 0; j < waves.length; j++) {
+                        const wave = waves[j];
+                        const waveY = wave.y + Math.sin(node.x * wave.frequency + wave.offset) * wave.amplitude;
+                        
+                        if (j === 0) {
+                            ctx.moveTo(node.x, node.y);
+                            ctx.lineTo(node.x, waveY);
+                        } else {
+                            ctx.moveTo(node.x, waves[j-1].y + Math.sin(node.x * waves[j-1].frequency + waves[j-1].offset) * waves[j-1].amplitude);
+                            ctx.lineTo(node.x, waveY);
+                        }
+                    }
+                    
+                    ctx.strokeStyle = `rgba(231, 76, 60, ${alpha * 0.3})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Start animation
+            animate();
+        }
+        
+        // Connect section background
+        function createConnectBackground() {
+            const connectBg = document.querySelector('.connect-bg');
+            
+            // Add circles
+            for (let i = 0; i < 5; i++) {
+                const circle = document.createElement('div');
+                circle.classList.add('connect-shape');
+                circle.style.width = `${100 + i * 100}px`;
+                circle.style.height = `${100 + i * 100}px`;
+                circle.style.border = '1px solid rgba(52, 152, 219, 0.2)';
+                circle.style.borderRadius = '50%';
+                circle.style.top = '50%';
+                circle.style.left = '50%';
+                circle.style.transform = 'translate(-50%, -50%)';
+                
+                connectBg.appendChild(circle);
+            }
+            
+            // Animate circle shapes
+            anime({
+                targets: '.connect-shape',
+                scale: [0, 1],
+                opacity: [0, 0.2],
+                delay: anime.stagger(200),
+                duration: 1500,
+                easing: 'easeOutSine',
+                complete: function() {
+                    // Continuous pulsing animation
+                    anime({
+                        targets: '.connect-shape',
+                        scale: [1, 1.1],
+                        opacity: [0.2, 0.1],
+                        easing: 'easeInOutSine',
+                        duration: 3000,
+                        direction: 'alternate',
+                        loop: true
+                    });
+                }
+            });
+        }
+        
+        // Animate skill progress bars
+        function animateSkillBars() {
+            const bars = document.querySelectorAll('.skill-progress-bar');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const width = entry.target.getAttribute('data-width');
+                        entry.target.style.width = width;
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            
+            bars.forEach(bar => {
+                observer.observe(bar);
+            });
+        }
+        
+        // Scroll animations
+        function handleScrollAnimations() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -10% 0px'
+            });
+
+            fadeElements.forEach(element => {
+                observer.observe(element);
+            });
+        }
+        
+        // On document ready
+        document.addEventListener('DOMContentLoaded', function() {
+            createHeroBackground();
+            initJourneyAnimation();
+            initResearchAnimation();
+            createConnectBackground();
+            animateSkillBars();
+            handleScrollAnimations();
+        });
+    </script>
 </body>
 </html>

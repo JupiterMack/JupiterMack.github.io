@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Hierarchical Clustering Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Hierarchical Clustering Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-3/5 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <div class="w-full h-[600px] relative" id="visualization-container">
+                    <svg id="visualization" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                </div>
+                <div class="mt-2 flex flex-wrap justify-between items-center text-sm gap-4">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+                        <span>Cluster 1</span>
+                        
+                        <span class="inline-block w-3 h-3 rounded-full bg-blue-500 ml-4"></span>
+                        <span>Cluster 2</span>
+                        
+                        <span class="inline-block w-3 h-3 rounded-full bg-green-500 ml-4"></span>
+                        <span>Cluster 3</span>
+                        
+                        <span class="inline-block w-3 h-3 rounded-full bg-purple-500 ml-4"></span>
+                        <span>Cluster 4</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel and Dendrogram -->
+            <div class="w-full lg:w-2/5">
+                <!-- Controls Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Data Generation -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="num-points" class="mr-2">Number of Points:</label>
+                                    <input type="number" id="num-points" min="20" max="200" value="100" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="data-distribution" class="mr-2">Distribution:</label>
+                                    <select id="data-distribution" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="blobs" selected>Gaussian Blobs</option>
+                                        <option value="circles">Concentric Circles</option>
+                                        <option value="anisotropic">Anisotropic Clusters</option>
+                                        <option value="varying-density">Varying Density</option>
+                                        <option value="noisy">Noisy Clusters</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="cluster-count" class="mr-2">True Clusters:</label>
+                                    <select id="cluster-count" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="2">2</option>
+                                        <option value="3" selected>3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="cluster-separation" class="mr-2">Cluster Separation:</label>
+                                    <input type="range" id="cluster-separation" min="1" max="10" step="0.5" value="5" class="w-40">
+                                    <span id="separation-value" class="text-sm">5.0</span>
+                                </div>
+                                
+                                <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Hierarchical Clustering Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Hierarchical Clustering Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="linkage-method" class="mr-2">Linkage Method:</label>
+                                    <select id="linkage-method" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="single">Single (Min)</option>
+                                        <option value="complete" selected>Complete (Max)</option>
+                                        <option value="average">Average</option>
+                                        <option value="ward">Ward</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="distance-metric" class="mr-2">Distance Metric:</label>
+                                    <select id="distance-metric" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="euclidean" selected>Euclidean</option>
+                                        <option value="manhattan">Manhattan</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="num-clusters" class="mr-2">Number of Clusters:</label>
+                                    <select id="num-clusters" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3" selected>3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-2">
+                                    <button id="run-clustering" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Run Clustering</button>
+                                    <button id="step-clustering" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step Through</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visualization Options -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-dendrogram" class="w-4 h-4" checked>
+                                    <label for="show-dendrogram">Show Dendrogram</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-centroids" class="w-4 h-4" checked>
+                                    <label for="show-centroids">Show Cluster Centroids</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-true-clusters" class="w-4 h-4">
+                                    <label for="show-true-clusters">Show True Clusters</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Status -->
+                        <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <h3 class="text-lg font-medium mb-2">Algorithm Stats</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Current Step:</span>
+                                    <span id="current-step">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Current Clusters:</span>
+                                    <span id="current-clusters">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Last Merged Distance:</span>
+                                    <span id="last-distance">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Status:</span>
+                                    <span id="algorithm-status-text">Not Started</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dendrogram Container -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Dendrogram</h2>
+                    <div class="w-full h-[300px]">
+                        <svg id="dendrogram" class="w-full h-full" viewBox="0 0 500 300"></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Hierarchical Clustering Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>Hierarchical Clustering</strong> builds a hierarchy of clusters by either a bottom-up (agglomerative) or top-down (divisive) approach. This visualization focuses on the more common agglomerative method.</p>
+                
+                <p><strong>Agglomerative Clustering Algorithm:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Start:</strong> Each data point begins as its own cluster</li>
+                    <li><strong>Merge:</strong> At each step, the two most similar clusters are merged into a single cluster</li>
+                    <li><strong>Update:</strong> Recalculate distances between the new cluster and all other clusters</li>
+                    <li><strong>Repeat:</strong> Continue merging clusters until only one cluster remains (or until desired cluster count is reached)</li>
+                </ol>
+                
+                <p><strong>Linkage Methods:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Single Linkage:</strong> Distance between the closest points of two clusters (minimum distance)</li>
+                    <li><strong>Complete Linkage:</strong> Distance between the farthest points of two clusters (maximum distance)</li>
+                    <li><strong>Average Linkage:</strong> Average distance between all pairs of points in the two clusters</li>
+                    <li><strong>Ward's Method:</strong> Minimizes the increase in variance for the clusters being merged</li>
+                </ul>
+                
+                <p><strong>Dendrogram:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>A tree diagram that shows the hierarchical relationship between clusters</li>
+                    <li>Horizontal position of merge points represents the distance at which clusters were merged</li>
+                    <li>Cutting the dendrogram at a particular height produces a specific number of clusters</li>
+                </ul>
+                
+                <p><strong>Advantages:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>No need to specify the number of clusters in advance</li>
+                    <li>Produces a dendrogram that provides insights into data structure</li>
+                    <li>Can identify hierarchical relationships between clusters</li>
+                </ul>
+                
+                <p><strong>Limitations:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Computationally intensive for large datasets (O(n²) space complexity, O(n³) time complexity in worst case)</li>
+                    <li>Sensitive to noise and outliers</li>
+                    <li>Different linkage criteria can yield very different results</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const svg = document.getElementById('visualization');
+        const dendrogramSvg = document.getElementById('dendrogram');
+        const generateDataBtn = document.getElementById('generate-data');
+        const runClusteringBtn = document.getElementById('run-clustering');
+        const stepClusteringBtn = document.getElementById('step-clustering');
+        const numPointsInput = document.getElementById('num-points');
+        const dataDistributionSelect = document.getElementById('data-distribution');
+        const clusterCountSelect = document.getElementById('cluster-count');
+        const clusterSeparationInput = document.getElementById('cluster-separation');
+        const separationValueDisplay = document.getElementById('separation-value');
+        const linkageMethodSelect = document.getElementById('linkage-method');
+        const distanceMetricSelect = document.getElementById('distance-metric');
+        const numClustersSelect = document.getElementById('num-clusters');
+        const showDendrogramCheckbox = document.getElementById('show-dendrogram');
+        const showCentroidsCheckbox = document.getElementById('show-centroids');
+        const showTrueClustersCheckbox = document.getElementById('show-true-clusters');
+        const currentStepDisplay = document.getElementById('current-step');
+        const currentClustersDisplay = document.getElementById('current-clusters');
+        const lastDistanceDisplay = document.getElementById('last-distance');
+        const algorithmStatusDisplay = document.getElementById('algorithm-status-text');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 600;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Data visualization constants
+        const DATA_WIDTH = WIDTH - MARGIN * 2;
+        const DATA_HEIGHT = HEIGHT - MARGIN * 2;
+        const DATA_X = MARGIN;
+        const DATA_Y = MARGIN;
+        
+        // Dendrogram visualization constants
+        const DEND_WIDTH = 500;
+        const DEND_HEIGHT = 300;
+        const DEND_MARGIN = 30;
+        const DEND_PLOT_WIDTH = DEND_WIDTH - 2 * DEND_MARGIN;
+        const DEND_PLOT_HEIGHT = DEND_HEIGHT - 2 * DEND_MARGIN;
+        
+        // Data range
+        const X_MIN = 0;
+        const X_MAX = 10;
+        const Y_MIN = 0;
+        const Y_MAX = 10;
+        
+        // Colors
+        const CLUSTER_COLORS = [
+            '#EF4444', // Red
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#8B5CF6', // Purple
+            '#F59E0B', // Amber
+            '#EC4899', // Pink
+            '#6366F1'  // Indigo
+        ];
+        const CLUSTER_COLORS_TRANSPARENT = [
+            'rgba(239, 68, 68, 0.2)', // Red with opacity
+            'rgba(59, 130, 246, 0.2)', // Blue with opacity
+            'rgba(16, 185, 129, 0.2)', // Green with opacity
+            'rgba(139, 92, 246, 0.2)', // Purple with opacity
+            'rgba(245, 158, 11, 0.2)', // Amber with opacity
+            'rgba(236, 72, 153, 0.2)', // Pink with opacity
+            'rgba(99, 102, 241, 0.2)'  // Indigo with opacity
+        ];
+        const CENTROID_COLOR = '#FBBF24'; // Yellow
+        const CENTROID_STROKE_COLOR = '#000000';
+        const DENDROGRAM_LINE_COLOR = '#6B7280'; // Gray
+        const DENDROGRAM_CUT_LINE_COLOR = '#EF4444'; // Red
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and algorithm parameters
+        let data = [];
+        let trueClusters = [];
+        let currentClusters = []; // Array of cluster arrays
+        let clusterAssignments = []; // Cluster ID for each point
+        let clusterSeparation = 5.0;
+        let clusterCount = 3;
+        let targetNumClusters = 3;
+        let distanceMatrix = []; // Matrix of distances between points/clusters
+        let mergeHistory = []; // History of cluster merges
+        let currentStep = 0;
+        let linkageMethod = 'complete';
+        let distanceMetric = 'euclidean';
+        let dendrogramData = []; // Data for drawing dendrogram
+        let maxMergeDistance = 0; // For scaling dendrogram
+        let stepByStepMode = false;
+        let animationInProgress = false;
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            svg.innerHTML = '';
+            dendrogramSvg.innerHTML = '';
+            
+            // Add background for main visualization
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            svg.appendChild(background);
+            
+            // Add grid lines
+            const numVerticalLines = 10;
+            const numHorizontalLines = 10;
+            const verticalSpacing = DATA_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = DATA_X + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                svg.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', DATA_X);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', DATA_X + DATA_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                svg.appendChild(hLine);
+            }
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', DATA_X);
+            xAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT);
+            xAxis.setAttribute('x2', DATA_X + DATA_WIDTH);
+            xAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', DATA_X);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', DATA_X);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 30);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Feature X₁';
+            svg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', DATA_X - 30);
+            yLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, ${DATA_X - 30}, ${DATA_Y + DATA_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Feature X₂';
+            svg.appendChild(yLabel);
+            
+            // Add x-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const x = mapX(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', DATA_Y + DATA_HEIGHT);
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', DATA_Y + DATA_HEIGHT + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Add y-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const y = mapY(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', DATA_X);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', DATA_X - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', DATA_X - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Initialize dendrogram SVG
+            initDendrogramSVG();
+        }
+        
+        // Initialize the dendrogram visualization
+        function initDendrogramSVG() {
+            // Clear existing SVG
+            dendrogramSvg.innerHTML = '';
+            
+            // Add background
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', DEND_WIDTH);
+            background.setAttribute('height', DEND_HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            dendrogramSvg.appendChild(background);
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', DEND_MARGIN);
+            xAxis.setAttribute('y1', DEND_HEIGHT - DEND_MARGIN);
+            xAxis.setAttribute('x2', DEND_WIDTH - DEND_MARGIN);
+            xAxis.setAttribute('y2', DEND_HEIGHT - DEND_MARGIN);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            dendrogramSvg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', DEND_MARGIN);
+            yAxis.setAttribute('y1', DEND_MARGIN);
+            yAxis.setAttribute('x2', DEND_MARGIN);
+            yAxis.setAttribute('y2', DEND_HEIGHT - DEND_MARGIN);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            dendrogramSvg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', DEND_WIDTH / 2);
+            xLabel.setAttribute('y', DEND_HEIGHT - 5);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Data Points';
+            dendrogramSvg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', 15);
+            yLabel.setAttribute('y', DEND_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, 15, ${DEND_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Distance';
+            dendrogramSvg.appendChild(yLabel);
+            
+            // Add placeholder text
+            const placeholderText = document.createElementNS(svgNS, 'text');
+            placeholderText.setAttribute('x', DEND_WIDTH / 2);
+            placeholderText.setAttribute('y', DEND_HEIGHT / 2);
+            placeholderText.setAttribute('text-anchor', 'middle');
+            placeholderText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            placeholderText.setAttribute('font-style', 'italic');
+            placeholderText.setAttribute('class', 'dendrogram-placeholder');
+            placeholderText.textContent = 'Run clustering to see dendrogram';
+            dendrogramSvg.appendChild(placeholderText);
+        }
+        
+        // Generate synthetic data for clustering
+        function generateData() {
+            const numPoints = parseInt(numPointsInput.value);
+            const distribution = dataDistributionSelect.value;
+            clusterCount = parseInt(clusterCountSelect.value);
+            clusterSeparation = parseFloat(clusterSeparationInput.value);
+            
+            // Update separation display
+            separationValueDisplay.textContent = clusterSeparation.toFixed(1);
+            
+            // Reset algorithm state
+            resetAlgorithmState();
+            
+            // Clear data
+            data = [];
+            trueClusters = [];
+            
+            // Generate data based on selected distribution
+            switch (distribution) {
+                case 'blobs':
+                    generateGaussianBlobs(numPoints, clusterCount, clusterSeparation);
+                    break;
+                case 'circles':
+                    generateConcentricCircles(numPoints, clusterCount, clusterSeparation);
+                    break;
+                case 'anisotropic':
+                    generateAnisotropicClusters(numPoints, clusterCount, clusterSeparation);
+                    break;
+                case 'varying-density':
+                    generateVaryingDensity(numPoints, clusterCount, clusterSeparation);
+                    break;
+                case 'noisy':
+                    generateNoisyClusters(numPoints, clusterCount, clusterSeparation);
+                    break;
+                default:
+                    generateGaussianBlobs(numPoints, clusterCount, clusterSeparation);
+            }
+            
+            // Visualize data
+            visualizeData();
+            
+            // Show true clusters if option is checked
+            if (showTrueClustersCheckbox.checked) {
+                visualizeTrueClusters();
+            }
+            
+            // Clear dendrogram
+            initDendrogramSVG();
+            
+            // Reset number of clusters select based on true cluster count
+            numClustersSelect.value = clusterCount.toString();
+            targetNumClusters = clusterCount;
+        }
+        
+        // Generate Gaussian blob clusters
+        function generateGaussianBlobs(numPoints, numClusters, separation) {
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const stdDev = 0.5 / (separation * 0.4); // Adjust cluster spread based on separation
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate point with Gaussian distribution around center
+                    const x = center.x + randomNormal() * stdDev;
+                    const y = center.y + randomNormal() * stdDev;
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const stdDev = 0.5 / (separation * 0.4);
+                
+                const x = center.x + randomNormal() * stdDev;
+                const y = center.y + randomNormal() * stdDev;
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate concentric circles
+        function generateConcentricCircles(numPoints, numCircles, separation) {
+            // Calculate points per circle
+            const pointsPerCircle = Math.floor(numPoints / numCircles);
+            
+            // Center of all circles
+            const centerX = 5;
+            const centerY = 5;
+            
+            // Generate points on each circle
+            for (let i = 0; i < numCircles; i++) {
+                // Calculate radius for this circle (smaller separation value means circles closer together)
+                const radius = 1 + i * (separation * 0.3);
+                
+                for (let j = 0; j < pointsPerCircle; j++) {
+                    // Generate angle around circle
+                    const angle = Math.random() * 2 * Math.PI;
+                    
+                    // Add some noise to the radius
+                    const noisyRadius = radius + (Math.random() * 0.2 - 0.1) * (11 - separation) * 0.1;
+                    
+                    // Convert to Cartesian coordinates
+                    const x = centerX + noisyRadius * Math.cos(angle);
+                    const y = centerY + noisyRadius * Math.sin(angle);
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const circleIndex = Math.floor(Math.random() * numCircles);
+                const radius = 1 + circleIndex * (separation * 0.3);
+                const angle = Math.random() * 2 * Math.PI;
+                const noisyRadius = radius + (Math.random() * 0.2 - 0.1) * (11 - separation) * 0.1;
+                
+                const x = centerX + noisyRadius * Math.cos(angle);
+                const y = centerY + noisyRadius * Math.sin(angle);
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(circleIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate anisotropic (elongated) clusters
+        function generateAnisotropicClusters(numPoints, numClusters, separation) {
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            const clusterAngles = [];
+            
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+                
+                // Give each cluster a random orientation
+                clusterAngles.push(Math.random() * Math.PI);
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const angle = clusterAngles[i];
+                
+                // Create covariance matrix for elongated clusters
+                const stdDevMajor = 1.0 / (separation * 0.4); // Major axis
+                const stdDevMinor = stdDevMajor * 0.2; // Minor axis (much smaller)
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate point with anisotropic distribution
+                    const u1 = randomNormal() * stdDevMajor;
+                    const u2 = randomNormal() * stdDevMinor;
+                    
+                    // Rotate point
+                    const x = center.x + u1 * Math.cos(angle) - u2 * Math.sin(angle);
+                    const y = center.y + u1 * Math.sin(angle) + u2 * Math.cos(angle);
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const angle = clusterAngles[clusterIndex];
+                
+                const stdDevMajor = 1.0 / (separation * 0.4);
+                const stdDevMinor = stdDevMajor * 0.2;
+                
+                const u1 = randomNormal() * stdDevMajor;
+                const u2 = randomNormal() * stdDevMinor;
+                
+                const x = center.x + u1 * Math.cos(angle) - u2 * Math.sin(angle);
+                const y = center.y + u1 * Math.sin(angle) + u2 * Math.cos(angle);
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate clusters with varying density
+        function generateVaryingDensity(numPoints, numClusters, separation) {
+            // Calculate total points distribution based on densities
+            const densities = [];
+            let totalDensity = 0;
+            
+            // Create varying densities
+            for (let i = 0; i < numClusters; i++) {
+                // Exponentially decrease density
+                const density = Math.pow(0.5, i);
+                densities.push(density);
+                totalDensity += density;
+            }
+            
+            // Normalize densities to sum to 1
+            for (let i = 0; i < numClusters; i++) {
+                densities[i] /= totalDensity;
+            }
+            
+            // Calculate points per cluster
+            const pointsPerCluster = [];
+            for (let i = 0; i < numClusters; i++) {
+                pointsPerCluster.push(Math.floor(numPoints * densities[i]));
+            }
+            
+            // Adjust for rounding errors
+            let sum = pointsPerCluster.reduce((a, b) => a + b, 0);
+            pointsPerCluster[0] += (numPoints - sum);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const count = pointsPerCluster[i];
+                
+                // Adjust spread based on density (denser clusters have smaller spread)
+                const stdDev = 0.5 / (separation * 0.4) * (Math.pow(1.5, i));
+                
+                for (let j = 0; j < count; j++) {
+                    // Generate point with Gaussian distribution around center
+                    const x = center.x + randomNormal() * stdDev;
+                    const y = center.y + randomNormal() * stdDev;
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+        }
+        
+        // Generate clusters with added noise points
+        function generateNoisyClusters(numPoints, numClusters, separation) {
+            // Determine how many points will be noise
+            const noiseRatio = 0.2; // 20% noise
+            const numNoisePoints = Math.floor(numPoints * noiseRatio);
+            const numClusterPoints = numPoints - numNoisePoints;
+            
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numClusterPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const stdDev = 0.5 / (separation * 0.4);
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate point with Gaussian distribution around center
+                    const x = center.x + randomNormal() * stdDev;
+                    const y = center.y + randomNormal() * stdDev;
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Generate noise points uniformly across the space
+            for (let i = 0; i < numNoisePoints; i++) {
+                const x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                const y = Math.random() * (Y_MAX - Y_MIN) + Y_MIN;
+                
+                data.push({ x, y });
+                trueClusters.push(-1); // -1 indicates noise
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const stdDev = 0.5 / (separation * 0.4);
+                
+                const x = center.x + randomNormal() * stdDev;
+                const y = center.y + randomNormal() * stdDev;
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate a random normal (Gaussian) number using Box-Muller transform
+        function randomNormal() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random(); // Exclude 0
+            while (v === 0) v = Math.random(); // Exclude 0
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+        
+        // Map data coordinates to SVG coordinates
+        function mapX(x) {
+            return DATA_X + ((x - X_MIN) / (X_MAX - X_MIN)) * DATA_WIDTH;
+        }
+        
+        function mapY(y) {
+            return DATA_Y + DATA_HEIGHT - ((y - Y_MIN) / (Y_MAX - Y_MIN)) * DATA_HEIGHT;
+        }
+        
+        // Map dendrogram coordinates
+        function mapDendX(index, totalLeaves) {
+            return DEND_MARGIN + (index / (totalLeaves - 1)) * DEND_PLOT_WIDTH;
+        }
+        
+        function mapDendY(distance, maxDistance) {
+            return DEND_HEIGHT - DEND_MARGIN - (distance / maxDistance) * DEND_PLOT_HEIGHT;
+        }
+        
+        // Visualize the data points
+        function visualizeData() {
+            // Remove existing points and clusters
+            clearVisualization();
+            
+            // Create the data points
+            data.forEach((point, index) => {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', mapX(point.x));
+                circle.setAttribute('cy', mapY(point.y));
+                circle.setAttribute('r', '4');
+                circle.setAttribute('fill', '#718096'); // Default gray
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                svg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(5),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Clear visualization elements
+        function clearVisualization() {
+            // Remove data points
+            const existingPoints = svg.querySelectorAll('.data-point');
+            existingPoints.forEach(point => point.remove());
+            
+            // Remove cluster visual elements
+            const existingClusterElements = svg.querySelectorAll('.cluster-element');
+            existingClusterElements.forEach(element => element.remove());
+            
+            // Remove centroids
+            const existingCentroids = svg.querySelectorAll('.centroid');
+            existingCentroids.forEach(centroid => centroid.remove());
+            
+            // Remove true clusters
+            const existingTrueClusters = svg.querySelectorAll('.true-cluster');
+            existingTrueClusters.forEach(tc => tc.remove());
+        }
+        
+        // Visualize true clusters
+        function visualizeTrueClusters() {
+            // Clear existing true cluster visualizations
+            const existingTrueClusters = svg.querySelectorAll('.true-cluster');
+            existingTrueClusters.forEach(tc => tc.remove());
+            
+            // Create groups for each true cluster
+            const clusterGroups = {};
+            
+            // Group points by true cluster
+            for (let i = 0; i < data.length; i++) {
+                const clusterIndex = trueClusters[i];
+                if (clusterIndex >= 0) { // Skip noise points
+                    if (!clusterGroups[clusterIndex]) {
+                        clusterGroups[clusterIndex] = [];
+                    }
+                    clusterGroups[clusterIndex].push(data[i]);
+                }
+            }
+            
+            // Draw ellipses for each cluster
+            for (const clusterIndex in clusterGroups) {
+                const points = clusterGroups[clusterIndex];
+                
+                // Draw ellipse approximation of cluster
+                const { centerX, centerY, radiusX, radiusY, angle } = calculateEllipseParams(points);
+                
+                // Create the ellipse
+                const ellipse = document.createElementNS(svgNS, 'ellipse');
+                ellipse.setAttribute('cx', mapX(centerX));
+                ellipse.setAttribute('cy', mapY(centerY));
+                ellipse.setAttribute('rx', radiusX * DATA_WIDTH / (X_MAX - X_MIN));
+                ellipse.setAttribute('ry', radiusY * DATA_HEIGHT / (Y_MAX - Y_MIN));
+                ellipse.setAttribute('transform', `rotate(${angle * 180 / Math.PI}, ${mapX(centerX)}, ${mapY(centerY)})`);
+                ellipse.setAttribute('fill', CLUSTER_COLORS_TRANSPARENT[clusterIndex % CLUSTER_COLORS_TRANSPARENT.length]);
+                ellipse.setAttribute('stroke', CLUSTER_COLORS[clusterIndex % CLUSTER_COLORS.length]);
+                ellipse.setAttribute('stroke-width', '1');
+                ellipse.setAttribute('stroke-dasharray', '5,5');
+                ellipse.setAttribute('class', 'true-cluster');
+                
+                // Add animation
+                ellipse.style.opacity = '0';
+                
+                // Add to SVG (before data points for proper layering)
+                const firstDataPoint = svg.querySelector('.data-point');
+                if (firstDataPoint) {
+                    svg.insertBefore(ellipse, firstDataPoint);
+                } else {
+                    svg.appendChild(ellipse);
+                }
+            }
+            
+            // Animate the true clusters
+            anime({
+                targets: '.true-cluster',
+                opacity: 1,
+                easing: 'easeInOutSine',
+                duration: 800
+            });
+        }
+        
+        // Calculate parameters for an ellipse approximating a cluster of points
+        function calculateEllipseParams(points) {
+            // Calculate center
+            let sumX = 0, sumY = 0;
+            for (const point of points) {
+                sumX += point.x;
+                sumY += point.y;
+            }
+            const centerX = sumX / points.length;
+            const centerY = sumY / points.length;
+            
+            // Calculate covariance matrix
+            let sumXX = 0, sumXY = 0, sumYY = 0;
+            for (const point of points) {
+                const dx = point.x - centerX;
+                const dy = point.y - centerY;
+                sumXX += dx * dx;
+                sumXY += dx * dy;
+                sumYY += dy * dy;
+            }
+            
+            // Normalize by number of points
+            const covXX = sumXX / points.length;
+            const covXY = sumXY / points.length;
+            const covYY = sumYY / points.length;
+            
+            // Calculate eigenvalues and eigenvectors of covariance matrix
+            const trace = covXX + covYY;
+            const det = covXX * covYY - covXY * covXY;
+            
+            // Calculate eigenvalues
+            const lambda1 = trace / 2 + Math.sqrt(Math.pow(trace / 2, 2) - det);
+            const lambda2 = trace / 2 - Math.sqrt(Math.pow(trace / 2, 2) - det);
+            
+            // Calculate semi-major and semi-minor axes (scale for coverage)
+            const radiusX = Math.sqrt(lambda1) * 2.45;
+            const radiusY = Math.sqrt(lambda2) * 2.45;
+            
+            // Calculate orientation angle
+            let angle = 0;
+            if (covXY !== 0) {
+                angle = Math.atan2(lambda1 - covXX, covXY);
+            }
+            
+            return { centerX, centerY, radiusX, radiusY, angle };
+        }
+        
+        // Reset algorithm state
+        function resetAlgorithmState() {
+            currentClusters = [];
+            clusterAssignments = Array(data.length).fill(-1);
+            distanceMatrix = [];
+            mergeHistory = [];
+            currentStep = 0;
+            maxMergeDistance = 0;
+            dendrogramData = [];
+            
+            // Update UI
+            currentStepDisplay.textContent = '0';
+            currentClustersDisplay.textContent = '0';
+            lastDistanceDisplay.textContent = '-';
+            algorithmStatusDisplay.textContent = 'Not Started';
+        }
+        
+        // Run hierarchical clustering algorithm
+        async function runHierarchicalClustering() {
+            if (data.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during processing
+            runClusteringBtn.disabled = true;
+            stepClusteringBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            linkageMethod = linkageMethodSelect.value;
+            distanceMetric = distanceMetricSelect.value;
+            targetNumClusters = parseInt(numClustersSelect.value);
+            
+            // Reset algorithm state
+            resetAlgorithmState();
+            
+            // Initialize clusters (each point starts as its own cluster)
+            initializeClusters();
+            
+            // Initialize distance matrix
+            initializeDistanceMatrix();
+            
+            // Run clustering algorithm until we reach the target number of clusters
+            while (currentClusters.length > targetNumClusters) {
+                // Find minimum distance pair of clusters
+                const { i, j, distance } = findClosestClusters();
+                
+                // Merge the clusters
+                mergeClusters(i, j, distance);
+                
+                // Update step counter
+                currentStep++;
+                
+                // Update UI
+                currentStepDisplay.textContent = currentStep.toString();
+                currentClustersDisplay.textContent = currentClusters.length.toString();
+                lastDistanceDisplay.textContent = distance.toFixed(3);
+                algorithmStatusDisplay.textContent = 'Running';
+                
+                // Add a small delay for visualization
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Build dendrogram data
+            buildDendrogramData();
+            
+            // Update dendrogram visualization
+            if (showDendrogramCheckbox.checked) {
+                visualizeDendrogram();
+            }
+            
+            // Assign final cluster IDs to points
+            assignClusterIDs();
+            
+            // Update visualization
+            updateClusterVisualization();
+            
+            // Update status
+            algorithmStatusDisplay.textContent = 'Complete';
+            
+            // Re-enable buttons
+            runClusteringBtn.disabled = false;
+            stepClusteringBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Step through hierarchical clustering
+        async function stepHierarchicalClustering() {
+            if (data.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during step
+            runClusteringBtn.disabled = true;
+            stepClusteringBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            linkageMethod = linkageMethodSelect.value;
+            distanceMetric = distanceMetricSelect.value;
+            targetNumClusters = parseInt(numClustersSelect.value);
+            
+            // Initialize if this is the first step
+            if (currentStep === 0 && currentClusters.length === 0) {
+                // Initialize clusters (each point starts as its own cluster)
+                initializeClusters();
+                
+                // Initialize distance matrix
+                initializeDistanceMatrix();
+                
+                // Update visualization
+                stepByStepMode = true;
+                assignClusterIDs();
+                updateClusterVisualization();
+                
+                // Update UI
+                currentStepDisplay.textContent = currentStep.toString();
+                currentClustersDisplay.textContent = currentClusters.length.toString();
+                lastDistanceDisplay.textContent = '-';
+                algorithmStatusDisplay.textContent = 'Initialized';
+            } 
+            // Perform a merge step if we haven't reached the target yet
+            else if (currentClusters.length > targetNumClusters) {
+                // Find minimum distance pair of clusters
+                const { i, j, distance } = findClosestClusters();
+                
+                // Merge the clusters
+                mergeClusters(i, j, distance);
+                
+                // Update step counter
+                currentStep++;
+                
+                // Build dendrogram data
+                buildDendrogramData();
+                
+                // Update dendrogram visualization
+                if (showDendrogramCheckbox.checked) {
+                    visualizeDendrogram();
+                }
+                
+                // Assign cluster IDs
+                assignClusterIDs();
+                
+                // Update visualization
+                updateClusterVisualization();
+                
+                // Update UI
+                currentStepDisplay.textContent = currentStep.toString();
+                currentClustersDisplay.textContent = currentClusters.length.toString();
+                lastDistanceDisplay.textContent = distance.toFixed(3);
+                algorithmStatusDisplay.textContent = 'Running';
+            } else {
+                // We've reached the target number of clusters
+                algorithmStatusDisplay.textContent = 'Complete';
+            }
+            
+            // Re-enable buttons
+            runClusteringBtn.disabled = false;
+            stepClusteringBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Initialize clusters
+        function initializeClusters() {
+            currentClusters = [];
+            
+            // Each point starts as its own cluster
+            for (let i = 0; i < data.length; i++) {
+                currentClusters.push([i]);
+            }
+        }
+        
+        // Initialize distance matrix
+        function initializeDistanceMatrix() {
+            const n = data.length;
+            distanceMatrix = Array(n).fill().map(() => Array(n).fill(0));
+            
+            // Calculate distances between all pairs of points
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    const dist = calculateDistance(data[i], data[j]);
+                    distanceMatrix[i][j] = dist;
+                    distanceMatrix[j][i] = dist; // Symmetric
+                }
+            }
+        }
+        
+        // Find the pair of clusters with the minimum distance
+        function findClosestClusters() {
+            let minDistance = Infinity;
+            let minI = -1, minJ = -1;
+            
+            for (let i = 0; i < currentClusters.length; i++) {
+                for (let j = i + 1; j < currentClusters.length; j++) {
+                    const distance = calculateClusterDistance(currentClusters[i], currentClusters[j]);
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        minI = i;
+                        minJ = j;
+                    }
+                }
+            }
+            
+            return { i: minI, j: minJ, distance: minDistance };
+        }
+        
+        // Merge two clusters
+        function mergeClusters(i, j, distance) {
+            // Ensure i < j for consistent removal
+            if (i > j) {
+                [i, j] = [j, i];
+            }
+            
+            // Record the merge
+            mergeHistory.push({
+                cluster1: currentClusters[i],
+                cluster2: currentClusters[j],
+                distance: distance
+            });
+            
+            // Track maximum merge distance for dendrogram scaling
+            maxMergeDistance = Math.max(maxMergeDistance, distance);
+            
+            // Merge the clusters
+            currentClusters[i] = [...currentClusters[i], ...currentClusters[j]];
+            
+            // Remove the second cluster
+            currentClusters.splice(j, 1);
+        }
+        
+        // Assign cluster IDs to points
+        function assignClusterIDs() {
+            clusterAssignments = Array(data.length).fill(-1);
+            
+            for (let i = 0; i < currentClusters.length; i++) {
+                for (const pointIndex of currentClusters[i]) {
+                    clusterAssignments[pointIndex] = i;
+                }
+            }
+        }
+        
+        // Calculate distance between two points
+        function calculateDistance(pointA, pointB) {
+            if (distanceMetric === 'euclidean') {
+                const dx = pointA.x - pointB.x;
+                const dy = pointA.y - pointB.y;
+                return Math.sqrt(dx * dx + dy * dy);
+            } else if (distanceMetric === 'manhattan') {
+                return Math.abs(pointA.x - pointB.x) + Math.abs(pointA.y - pointB.y);
+            }
+            
+            // Default to Euclidean
+            const dx = pointA.x - pointB.x;
+            const dy = pointA.y - pointB.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // Calculate distance between two clusters
+        function calculateClusterDistance(clusterA, clusterB) {
+            if (linkageMethod === 'single') {
+                // Single linkage: minimum distance between any points
+                let minDist = Infinity;
+                
+                for (const a of clusterA) {
+                    for (const b of clusterB) {
+                        const dist = distanceMatrix[a][b];
+                        minDist = Math.min(minDist, dist);
+                    }
+                }
+                
+                return minDist;
+            } else if (linkageMethod === 'complete') {
+                // Complete linkage: maximum distance between any points
+                let maxDist = -Infinity;
+                
+                for (const a of clusterA) {
+                    for (const b of clusterB) {
+                        const dist = distanceMatrix[a][b];
+                        maxDist = Math.max(maxDist, dist);
+                    }
+                }
+                
+                return maxDist;
+            } else if (linkageMethod === 'average') {
+                // Average linkage: average distance between all pairs of points
+                let sumDist = 0;
+                let count = 0;
+                
+                for (const a of clusterA) {
+                    for (const b of clusterB) {
+                        sumDist += distanceMatrix[a][b];
+                        count++;
+                    }
+                }
+                
+                return sumDist / count;
+            } else if (linkageMethod === 'ward') {
+                // Ward's method: increase in variance when clusters are merged
+                const centroidA = calculateClusterCentroid(clusterA);
+                const centroidB = calculateClusterCentroid(clusterB);
+                
+                const distCentroids = calculateDistance(centroidA, centroidB);
+                
+                // Ward's formula: (|A|*|B|)/(|A|+|B|) * d(centroid_A, centroid_B)^2
+                return (clusterA.length * clusterB.length) / (clusterA.length + clusterB.length) * distCentroids * distCentroids;
+            }
+            
+            // Default to complete linkage
+            let maxDist = -Infinity;
+            
+            for (const a of clusterA) {
+                for (const b of clusterB) {
+                    const dist = distanceMatrix[a][b];
+                    maxDist = Math.max(maxDist, dist);
+                }
+            }
+            
+            return maxDist;
+        }
+        
+        // Calculate centroid of a cluster
+        function calculateClusterCentroid(cluster) {
+            let sumX = 0, sumY = 0;
+            
+            for (const pointIndex of cluster) {
+                sumX += data[pointIndex].x;
+                sumY += data[pointIndex].y;
+            }
+            
+            return {
+                x: sumX / cluster.length,
+                y: sumY / cluster.length
+            };
+        }
+        
+        // Build dendrogram data structure
+        function buildDendrogramData() {
+            // Reset dendrogram data
+            dendrogramData = [];
+            
+            // If no merges yet, return
+            if (mergeHistory.length === 0) {
+                return;
+            }
+            
+            // Initialize leaf nodes (one per data point)
+            const leaves = Array(data.length).fill().map((_, i) => ({
+                id: i,
+                height: 0,
+                children: [],
+                isLeaf: true,
+                leafIndex: i
+            }));
+            
+            // Map from original point indices to node objects
+            const nodeMap = new Map();
+            leaves.forEach(leaf => {
+                nodeMap.set(leaf.id, leaf);
+            });
+            
+            // Process merges to build the tree
+            let nextId = data.length;
+            
+            for (const merge of mergeHistory) {
+                // Find the nodes for each cluster
+                const cluster1Points = merge.cluster1;
+                const cluster2Points = merge.cluster2;
+                
+                // Find the root nodes for these clusters
+                const node1 = findRootNode(cluster1Points[0], nodeMap);
+                const node2 = findRootNode(cluster2Points[0], nodeMap);
+                
+                // Create new internal node
+                const newNode = {
+                    id: nextId++,
+                    height: merge.distance,
+                    children: [node1, node2],
+                    isLeaf: false,
+                    leafIndices: [...node1.leafIndices || [node1.leafIndex], ...node2.leafIndices || [node2.leafIndex]]
+                };
+                
+                // Update node map
+                nodeMap.set(newNode.id, newNode);
+                
+                // Add to dendrogram data
+                dendrogramData.push(newNode);
+            }
+        }
+        
+        // Find the root node that contains a given point
+        function findRootNode(pointIndex, nodeMap) {
+            // Start with the leaf node for this point
+            let node = nodeMap.get(pointIndex);
+            
+            // Check all nodes to see if they contain this node
+            for (const [id, n] of nodeMap.entries()) {
+                if (!n.isLeaf && n.leafIndices && n.leafIndices.includes(pointIndex)) {
+                    // Check if this is a more recent merge (higher ID)
+                    if (id > node.id) {
+                        node = n;
+                    }
+                }
+            }
+            
+            return node;
+        }
+        
+        // Visualize the dendrogram
+        function visualizeDendrogram() {
+            // Remove existing dendrogram
+            const existingDendrogramElements = dendrogramSvg.querySelectorAll('.dendrogram-element');
+            existingDendrogramElements.forEach(element => element.remove());
+            
+            // Remove placeholder text
+            const placeholder = dendrogramSvg.querySelector('.dendrogram-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // If no dendrogram data, return
+            if (dendrogramData.length === 0) {
+                return;
+            }
+            
+            // Find root node (the last merge)
+            const rootNode = dendrogramData[dendrogramData.length - 1];
+            
+            // Calculate leaf positions
+            const leafPositions = new Map();
+            assignLeafPositions(rootNode, 0, leafPositions);
+            
+            // Draw the tree
+            drawDendrogramNode(rootNode, leafPositions);
+            
+            // Draw cut line representing the current number of clusters
+            drawCutLine();
+            
+            // Add labels
+            addDendrogramLabels();
+        }
+        
+        // Assign x-positions to leaf nodes (in-order traversal)
+        function assignLeafPositions(node, index, leafPositions) {
+            if (node.isLeaf) {
+                leafPositions.set(node.id, index);
+                return index + 1;
+            }
+            
+            let newIndex = index;
+            for (const child of node.children) {
+                newIndex = assignLeafPositions(child, newIndex, leafPositions);
+            }
+            
+            return newIndex;
+        }
+        
+        // Draw a dendrogram node and its children
+        function drawDendrogramNode(node, leafPositions) {
+            if (node.isLeaf) {
+                // Draw leaf node
+                const leafIndex = leafPositions.get(node.id);
+                const x = mapDendX(leafIndex, data.length);
+                const y = mapDendY(0, maxMergeDistance);
+                
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', '3');
+                circle.setAttribute('fill', CLUSTER_COLORS[clusterAssignments[node.id] % CLUSTER_COLORS.length]);
+                circle.setAttribute('class', 'dendrogram-element');
+                dendrogramSvg.appendChild(circle);
+            } else {
+                // Draw internal node and its connections
+                
+                // Calculate positions of children
+                const childPositions = node.children.map(child => {
+                    if (child.isLeaf) {
+                        const leafIndex = leafPositions.get(child.id);
+                        return { x: mapDendX(leafIndex, data.length), y: mapDendY(0, maxMergeDistance) };
+                    } else {
+                        // For internal nodes, calculate center of its children
+                        const leafIndices = child.leafIndices;
+                        const minIndex = Math.min(...leafIndices.map(idx => leafPositions.get(idx)));
+                        const maxIndex = Math.max(...leafIndices.map(idx => leafPositions.get(idx)));
+                        const centerIndex = (minIndex + maxIndex) / 2;
+                        return { x: mapDendX(centerIndex, data.length), y: mapDendY(child.height, maxMergeDistance) };
+                    }
+                });
+                
+                // Calculate center position for this node
+                const nodeX = (childPositions[0].x + childPositions[1].x) / 2;
+                const nodeY = mapDendY(node.height, maxMergeDistance);
+                
+                // Draw horizontal lines connecting to children
+                for (let i = 0; i < childPositions.length; i++) {
+                    const horizontalLine = document.createElementNS(svgNS, 'line');
+                    horizontalLine.setAttribute('x1', childPositions[i].x);
+                    horizontalLine.setAttribute('y1', childPositions[i].y);
+                    horizontalLine.setAttribute('x2', childPositions[i].x);
+                    horizontalLine.setAttribute('y2', nodeY);
+                    horizontalLine.setAttribute('stroke', DENDROGRAM_LINE_COLOR);
+                    horizontalLine.setAttribute('stroke-width', '1.5');
+                    horizontalLine.setAttribute('class', 'dendrogram-element');
+                    dendrogramSvg.appendChild(horizontalLine);
+                }
+                
+                // Draw horizontal line connecting the children
+                const horizontalConnector = document.createElementNS(svgNS, 'line');
+                horizontalConnector.setAttribute('x1', childPositions[0].x);
+                horizontalConnector.setAttribute('y1', nodeY);
+                horizontalConnector.setAttribute('x2', childPositions[1].x);
+                horizontalConnector.setAttribute('y2', nodeY);
+                horizontalConnector.setAttribute('stroke', DENDROGRAM_LINE_COLOR);
+                horizontalConnector.setAttribute('stroke-width', '1.5');
+                horizontalConnector.setAttribute('class', 'dendrogram-element');
+                dendrogramSvg.appendChild(horizontalConnector);
+                
+                // Draw node
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', nodeX);
+                circle.setAttribute('cy', nodeY);
+                circle.setAttribute('r', '3');
+                circle.setAttribute('fill', DENDROGRAM_LINE_COLOR);
+                circle.setAttribute('class', 'dendrogram-element');
+                dendrogramSvg.appendChild(circle);
+                
+                // Recursively draw children
+                for (const child of node.children) {
+                    if (!child.isLeaf) {
+                        drawDendrogramNode(child, leafPositions);
+                    }
+                }
+            }
+        }
+        
+        // Draw cut line representing the current number of clusters
+        function drawCutLine() {
+            if (mergeHistory.length < data.length - targetNumClusters) {
+                return;
+            }
+            
+            // Get the distance at which we have the target number of clusters
+            const threshold = mergeHistory[mergeHistory.length - (data.length - targetNumClusters)].distance;
+            
+            // Draw horizontal cut line
+            const cutLine = document.createElementNS(svgNS, 'line');
+            cutLine.setAttribute('x1', DEND_MARGIN);
+            cutLine.setAttribute('y1', mapDendY(threshold, maxMergeDistance));
+            cutLine.setAttribute('x2', DEND_WIDTH - DEND_MARGIN);
+            cutLine.setAttribute('y2', mapDendY(threshold, maxMergeDistance));
+            cutLine.setAttribute('stroke', DENDROGRAM_CUT_LINE_COLOR);
+            cutLine.setAttribute('stroke-width', '2');
+            cutLine.setAttribute('stroke-dasharray', '5,5');
+            cutLine.setAttribute('class', 'dendrogram-element');
+            dendrogramSvg.appendChild(cutLine);
+            
+            // Add label
+            const cutLabel = document.createElementNS(svgNS, 'text');
+            cutLabel.setAttribute('x', DEND_WIDTH - DEND_MARGIN - 10);
+            cutLabel.setAttribute('y', mapDendY(threshold, maxMergeDistance) - 5);
+            cutLabel.setAttribute('text-anchor', 'end');
+            cutLabel.setAttribute('font-size', '12');
+            cutLabel.setAttribute('fill', DENDROGRAM_CUT_LINE_COLOR);
+            cutLabel.setAttribute('class', 'dendrogram-element');
+            cutLabel.textContent = `${targetNumClusters} clusters`;
+            dendrogramSvg.appendChild(cutLabel);
+        }
+        
+        // Add labels to dendrogram
+        function addDendrogramLabels() {
+            // Add y-axis ticks and labels
+            for (let i = 0; i <= 5; i++) {
+                const height = (i / 5) * maxMergeDistance;
+                const y = mapDendY(height, maxMergeDistance);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', DEND_MARGIN);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', DEND_MARGIN - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                tickLine.setAttribute('class', 'dendrogram-element');
+                dendrogramSvg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', DEND_MARGIN - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '10');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.setAttribute('class', 'dendrogram-element');
+                tickLabel.textContent = height.toFixed(1);
+                dendrogramSvg.appendChild(tickLabel);
+            }
+        }
+        
+        // Update cluster visualization
+        function updateClusterVisualization() {
+            // Remove existing cluster elements
+            const existingClusterElements = svg.querySelectorAll('.cluster-element');
+            existingClusterElements.forEach(element => element.remove());
+            
+            // Update data points with cluster colors
+            data.forEach((point, index) => {
+                const clusterIndex = clusterAssignments[index];
+                const pointElement = svg.querySelector(`.data-point[data-index="${index}"]`);
+                
+                if (pointElement) {
+                    // Set color based on cluster assignment
+                    if (clusterIndex >= 0) {
+                        pointElement.setAttribute('fill', CLUSTER_COLORS[clusterIndex % CLUSTER_COLORS.length]);
+                    } else {
+                        pointElement.setAttribute('fill', '#718096'); // Default gray
+                    }
+                    
+                    // Update cluster info
+                    pointElement.setAttribute('data-cluster', clusterIndex);
+                }
+            });
+            
+            // Visualize cluster shapes and centroids
+            for (let i = 0; i < currentClusters.length; i++) {
+                const cluster = currentClusters[i];
+                const clusterPoints = cluster.map(index => data[index]);
+                
+                // Draw convex hull or ellipse for the cluster
+                if (clusterPoints.length >= 3) {
+                    const { centerX, centerY, radiusX, radiusY, angle } = calculateEllipseParams(clusterPoints);
+                    
+                    // Create the ellipse
+                    const ellipse = document.createElementNS(svgNS, 'ellipse');
+                    ellipse.setAttribute('cx', mapX(centerX));
+                    ellipse.setAttribute('cy', mapY(centerY));
+                    ellipse.setAttribute('rx', radiusX * DATA_WIDTH / (X_MAX - X_MIN));
+                    ellipse.setAttribute('ry', radiusY * DATA_HEIGHT / (Y_MAX - Y_MIN));
+                    ellipse.setAttribute('transform', `rotate(${angle * 180 / Math.PI}, ${mapX(centerX)}, ${mapY(centerY)})`);
+                    ellipse.setAttribute('fill', 'none');
+                    ellipse.setAttribute('stroke', CLUSTER_COLORS[i % CLUSTER_COLORS.length]);
+                    ellipse.setAttribute('stroke-width', '2');
+                    ellipse.setAttribute('class', 'cluster-element');
+                    
+                    // Add animation
+                    ellipse.style.opacity = '0';
+                    
+                    svg.appendChild(ellipse);
+                }
+                
+                // Draw centroid if enabled
+                if (showCentroidsCheckbox.checked) {
+                    const centroid = calculateClusterCentroid(cluster);
+                    
+                    const centroidElement = document.createElementNS(svgNS, 'circle');
+                    centroidElement.setAttribute('cx', mapX(centroid.x));
+                    centroidElement.setAttribute('cy', mapY(centroid.y));
+                    centroidElement.setAttribute('r', '6');
+                    centroidElement.setAttribute('fill', CENTROID_COLOR);
+                    centroidElement.setAttribute('stroke', CENTROID_STROKE_COLOR);
+                    centroidElement.setAttribute('stroke-width', '2');
+                    centroidElement.setAttribute('class', 'centroid cluster-element');
+                    
+                    // Add animation
+                    centroidElement.style.opacity = '0';
+                    
+                    svg.appendChild(centroidElement);
+                }
+            }
+            
+            // Animate cluster elements
+            anime({
+                targets: '.cluster-element',
+                opacity: 1,
+                easing: 'easeInOutSine',
+                duration: 800
+            });
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        runClusteringBtn.addEventListener('click', runHierarchicalClustering);
+        stepClusteringBtn.addEventListener('click', stepHierarchicalClustering);
+        
+        clusterSeparationInput.addEventListener('input', () => {
+            clusterSeparation = parseFloat(clusterSeparationInput.value);
+            separationValueDisplay.textContent = clusterSeparation.toFixed(1);
+        });
+        
+        showDendrogramCheckbox.addEventListener('change', () => {
+            if (showDendrogramCheckbox.checked && dendrogramData.length > 0) {
+                visualizeDendrogram();
+            } else {
+                const existingDendrogramElements = dendrogramSvg.querySelectorAll('.dendrogram-element');
+                existingDendrogramElements.forEach(element => element.remove());
+                
+                // Add placeholder text
+                if (!dendrogramSvg.querySelector('.dendrogram-placeholder')) {
+                    const placeholderText = document.createElementNS(svgNS, 'text');
+                    placeholderText.setAttribute('x', DEND_WIDTH / 2);
+                    placeholderText.setAttribute('y', DEND_HEIGHT / 2);
+                    placeholderText.setAttribute('text-anchor', 'middle');
+                    placeholderText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                    placeholderText.setAttribute('font-style', 'italic');
+                    placeholderText.setAttribute('class', 'dendrogram-placeholder');
+                    placeholderText.textContent = 'Dendrogram view disabled';
+                    dendrogramSvg.appendChild(placeholderText);
+                }
+            }
+        });
+        
+        showCentroidsCheckbox.addEventListener('change', () => {
+            if (clusterAssignments.some(c => c !== -1)) {
+                updateClusterVisualization();
+            }
+        });
+        
+        showTrueClustersCheckbox.addEventListener('change', () => {
+            if (showTrueClustersCheckbox.checked) {
+                visualizeTrueClusters();
+            } else {
+                const existingTrueClusters = svg.querySelectorAll('.true-cluster');
+                existingTrueClusters.forEach(tc => tc.remove());
+            }
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

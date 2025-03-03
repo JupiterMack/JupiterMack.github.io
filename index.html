@@ -3,117 +3,1919 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ozeye - AI Consulting Experts</title>
+    <title>Ozeye - Home</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Import fonts from the existing styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        
+        /* Basic reset and global styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header styles from styles.css */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: rgba(40, 40, 40, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            opacity: 0;
+            height: 65px;
+            transition: opacity 1s ease-in;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10%;
+            height: 100%;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo-link {
+            text-decoration: none;
+            color: inherit;
+            transition: opacity 0.3s ease;
+        }
+        
+        .logo-link:hover {
+            opacity: 0.9;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            letter-spacing: -0.3px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            padding: 0 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a::before,
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a::before {
+            left: 0;
+            top: 40%;
+            border-left: 2px solid #fff;
+            border-top: 2px solid #fff;
+        }
+        
+        .nav-links a::after {
+            right: 0;
+            bottom: 40%;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+        }
+        
+        .nav-links a:hover::before,
+        .nav-links a:hover::after {
+            opacity: 1;
+            width: 12px;
+            height: 12px;
+        }
+        
+        .nav-links a:hover::before {
+            top: 35%;
+        }
+        
+        .nav-links a:hover::after {
+            bottom: 35%;
+        }
+        
+        /* Hero section with wheel animation */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #000;
+        }
+        
+        .wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            width: 1px;
+            height: 100vh;
+            z-index: 1;
+        }
+        
+        .el {
+            position: absolute;
+            opacity: 1;
+            width: 2px;
+            height: 24vh;
+            margin-top: -12vh;
+            transform-origin: 50% 100%;
+            background: white;
+        }
+        
+        .hero-content {
+            position: absolute;
+            z-index: 2;
+            max-width: 600px;
+            text-align: center;
+            padding: 0 20px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeIn 1.5s forwards 1s;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -1px;
+            text-shadow: 0 0 30px rgba(52, 152, 219, 0.5);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Space Grotesk', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .hero-btns {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+        
+        .hero-btn {
+            padding: 14px 32px;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .hero-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: transform 0.5s;
+            transform: skewX(-15deg);
+            z-index: -1;
+        }
+        
+        .hero-btn:hover::before {
+            transform: skewX(-15deg) translateX(200%);
+        }
+        
+        .hero-btn.primary {
+            background: #3498db;
+            color: white;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+        }
+        
+        .hero-btn.secondary {
+            background: transparent;
+            color: white;
+            border: 1px solid #3498db;
+        }
+        
+        .hero-btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .hero-btn.primary:hover {
+            box-shadow: 0 0 25px rgba(52, 152, 219, 0.7);
+        }
+        
+        /* Playground section with algorithm race animation */
+        .playground-section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            background-color: #0a0a0a;
+        }
+        
+        .playground-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 5%;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .playground-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+        
+        .playground-text {
+            position: relative;
+        }
+        
+        .section-title {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #fff;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: #3498db;
+        }
+        
+        .playground-text p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .playground-text strong {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .explore-links {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .explore-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 10px 20px;
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .explore-link:hover {
+            background: rgba(52, 152, 219, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .explore-link svg {
+            width: 20px;
+            height: 20px;
+            stroke: #3498db;
+            transition: transform 0.3s ease;
+        }
+        
+        .explore-link:hover svg {
+            transform: translateX(3px);
+        }
+        
+        .playground-viz {
+            position: relative;
+            height: 500px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        /* Algorithm Race Visualization */
+        .algorithm-race {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .algorithm-race-header {
+            width: 100%;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            z-index: 10;
+        }
+        
+        .algorithm-legend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .algorithm-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .astar-color { background-color: #e74c3c; }
+        .dfs-color { background-color: #f1c40f; }
+        .greedy-color { background-color: #9b59b6; }
+        
+        .grid-container {
+            position: relative;
+            width: 384px;
+            height: 384px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+        
+        .algorithm-grid {
+            display: grid;
+            grid-template-columns: repeat(32, 1fr);
+            grid-template-rows: repeat(32, 1fr);
+            width: 100%;
+            height: 100%;
+            background-color: #1a1a1a;
+        }
+        
+        .cell {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+        
+        .cell.pulse {
+            animation: pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+        
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 8px;
+            background-color: rgba(0, 0, 0, 0.6);
+            text-align: center;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            z-index: 10;
+        }
+        
+        /* Cell states */
+        .empty { background-color: #1e272e; }
+        .wall { background-color: #2f3640; }
+        .start-a { background-color: #e74c3c; }
+        .start-b { background-color: #f1c40f; }
+        .start-c { background-color: #9b59b6; }
+        .goal { background-color: #2ecc71; }
+        .visited-a { background-color: rgba(231, 76, 60, 0.3); }
+        .visited-b { background-color: rgba(241, 196, 15, 0.3); }
+        .visited-c { background-color: rgba(155, 89, 182, 0.3); }
+        .current-a { background-color: rgba(231, 76, 60, 0.9); }
+        .current-b { background-color: rgba(241, 196, 15, 0.9); }
+        .current-c { background-color: rgba(155, 89, 182, 0.9); }
+        .path-a { background-color: #e74c3c; }
+        .path-b { background-color: #f1c40f; }
+        .path-c { background-color: #9b59b6; }
+        
+        /* Wave overlay */
+        .wave-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+        }
+        
+        /* Connect section */
+        .connect-section {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            overflow: hidden;
+            background-color: #080808;
+            text-align: center;
+            padding: 80px 5%;
+        }
+        
+        .connect-content {
+            max-width: 800px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .connect-title {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .connect-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 3rem;
+        }
+        
+        .connect-btn {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .connect-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: transform 0.5s;
+            transform: skewX(-15deg);
+        }
+        
+        .connect-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+        
+        .connect-btn:hover::before {
+            transform: skewX(-15deg) translateX(200%);
+        }
+        
+        .connect-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .connect-shape {
+            position: absolute;
+            opacity: 0.1;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #0a0a0a;
+            padding: 80px 0 40px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 5%;
+            text-align: center;
+        }
+        
+        .footer-logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+        }
+        
+        .footer-tagline {
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .footer-link {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-family: 'Roboto Mono', monospace;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        .footer-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: #3498db;
+        }
+        
+        .footer-link:hover::after {
+            width: 100%;
+        }
+        
+        .footer-copyright {
+            color: rgba(255, 255, 255, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 2rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Utilities */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 1024px) {
+            .playground-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .playground-viz {
+                grid-row: 1;
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero-title {
+                font-size: 3.5rem;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-btns {
+                flex-direction: column;
+            }
+            
+            .connect-title {
+                font-size: 2.8rem;
+            }
+            
+            .footer-links {
+                flex-wrap: wrap;
+                gap: 1.5rem 3rem;
+            }
+            
+            .grid-container {
+                width: 320px;
+                height: 320px;
+            }
+            
+            .algorithm-race-header {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Header -->
     <header>
-        <div class="container">
+        <nav>
             <div class="logo">
-                <img src="ozeye_logo_draft3.png" alt="Logo" class="logo-image">
+                <a href="index.html" class="logo-link">Ozeye</a>
             </div>
-            
-            <div class="hamburger-menu">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
+            <div class="nav-links">
+                <a href="index.html" class="active" style="color: #3498db;">Home</a>
+                <a href="consulting.html">Consulting</a>
+                <a href="algorithms.html">Algorithms</a>
+                <a href="about.html">About Me</a>
+                <a href="contact.html">Contact</a>
             </div>
-
-            <nav class="desktop-nav">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="services.html">Services</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </nav>
-
-            <nav class="mobile-nav">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="services.html">Services</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
+        </nav>
     </header>
 
-    <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h1>AI Solutions Made Practical</h1>
-                <p>Learn to leverage Large Language Models for your business success</p>
-                <a href="contact.html" class="btn">Start Your Journey</a>
+    <!-- Hero Section with Wheel Animation -->
+    <section class="hero">
+        <div class="wrapper"></div>
+        
+        <div class="hero-content">
+            <h1 class="hero-title">Ozeye</h1>
+            <p class="hero-subtitle">Exploring the intersection of AI, algorithms, and human creativity.</p>
+            <div class="hero-btns">
+                <a href="consulting.html" class="hero-btn primary">AI Consulting</a>
+                <a href="algorithms.html" class="hero-btn secondary">Explore Algorithms</a>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section id="our-approach">
-            <h2 class="section-title">Our Approach</h2>
-            <div class="section-description">
-                We help you understand and implement AI solutions independently, focusing on practical applications and sustainable growth.
+    <!-- Digital Playground Section -->
+    <section class="playground-section">
+        <div class="bg-animation">
+            <div class="bg-grid"></div>
+        </div>
+        
+        <div class="playground-container">
+            <div class="playground-grid">
+                <div class="playground-text fade-in">
+                    <h2 class="section-title">My Digital Playground</h2>
+                    <p>I'm a <strong>computer scientist</strong> and <strong>AI consultant</strong> with a passion for developing intelligent solutions that push the boundaries of what's possible.</p>
+                    <p>My work spans across multiple domains, from algorithmic optimization to AI strategy. I focus on making complex concepts accessible and bridging the gap between technical possibilities and practical applications.</p>
+                    
+                    <div class="explore-links">
+                        <a href="consulting.html" class="explore-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                            AI Consulting
+                        </a>
+                        <a href="algorithms.html" class="explore-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                            Algorithm Demos
+                        </a>
+                        <a href="about.html" class="explore-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                            About Me
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="playground-viz fade-in">
+                    <div class="algorithm-race">
+                        <div class="algorithm-race-header">
+                            <div class="algorithm-legend">
+                                <div class="algorithm-color astar-color"></div>
+                                <span>A* Search</span>
+                            </div>
+                            <div class="algorithm-legend">
+                                <div class="algorithm-color dfs-color"></div>
+                                <span>Depth-First Search</span>
+                            </div>
+                            <div class="algorithm-legend">
+                                <div class="algorithm-color greedy-color"></div>
+                                <span>Greedy Best-First</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid-container">
+                            <div class="algorithm-grid" id="algorithmGrid"></div>
+                            <div class="wave-overlay" id="waveOverlay"></div>
+                        </div>
+                        
+                        <div class="status-bar" id="statusBar">Initializing algorithms...</div>
+                    </div>
+                </div>
             </div>
-            <div class="card-container">
-                <div class="card">
-                    <h3>Save Time</h3>
-                    <p>Skip the learning curve and implement AI solutions faster</p>
-                </div>
-                <div class="card">
-                    <h3>Reduce Risk</h3>
-                    <p>Avoid costly mistakes with expert-guided implementation</p>
-                </div>
-                <div class="card">
-                    <h3>Maximize ROI</h3>
-                    <p>Ensure your AI investments deliver tangible business value</p>
-                </div>
-            </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="section">
-            <h2 class="section-title">Our Expertise</h2>
-            <div class="expertise-cards">
-                <div class="card">
-                    <h3>AI Strategy</h3>
-                    <p>Develop a tailored AI roadmap for your organization</p>
-                </div>
-                <div class="card">
-                    <h3>LLM Integration</h3>
-                    <p>Seamlessly implement cutting-edge language models</p>
-                </div>
-                <div class="card">
-                    <h3>AI Ethics & Security</h3>
-                    <p>Ensure responsible AI use and data protection</p>
-                </div>
-            </div>
-        </section>
+    <!-- Connect Section -->
+    <section class="connect-section">
+        <div class="connect-bg">
+            <!-- Shapes will be added by JavaScript -->
+        </div>
+        
+        <div class="connect-content fade-in">
+            <h2 class="connect-title">Let's Connect</h2>
+            <p class="connect-text">Interested in collaboration, consulting, or discussing ideas? I'm always open to new connections and challenges.</p>
+            <a href="contact.html" class="connect-btn">Get in Touch</a>
+        </div>
+    </section>
 
-        <section id="meet-jupiter">
-            <h2 class="section-title">Meet Jupiter</h2>
-            <div class="section-description">
-                Founder of Ozeye
-            </div>
-            <div class="card-container">
-                <div class="card">
-                    <p>As an AI expert with a degree from Radboud University, I bring practical experience in making AI accessible and actionable for businesses of all sizes.</p>
-                    <a href="about.html" class="btn">Learn More About Us</a>
-                </div>
-            </div>
-        </section>
-
-        <section id="contact" class="section">
-                <div id="contact-card" class="card">
-                <h3>Ready to transform your business with AI? Let's talk.</h3>
-                <p>Email: info@ozeye.com</p>
-                <p>Phone: (646) 937-0807</p>
-                <a href="contact.html" class="btn">Contact Us</a>
-            </div>
-        </section>
-    </main>
-
+    <!-- Footer -->
     <footer>
-        <p>&copy; 2024 Ozeye. All rights reserved.</p>
+        <div class="footer-container">
+            <div class="footer-logo">Ozeye</div>
+            <p class="footer-tagline">Exploring the intersection of AI, algorithms, and human creativity.</p>
+            <div class="footer-links">
+                <a href="contact.html" class="footer-link">Contact</a>
+            </div>
+            <div class="footer-copyright">
+                <p>© 2025 Ozeye. All rights reserved.</p>
+            </div>
+        </div>
     </footer>
-    <script src="script.js"></script>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        // Initialize wheel animation for hero section
+        function initWheelAnimation() {
+            const wrapperEl = document.querySelector('.wrapper');
+            const numberOfEls = 90;
+            const duration = 6000;
+            const delay = duration / numberOfEls;
+            
+            // Create elements for the wheel
+            const elements = [];
+            
+            for (let i = 0; i < numberOfEls; i++) {
+                let el = document.createElement('div');
+                const rotate = (360 / numberOfEls) * i;
+                const translateY = -50;
+                
+                // Initial color (will be updated during animation)
+                el.classList.add('el');
+                el.style.transform = 'rotate(' + rotate + 'deg) translateY(' + translateY + '%)';
+                
+                // Store original rotation for animation reference
+                el.dataset.rotate = rotate;
+                el.dataset.index = i;
+                
+                wrapperEl.appendChild(el);
+                elements.push(el);
+            }
+            
+            // Update colors - monochromatic with slight variations
+            function updateColors(rotation) {
+                elements.forEach(el => {
+                    const index = parseInt(el.dataset.index);
+                    const originalRotate = parseInt(el.dataset.rotate);
+                    
+                    // Calculate position for slight variation in blue shades
+                    const position = (originalRotate / 360);
+                    
+                    // Create a refined electric blue palette
+                    // More vibrant blue hue with minimal variation
+                    const hue = 200 + (Math.random() * 15); // 200-215 (more electric blue range)
+                    
+                    // Higher saturation for more vibrant color
+                    const saturation = 75 + (position * 15) + (Math.random() * 5); // 75-95%
+                    
+                    // Higher lightness for more glowing look
+                    const lightness = 50 + (position * 20) + (Math.random() * 5); // 50-75%
+                    
+                    el.style.backgroundColor = 'hsl(' + hue + ', ' + saturation + '%, ' + lightness + '%)';
+                });
+            }
+            
+            // Initial color update
+            updateColors(0);
+            
+            // Animate individual elements with pulsing effect
+            elements.forEach(el => {
+                const rotate = parseInt(el.dataset.rotate);
+                const translateY = -50;
+                
+                anime({
+                    targets: el,
+                    rotate: [rotate + 'deg', rotate + 8 + 'deg'],
+                    translateY: [translateY + '%', (translateY + 8) + '%'],
+                    scale: [1, 1.2],
+                    easing: 'easeInOutSine',
+                    direction: 'alternate',
+                    duration: 1000 + Math.random() * 1000,
+                    loop: true
+                });
+            });
+            
+            // Animate the entire wheel rotation
+            anime({
+                targets: {},
+                duration: 30000,
+                easing: 'linear',
+                loop: true,
+                update: function(anim) {
+                    // Calculate current rotation (0-360 degrees)
+                    const rotation = (anim.progress / 100) * 360;
+                    
+                    // Update colors based on the current rotation
+                    updateColors(rotation);
+                }
+            });
+        }
+
+        // Initialize algorithm race visualization
+        function initAlgorithmRace() {
+            // Constants
+            const GRID_SIZE = 32;
+            const CELL_STATES = {
+                EMPTY: 'empty',
+                WALL: 'wall',
+                START_A: 'start-a',
+                START_B: 'start-b',
+                START_C: 'start-c',
+                GOAL: 'goal',
+                VISITED_A: 'visited-a',
+                VISITED_B: 'visited-b',
+                VISITED_C: 'visited-c',
+                CURRENT_A: 'current-a',
+                CURRENT_B: 'current-b',
+                CURRENT_C: 'current-c',
+                PATH_A: 'path-a',
+                PATH_B: 'path-b',
+                PATH_C: 'path-c'
+            };
+            
+            // Colors for algorithms
+            const COLORS = {
+                ASTAR: '#e74c3c', // Red
+                DFS: '#f1c40f',   // Yellow
+                GREEDY: '#9b59b6' // Purple
+            };
+            
+            // Initialize DOM elements
+            const grid = document.getElementById('algorithmGrid');
+            const statusBar = document.getElementById('statusBar');
+            const waveOverlay = document.getElementById('waveOverlay');
+            
+            // Data structures for the grid and algorithms
+            let gridData = [];
+            let cells = [];
+            
+            // Start and goal positions
+            const startPositions = [
+                { row: 2, col: 5 },  // A* start
+                { row: 2, col: 15 }, // DFS start
+                { row: 2, col: 25 }  // Greedy start
+            ];
+            
+            const goalPosition = { row: GRID_SIZE - 3, col: Math.floor(GRID_SIZE / 2) };
+            
+            // Algorithm states
+            let astar = {
+                queue: [],
+                visited: new Set(),
+                cameFrom: new Map(),
+                done: false,
+                pathLength: Infinity,
+                reachedGoalAt: null
+            };
+            
+            let dfs = {
+                stack: [],
+                visited: new Set(),
+                cameFrom: new Map(),
+                done: false,
+                pathLength: Infinity,
+                reachedGoalAt: null
+            };
+            
+            let greedy = {
+                queue: [],
+                visited: new Set(),
+                cameFrom: new Map(),
+                done: false,
+                pathLength: Infinity,
+                reachedGoalAt: null
+            };
+            
+            // Animation state
+            let animationState = {
+                running: false,
+                winner: null,
+                currentMaze: 0,
+                waveAnimationDone: false,
+                pathFound: false,
+                // Animation settings - SLOWED DOWN
+                stepsPerFrame: 1,        // Reduced from 4 (slower)
+                animationDelay: 150,     // Increased from 50 (slower animation)
+                animationID: null,       // Store animation ID
+                goalReachedCount: 0      // Track how many algorithms found the goal
+            };
+            
+            // Maze patterns designed to favor different algorithms
+            const mazePatterns = [
+                {
+                    name: "Long Corridors",
+                    favors: 'B', // DFS
+                    generate: generateDfsFavoredMaze
+                },
+                {
+                    name: "Direct Path",
+                    favors: 'C', // Greedy
+                    generate: generateGreedyFavoredMaze
+                },
+                {
+                    name: "Complex Maze",
+                    favors: 'A', // A*
+                    generate: generateAStarFavoredMaze
+                }
+            ];
+            
+            // Initialize grid and create cells
+            function initializeGrid() {
+                grid.innerHTML = '';
+                gridData = [];
+                cells = [];
+                
+                // Create grid cells
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    const rowData = [];
+                    const rowCells = [];
+                    
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell ' + CELL_STATES.EMPTY;
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        grid.appendChild(cell);
+                        
+                        rowData.push(CELL_STATES.EMPTY);
+                        rowCells.push(cell);
+                    }
+                    
+                    gridData.push(rowData);
+                    cells.push(rowCells);
+                }
+            }
+            
+            // Update cell state
+            function updateCell(row, col, state) {
+                if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return;
+                
+                // Update data model
+                gridData[row][col] = state;
+                
+                // Update visual representation
+                const cell = cells[row][col];
+                
+                // Remove all state classes
+                cell.className = 'cell';
+                
+                // Add new state class
+                cell.classList.add(state);
+            }
+            
+            // Add pulse animation to a cell
+            function pulseCell(row, col) {
+                const cell = cells[row][col];
+                cell.classList.remove('pulse');
+                
+                // Trigger reflow to restart animation
+                void cell.offsetWidth;
+                
+                cell.classList.add('pulse');
+            }
+            
+            // Reset the grid
+            function resetGrid() {
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        updateCell(row, col, CELL_STATES.EMPTY);
+                    }
+                }
+            }
+            
+            // Reset algorithms
+            function resetAlgorithms() {
+                // A* algorithm
+                astar = {
+                    queue: [[startPositions[0].row, startPositions[0].col, 0]],
+                    visited: new Set([`${startPositions[0].row},${startPositions[0].col}`]),
+                    cameFrom: new Map(),
+                    done: false,
+                    pathLength: Infinity,
+                    reachedGoalAt: null
+                };
+                
+                // DFS algorithm
+                dfs = {
+                    stack: [[startPositions[1].row, startPositions[1].col]],
+                    visited: new Set([`${startPositions[1].row},${startPositions[1].col}`]),
+                    cameFrom: new Map(),
+                    done: false,
+                    pathLength: Infinity,
+                    reachedGoalAt: null
+                };
+                
+                // Greedy Best-First Search algorithm
+                greedy = {
+                    queue: [[startPositions[2].row, startPositions[2].col]],
+                    visited: new Set([`${startPositions[2].row},${startPositions[2].col}`]),
+                    cameFrom: new Map(),
+                    done: false,
+                    pathLength: Infinity,
+                    reachedGoalAt: null
+                };
+                
+                // Reset animation state
+                animationState.winner = null;
+                animationState.waveAnimationDone = false;
+                animationState.pathFound = false;
+                animationState.goalReachedCount = 0;
+                
+                // Cancel any running animation
+                if (animationState.animationID) {
+                    clearTimeout(animationState.animationID);
+                }
+            }
+            
+            // Helper function to calculate Manhattan distance
+            function manhattanDistance(r1, c1, r2, c2) {
+                return Math.abs(r1 - r2) + Math.abs(c1 - c2);
+            }
+            
+            // Helper function to calculate Euclidean distance (used for Greedy)
+            function euclideanDistance(r1, c1, r2, c2) {
+                return Math.sqrt(Math.pow(r1 - r2, 2) + Math.pow(c1 - c2, 2));
+            }
+            
+            // Get valid neighbors for a cell
+            function getNeighbors(row, col) {
+                const directions = [
+                    [1, 0],  // Down
+                    [0, 1],  // Right
+                    [0, -1], // Left
+                    [-1, 0]  // Up
+                ];
+                
+                const neighbors = [];
+                
+                for (const [dr, dc] of directions) {
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    
+                    if (newRow >= 0 && newRow < GRID_SIZE && 
+                        newCol >= 0 && newCol < GRID_SIZE && 
+                        gridData[newRow][newCol] !== CELL_STATES.WALL) {
+                        neighbors.push([newRow, newCol]);
+                    }
+                }
+                
+                return neighbors;
+            }
+            
+            // Place starts and goal
+            function placeStartsAndGoal() {
+                // Place starts
+                updateCell(startPositions[0].row, startPositions[0].col, CELL_STATES.START_A);
+                updateCell(startPositions[1].row, startPositions[1].col, CELL_STATES.START_B);
+                updateCell(startPositions[2].row, startPositions[2].col, CELL_STATES.START_C);
+                
+                // Place goal
+                updateCell(goalPosition.row, goalPosition.col, CELL_STATES.GOAL);
+                
+                // Ensure areas around starts and goal are clear
+                for (const pos of [...startPositions, goalPosition]) {
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            const r = pos.row + dr;
+                            const c = pos.col + dc;
+                            
+                            // Skip the positions of start and goal themselves
+                            if (dr === 0 && dc === 0) continue;
+                            
+                            // Clear surrounding cells
+                            if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
+                                if (gridData[r][c] !== CELL_STATES.START_A &&
+                                    gridData[r][c] !== CELL_STATES.START_B &&
+                                    gridData[r][c] !== CELL_STATES.START_C &&
+                                    gridData[r][c] !== CELL_STATES.GOAL) {
+                                    updateCell(r, c, CELL_STATES.EMPTY);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Maze generator for DFS favored maze
+            function generateDfsFavoredMaze() {
+                resetGrid();
+                
+                // Create vertical corridors that favor DFS
+                for (let col = 0; col < GRID_SIZE; col += 4) {
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (col > 0 && col < GRID_SIZE - 1) {
+                            updateCell(row, col, CELL_STATES.WALL);
+                        }
+                    }
+                    
+                    // Create openings
+                    if (col > 0 && col < GRID_SIZE - 1) {
+                        const opening1 = Math.floor(Math.random() * 10) + 5;
+                        const opening2 = Math.floor(Math.random() * 10) + 18;
+                        updateCell(opening1, col, CELL_STATES.EMPTY);
+                        updateCell(opening2, col, CELL_STATES.EMPTY);
+                    }
+                }
+                
+                // Add some horizontal barriers with openings that favor DFS
+                for (let row = 8; row < GRID_SIZE - 8; row += 8) {
+                    const openingCol = row % 16 === 0 ? 10 : 20;
+                    
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        if (Math.abs(col - openingCol) > 3 && Math.abs(col - goalPosition.col) > 3) {
+                            updateCell(row, col, CELL_STATES.WALL);
+                        }
+                    }
+                }
+                
+                // Create a path from DFS start to goal
+                let currRow = startPositions[1].row + 1;
+                let currCol = startPositions[1].col;
+                
+                while (currRow < goalPosition.row - 1) {
+                    // Clear the path
+                    updateCell(currRow, currCol, CELL_STATES.EMPTY);
+                    
+                    // Move mostly down (DFS will find this)
+                    if (Math.random() < 0.8) {
+                        currRow++;
+                    } else if (currCol < goalPosition.col) {
+                        currCol++;
+                    } else {
+                        currCol--;
+                    }
+                    
+                    // Ensure path is clear
+                    updateCell(currRow, currCol, CELL_STATES.EMPTY);
+                }
+                
+                // Add some random obstacles
+                addRandomObstacles(80, (row, col) => {
+                    return Math.abs(col - startPositions[1].col) > 5 || 
+                           row > goalPosition.row / 2;
+                });
+                
+                // Place starts and goal
+                placeStartsAndGoal();
+            }
+            
+            // Helper function to add random obstacles
+            function addRandomObstacles(count, condition = () => true) {
+                for (let i = 0; i < count; i++) {
+                    const row = Math.floor(Math.random() * GRID_SIZE);
+                    const col = Math.floor(Math.random() * GRID_SIZE);
+                    
+                    // Keep start and goal areas clear
+                    const clearStartArea = startPositions.some(pt => 
+                        manhattanDistance(row, col, pt.row, pt.col) < 3);
+                    const clearGoalArea = manhattanDistance(row, col, goalPosition.row, goalPosition.col) < 3;
+                    
+                    if (!clearStartArea && !clearGoalArea && condition(row, col)) {
+                        updateCell(row, col, CELL_STATES.WALL);
+                    }
+                }
+            }
+            
+            // Maze generator for Greedy favored maze
+            function generateGreedyFavoredMaze() {
+                resetGrid();
+                
+                // Create patterns that favor direct path to goal (good for Greedy)
+                for (let i = 0; i < GRID_SIZE - 5; i += 3) {
+                    for (let j = 0; j < 3; j++) {
+                        if (j !== 1) { // Leave an opening for Greedy
+                            updateCell(5 + i, 5 + i + j, CELL_STATES.WALL);
+                        }
+                    }
+                }
+                
+                // Create obstacles that trap others but Greedy can navigate
+                for (let row = 6; row < GRID_SIZE - 6; row += 6) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        // Create pattern with gaps
+                        if (col % 6 !== 3 && Math.abs(col - goalPosition.col) > 3) {
+                            updateCell(row, col, CELL_STATES.WALL);
+                        }
+                    }
+                }
+                
+                // Create a direct path from Greedy start to goal
+                let currRow = startPositions[2].row;
+                let currCol = startPositions[2].col;
+                
+                while (currRow < goalPosition.row - 1) {
+                    // Clear path
+                    updateCell(currRow, currCol, CELL_STATES.EMPTY);
+                    
+                    // Move toward goal (good for Greedy)
+                    if (currCol < goalPosition.col) {
+                        currCol++;
+                    } else if (currCol > goalPosition.col) {
+                        currCol--;
+                    }
+                    
+                    if (Math.random() < 0.7) {
+                        currRow++;
+                    }
+                    
+                    updateCell(currRow, currCol, CELL_STATES.EMPTY);
+                }
+                
+                // Add random obstacles
+                addRandomObstacles(70, (row, col) => {
+                    // Avoid the path we made for Greedy
+                    return Math.abs(col - goalPosition.col) > 3 || row < startPositions[2].row;
+                });
+                
+                // Place starts and goal
+                placeStartsAndGoal();
+            }
+            
+            // Maze generator for A* favored maze
+            function generateAStarFavoredMaze() {
+                resetGrid();
+                
+                // Create a grid pattern that A* navigates well
+                for (let row = 4; row < GRID_SIZE - 4; row += 4) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        if (col % 3 !== 0) {
+                            updateCell(row, col, CELL_STATES.WALL);
+                        }
+                    }
+                }
+                
+                // Create vertical barriers
+                for (let col = 4; col < GRID_SIZE - 4; col += 4) {
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (row % 3 !== 0) {
+                            updateCell(row, col, CELL_STATES.WALL);
+                        }
+                    }
+                }
+                
+                // Create a path that A* can find optimally
+                let currRow = startPositions[0].row;
+                let currCol = startPositions[0].col;
+                let g = 0;
+                
+                while (currRow < goalPosition.row - 2) {
+                    updateCell(currRow, currCol, CELL_STATES.EMPTY);
+                    
+                    // Consider all moves and pick based on A* heuristic
+                    const moves = [
+                        { dr: 1, dc: 0 },
+                        { dr: 0, dc: 1 },
+                        { dr: 0, dc: -1 },
+                        { dr: -1, dc: 0 }
+                    ];
+                    
+                    const options = [];
+                    
+                    for (const { dr, dc } of moves) {
+                        const newRow = currRow + dr;
+                        const newCol = currCol + dc;
+                        
+                        if (newRow >= 0 && newRow < GRID_SIZE && 
+                            newCol >= 0 && newCol < GRID_SIZE) {
+                            const gCost = g + 1;
+                            const hCost = manhattanDistance(newRow, newCol, goalPosition.row, goalPosition.col);
+                            const fCost = gCost + hCost;
+                            
+                            options.push({ row: newRow, col: newCol, f: fCost });
+                        }
+                    }
+                    
+                    // Sort by f-score and pick best option for A*
+                    options.sort((a, b) => a.f - b.f);
+                    const choice = options[0]; // Best option for A*
+                    
+                    currRow = choice.row;
+                    currCol = choice.col;
+                    g++;
+                }
+                
+                // Add random obstacles
+                addRandomObstacles(100);
+                
+                // Place starts and goal
+                placeStartsAndGoal();
+            }
+            
+            // Step the A* algorithm (one iteration)
+            function stepAstar() {
+                if (astar.done || astar.queue.length === 0) return false;
+                
+                // Sort queue by f-score
+                astar.queue.sort((a, b) => {
+                    const aFScore = a[2] + manhattanDistance(a[0], a[1], goalPosition.row, goalPosition.col);
+                    const bFScore = b[2] + manhattanDistance(b[0], b[1], goalPosition.row, goalPosition.col);
+                    return aFScore - bFScore;
+                });
+                
+                const [row, col, gScore] = astar.queue.shift();
+                const key = `${row},${col}`;
+                
+                // Mark as visited with a pulse animation
+                if (gridData[row][col] !== CELL_STATES.START_A && 
+                    gridData[row][col] !== CELL_STATES.GOAL) {
+                    updateCell(row, col, CELL_STATES.VISITED_A);
+                    pulseCell(row, col);
+                }
+                
+                // Check if reached goal
+                if (row === goalPosition.row && col === goalPosition.col) {
+                    astar.done = true;
+                    astar.reachedGoalAt = Date.now();
+                    astar.pathLength = calculatePathLength(astar.cameFrom, row, col);
+                    animationState.goalReachedCount++;
+                    
+                    // Play goal animation
+                    pulseCell(row, col);
+                    
+                    // Determine winner
+                    if (!animationState.winner) {
+                        animationState.winner = 'A';
+                    }
+                    return true;
+                }
+                
+                // Explore neighbors
+                for (const [newRow, newCol] of getNeighbors(row, col)) {
+                    const newKey = `${newRow},${newCol}`;
+                    
+                    if (!astar.visited.has(newKey)) {
+                        astar.visited.add(newKey);
+                        astar.cameFrom.set(newKey, key);
+                        astar.queue.push([newRow, newCol, gScore + 1]);
+                        
+                        // Mark as current
+                        if (gridData[newRow][newCol] !== CELL_STATES.START_A && 
+                            gridData[newRow][newCol] !== CELL_STATES.GOAL) {
+                            updateCell(newRow, newCol, CELL_STATES.CURRENT_A);
+                        }
+                    }
+                }
+                
+                return false;
+            }
+            
+            // Step the DFS algorithm (one iteration)
+            function stepDfs() {
+                if (dfs.done || dfs.stack.length === 0) return false;
+                
+                // Pop from stack (LIFO)
+                const [row, col] = dfs.stack.pop();
+                const key = `${row},${col}`;
+                
+                // Mark as visited with a pulse animation
+                if (gridData[row][col] !== CELL_STATES.START_B && 
+                    gridData[row][col] !== CELL_STATES.GOAL) {
+                    updateCell(row, col, CELL_STATES.VISITED_B);
+                    pulseCell(row, col);
+                }
+                
+                // Check if reached goal
+                if (row === goalPosition.row && col === goalPosition.col) {
+                    dfs.done = true;
+                    dfs.reachedGoalAt = Date.now();
+                    dfs.pathLength = calculatePathLength(dfs.cameFrom, row, col);
+                    animationState.goalReachedCount++;
+                    
+                    // Play goal animation
+                    pulseCell(row, col);
+                    
+                    // Determine winner
+                    if (!animationState.winner) {
+                        animationState.winner = 'B';
+                    }
+                    return true;
+                }
+                
+                // Get neighbors
+                const neighbors = getNeighbors(row, col);
+                
+                // Process neighbors in reverse order (for depth-first behavior)
+                for (let i = neighbors.length - 1; i >= 0; i--) {
+                    const [newRow, newCol] = neighbors[i];
+                    const newKey = `${newRow},${newCol}`;
+                    
+                    if (!dfs.visited.has(newKey)) {
+                        dfs.visited.add(newKey);
+                        dfs.cameFrom.set(newKey, key);
+                        dfs.stack.push([newRow, newCol]);
+                        
+                        // Mark as current
+                        if (gridData[newRow][newCol] !== CELL_STATES.START_B && 
+                            gridData[newRow][newCol] !== CELL_STATES.GOAL) {
+                            updateCell(newRow, newCol, CELL_STATES.CURRENT_B);
+                        }
+                    }
+                }
+                
+                return false;
+            }
+            
+            // Step the Greedy Best-First Search algorithm (one iteration)
+            function stepGreedy() {
+                if (greedy.done || greedy.queue.length === 0) return false;
+                
+                // Sort queue by heuristic (distance to goal)
+                greedy.queue.sort((a, b) => {
+                    const aHeuristic = euclideanDistance(a[0], a[1], goalPosition.row, goalPosition.col);
+                    const bHeuristic = euclideanDistance(b[0], b[1], goalPosition.row, goalPosition.col);
+                    return aHeuristic - bHeuristic;
+                });
+                
+                const [row, col] = greedy.queue.shift();
+                const key = `${row},${col}`;
+                
+                // Mark as visited with a pulse animation
+                if (gridData[row][col] !== CELL_STATES.START_C && 
+                    gridData[row][col] !== CELL_STATES.GOAL) {
+                    updateCell(row, col, CELL_STATES.VISITED_C);
+                    pulseCell(row, col);
+                }
+                
+                // Check if reached goal
+                if (row === goalPosition.row && col === goalPosition.col) {
+                    greedy.done = true;
+                    greedy.reachedGoalAt = Date.now();
+                    greedy.pathLength = calculatePathLength(greedy.cameFrom, row, col);
+                    animationState.goalReachedCount++;
+                    
+                    // Play goal animation
+                    pulseCell(row, col);
+                    
+                    // Determine winner
+                    if (!animationState.winner) {
+                        animationState.winner = 'C';
+                    }
+                    return true;
+                }
+                
+                // Explore neighbors
+                for (const [newRow, newCol] of getNeighbors(row, col)) {
+                    const newKey = `${newRow},${newCol}`;
+                    
+                    if (!greedy.visited.has(newKey)) {
+                        greedy.visited.add(newKey);
+                        greedy.cameFrom.set(newKey, key);
+                        greedy.queue.push([newRow, newCol]);
+                        
+                        // Mark as current
+                        if (gridData[newRow][newCol] !== CELL_STATES.START_C && 
+                            gridData[newRow][newCol] !== CELL_STATES.GOAL) {
+                            updateCell(newRow, newCol, CELL_STATES.CURRENT_C);
+                        }
+                    }
+                }
+                
+                return false;
+            }
+            
+            // Calculate path length
+            function calculatePathLength(cameFrom, goalRow, goalCol) {
+                let pathLength = 0;
+                let current = `${goalRow},${goalCol}`;
+                
+                while (cameFrom.has(current)) {
+                    pathLength++;
+                    current = cameFrom.get(current);
+                }
+                
+                return pathLength;
+            }
+            
+            // Determine the winner when multiple algorithms reach the goal
+            function determineWinner() {
+                // If only one algorithm reached the goal, it's the winner
+                if (animationState.goalReachedCount === 1) {
+                    if (astar.done) return 'A';
+                    if (dfs.done) return 'B';
+                    if (greedy.done) return 'C';
+                }
+                
+                // If multiple algorithms reached the goal, use tiebreakers:
+                // 1. First one to reach the goal
+                // 2. Shortest path if tied on time
+                
+                const candidates = [];
+                
+                if (astar.done) candidates.push({algo: 'A', time: astar.reachedGoalAt, pathLength: astar.pathLength});
+                if (dfs.done) candidates.push({algo: 'B', time: dfs.reachedGoalAt, pathLength: dfs.pathLength});
+                if (greedy.done) candidates.push({algo: 'C', time: greedy.reachedGoalAt, pathLength: greedy.pathLength});
+                
+                // Sort by time first, then by path length
+                candidates.sort((a, b) => {
+                    // First criterion: time to reach goal
+                    if (a.time !== b.time) return a.time - b.time;
+                    
+                    // Tiebreaker: path length
+                    return a.pathLength - b.pathLength;
+                });
+                
+                return candidates.length > 0 ? candidates[0].algo : mazePatterns[animationState.currentMaze].favors;
+            }
+            
+            // Trace the winning path
+            function tracePath() {
+                if (!animationState.winner) return;
+                
+                // Determine actual winner with tiebreaker
+                if (animationState.goalReachedCount > 1) {
+                    animationState.winner = determineWinner();
+                }
+                
+                const algorithm = animationState.winner === 'A' ? astar : 
+                                 (animationState.winner === 'B' ? dfs : greedy);
+                                 
+                const pathState = animationState.winner === 'A' ? CELL_STATES.PATH_A : 
+                                 (animationState.winner === 'B' ? CELL_STATES.PATH_B : CELL_STATES.PATH_C);
+                
+                let current = `${goalPosition.row},${goalPosition.col}`;
+                const path = [];
+                
+                // Build path in reverse order
+                while (algorithm.cameFrom.has(current)) {
+                    const [row, col] = current.split(',').map(Number);
+                    
+                    // Add to path (excluding start and goal)
+                    if ((gridData[row][col] !== CELL_STATES.START_A && 
+                         gridData[row][col] !== CELL_STATES.START_B && 
+                         gridData[row][col] !== CELL_STATES.START_C && 
+                         gridData[row][col] !== CELL_STATES.GOAL)) {
+                        path.push([row, col]);
+                    }
+                    
+                    current = algorithm.cameFrom.get(current);
+                }
+                
+                // Reverse the path so it goes from start to goal
+                path.reverse();
+                
+                // Animate path tracing
+                let i = 0;
+                
+                // SLOWED DOWN: Increased delay from 30ms to 60ms
+                function animatePathStep() {
+                    if (i < path.length) {
+                        const [row, col] = path[i];
+                        updateCell(row, col, pathState);
+                        pulseCell(row, col);
+                        i++;
+                        setTimeout(animatePathStep, 60);
+                    } else {
+                        // Path animation complete, start wave
+                        setTimeout(startWaveAnimation, 300);
+                    }
+                }
+                
+                // Start path animation
+                setTimeout(animatePathStep, 300);
+                
+                // Update status
+                const algorithmName = animationState.winner === 'A' ? 'A* Search' : 
+                                     (animationState.winner === 'B' ? 'Depth-First Search' : 'Greedy Best-First');
+                statusBar.textContent = `${algorithmName} wins!`;
+                
+                animationState.pathFound = true;
+            }
+            
+            // Start wave animation
+            function startWaveAnimation() {
+                // Determine wave color based on winner
+                const waveColor = animationState.winner === 'A' ? COLORS.ASTAR : 
+                                 (animationState.winner === 'B' ? COLORS.DFS : COLORS.GREEDY);
+                
+                // Setup wave overlay for animation
+                waveOverlay.style.backgroundImage = `radial-gradient(circle at center, ${waveColor}00 0%, ${waveColor}aa 70%, ${waveColor}00 100%)`;
+                waveOverlay.style.transition = 'none';
+                waveOverlay.style.backgroundSize = '0% 0%';
+                waveOverlay.style.backgroundPosition = 'center';
+                waveOverlay.style.backgroundRepeat = 'no-repeat';
+                waveOverlay.style.opacity = '0';
+                
+                // Force reflow
+                void waveOverlay.offsetWidth;
+                
+                // SLOWED DOWN: Longer wave animation (2.5s instead of 1.5s)
+                waveOverlay.style.transition = 'all 2.5s cubic-bezier(0.165, 0.84, 0.44, 1)';
+                waveOverlay.style.backgroundSize = '200% 200%';
+                waveOverlay.style.opacity = '0.8';
+                
+                // When wave animation completes
+                waveOverlay.addEventListener('transitionend', function handleWaveEnd() {
+                    // Clean up listener
+                    waveOverlay.removeEventListener('transitionend', handleWaveEnd);
+                    
+                    // Fade out the wave
+                    waveOverlay.style.opacity = '0';
+                    
+                    // Mark wave animation as done
+                    animationState.waveAnimationDone = true;
+                    
+                    // Schedule next maze
+                    setTimeout(nextMaze, 800);
+                }, {once: true});
+            }
+            
+            // Move to next maze
+            function nextMaze() {
+                // Move to next maze pattern
+                animationState.currentMaze = (animationState.currentMaze + 1) % mazePatterns.length;
+                
+                // Generate new maze
+                mazePatterns[animationState.currentMaze].generate();
+                
+                // Reset algorithms
+                resetAlgorithms();
+                
+                // Reset wave overlay
+                waveOverlay.style.transition = 'none';
+                waveOverlay.style.backgroundSize = '0% 0%';
+                waveOverlay.style.opacity = '0';
+                
+                // Update status display
+                statusBar.textContent = `New maze: ${mazePatterns[animationState.currentMaze].name}`;
+                
+                // Restart the animation with a delay
+                setTimeout(() => {
+                    animationState.running = true;
+                    runAnimationLoop();
+                }, 500);
+            }
+            
+            // Main animation loop with controllable speed
+            function runAnimationLoop() {
+                if (!animationState.running) return;
+                
+                let continueAnimation = true;
+                
+                // If no winner yet, step algorithms
+                if (!animationState.winner) {
+                    // Run algorithm steps, but slower
+                    for (let i = 0; i < animationState.stepsPerFrame; i++) {
+                        // Step each algorithm
+                        const astarReachedGoal = stepAstar();
+                        const dfsReachedGoal = stepDfs();
+                        const greedyReachedGoal = stepGreedy();
+                        
+                        // If an algorithm reached the goal, continue a bit longer
+                        // to see if others reach it too (for tiebreaker)
+                        if (astarReachedGoal || dfsReachedGoal || greedyReachedGoal) {
+                            // Run a few more steps after one algorithm reaches goal
+                            if (animationState.goalReachedCount === 1) {
+                                // Set a timeout to finalize the winner and trace path
+                                // This allows for ties when algorithms reach the goal in the same frame
+                                setTimeout(() => {
+                                    // Determine final winner (with tiebreaker if needed)
+                                    animationState.winner = determineWinner();
+                                    
+                                    // Trace path if not already done
+                                    if (!animationState.pathFound) {
+                                        tracePath();
+                                    }
+                                }, 500); // Give other algorithms 500ms to reach the goal too
+                                
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Check if all algorithms are done
+                    if ((astar.done || astar.queue.length === 0) &&
+                        (dfs.done || dfs.stack.length === 0) &&
+                        (greedy.done || greedy.queue.length === 0) &&
+                        !animationState.pathFound) {
+                        
+                        // If no algorithm reached the goal naturally, use the favored one
+                        if (animationState.goalReachedCount === 0) {
+                            animationState.winner = mazePatterns[animationState.currentMaze].favors;
+                            
+                            // Trace path of the favored algorithm
+                            setTimeout(() => {
+                                tracePath();
+                            }, 300);
+                        }
+                    }
+                    
+                    // Continue animation as long as we don't have a traced path
+                    continueAnimation = !animationState.pathFound;
+                } else {
+                    // If we have a winner but path not traced yet, continue until path is traced
+                    continueAnimation = !animationState.pathFound;
+                }
+                
+                // Schedule next animation frame
+                if (continueAnimation) {
+                    animationState.animationID = setTimeout(runAnimationLoop, animationState.animationDelay);
+                }
+            }
+            
+            // Start the animation
+            function start() {
+                // Initialize the grid
+                initializeGrid();
+                
+                // Generate initial maze
+                mazePatterns[animationState.currentMaze].generate();
+                
+                // Reset algorithms
+                resetAlgorithms();
+                
+                // Start animation
+                animationState.running = true;
+                
+                // Update status
+                statusBar.textContent = `Starting: ${mazePatterns[animationState.currentMaze].name}`;
+                
+                // Start with a delay
+                setTimeout(() => {
+                    runAnimationLoop();
+                }, 500);
+            }
+            
+            // Initialize and start
+            start();
+        }
+
+        // Connect section background animation
+        function initConnectBg() {
+            const connectBg = document.querySelector('.connect-bg');
+            
+            // Add circles
+            for (let i = 0; i < 5; i++) {
+                const circle = document.createElement('div');
+                circle.classList.add('connect-shape');
+                circle.style.width = `${100 + i * 100}px`;
+                circle.style.height = `${100 + i * 100}px`;
+                circle.style.border = '1px solid rgba(52, 152, 219, 0.2)';
+                circle.style.borderRadius = '50%';
+                circle.style.top = '50%';
+                circle.style.left = '50%';
+                circle.style.transform = 'translate(-50%, -50%)';
+                
+                connectBg.appendChild(circle);
+            }
+            
+            // Animate circle shapes
+            anime({
+                targets: '.connect-shape',
+                scale: [0, 1],
+                opacity: [0, 0.2],
+                delay: anime.stagger(200),
+                duration: 1500,
+                easing: 'easeOutSine',
+                complete: function() {
+                    // Continuous pulsing animation
+                    anime({
+                        targets: '.connect-shape',
+                        scale: [1, 1.1],
+                        opacity: [0.2, 0.1],
+                        easing: 'easeInOutSine',
+                        duration: 3000,
+                        direction: 'alternate',
+                        loop: true
+                    });
+                }
+            });
+        }
+
+        // Scroll animations
+        function handleScrollAnimations() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -10% 0px'
+            });
+
+            fadeElements.forEach(element => {
+                observer.observe(element);
+            });
+        }
+
+        // On document ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('header');
+            
+            // Fade in header
+            setTimeout(() => {
+                header.style.opacity = '1';
+            }, 1000);
+            
+            // Initialize wheel animation
+            initWheelAnimation();
+            
+            // Initialize algorithm race
+            initAlgorithmRace();
+            
+            // Initialize connect section background
+            initConnectBg();
+            
+            // Initialize scroll animations
+            handleScrollAnimations();
+        });
+    </script>
 </body>
 </html>

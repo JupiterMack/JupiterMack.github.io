@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Search Algorithm Visualizations</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Search Algorithms</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Grid and Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- Grid Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Search Grid</h2>
+                    <div class="w-full h-[500px] flex justify-center items-center relative" id="grid-container">
+                        <canvas id="grid-canvas" width="500" height="500" class="border border-gray-300 dark:border-gray-600"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>A* algorithm finding the optimal path from start to goal</span>
+                    </div>
+                    
+                    <!-- Grid Legend -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-4">
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-green-500 rounded-sm mr-2"></div>
+                            <span>Start</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-red-500 rounded-sm mr-2"></div>
+                            <span>Goal</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-gray-700 dark:bg-gray-500 rounded-sm mr-2"></div>
+                            <span>Wall</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-blue-200 dark:bg-blue-800 rounded-sm mr-2"></div>
+                            <span>Open Set</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-purple-200 dark:bg-purple-800 rounded-sm mr-2"></div>
+                            <span>Closed Set</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-yellow-400 rounded-sm mr-2"></div>
+                            <span>Path</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search Statistics -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Search Statistics</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Nodes Explored</h3>
+                            <p class="text-2xl font-semibold" id="nodes-explored">0</p>
+                        </div>
+                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Nodes in Queue</h3>
+                            <p class="text-2xl font-semibold" id="nodes-in-queue">0</p>
+                        </div>
+                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Path Length</h3>
+                            <p class="text-2xl font-semibold" id="path-length">-</p>
+                        </div>
+                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Path Cost</h3>
+                            <p class="text-2xl font-semibold" id="path-cost">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Algorithm Comparison Chart -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Algorithm Performance</h2>
+                    <div class="w-full h-[250px]">
+                        <canvas id="performance-chart" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Comparison of different search algorithms</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls and Information Panel -->
+            <div class="w-full lg:w-2/5">
+                <!-- Controls Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Grid Setup -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Grid Setup</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="grid-size" class="mr-2">Grid Size:</label>
+                                    <select id="grid-size" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="10">10×10</option>
+                                        <option value="15">15×15</option>
+                                        <option value="20" selected>20×20</option>
+                                        <option value="30">30×30</option>
+                                        <option value="40">40×40</option>
+                                        <option value="50">50×50</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="obstacle-density" class="mr-2">Obstacle Density:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="obstacle-density" min="0" max="50" step="5" value="30" class="w-32">
+                                        <span id="obstacle-density-value" class="ml-2 w-12 text-sm">30%</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="maze-type" class="mr-2">Maze Type:</label>
+                                    <select id="maze-type" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="random" selected>Random Obstacles</option>
+                                        <option value="maze">Recursive Maze</option>
+                                        <option value="rooms">Connected Rooms</option>
+                                        <option value="labyrinth">Labyrinth</option>
+                                        <option value="spiral">Spiral</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="edit-mode" class="w-4 h-4">
+                                    <label for="edit-mode">Edit Grid</label>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="wall-tool" value="wall" class="w-4 h-4" checked>
+                                        <label for="wall-tool">Wall</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="start-tool" value="start" class="w-4 h-4">
+                                        <label for="start-tool">Start</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="goal-tool" value="goal" class="w-4 h-4">
+                                        <label for="goal-tool">Goal</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="weight-tool" value="weight" class="w-4 h-4">
+                                        <label for="weight-tool">Weight</label>
+                                    </div>
+                                    <div class="edit-tool-container flex items-center gap-2">
+                                        <input type="radio" name="edit-tool" id="erase-tool" value="erase" class="w-4 h-4">
+                                        <label for="erase-tool">Erase</label>
+                                    </div>
+                                </div>
+                                
+                                <button id="generate-grid" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Grid</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Algorithm Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="algorithm-type" class="mr-2">Algorithm:</label>
+                                    <select id="algorithm-type" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="astar" selected>A* Search</option>
+                                        <option value="dijkstra">Dijkstra's Algorithm</option>
+                                        <option value="greedy">Greedy Best-First</option>
+                                        <option value="bfs">Breadth-First Search</option>
+                                        <option value="dfs">Depth-First Search</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between" id="heuristic-container">
+                                    <label for="heuristic-type" class="mr-2">Heuristic:</label>
+                                    <select id="heuristic-type" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="manhattan" selected>Manhattan Distance</option>
+                                        <option value="euclidean">Euclidean Distance</option>
+                                        <option value="chebyshev">Chebyshev Distance</option>
+                                        <option value="octile">Octile Distance</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="diagonal-movement" class="mr-2">Allow Diagonal Movement:</label>
+                                    <div class="relative inline-block w-12 h-6 mr-2">
+                                        <input type="checkbox" id="diagonal-movement" class="sr-only">
+                                        <span class="slider absolute cursor-pointer inset-0 bg-gray-300 dark:bg-gray-600 rounded-full transition-all duration-300 ease-in-out"></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="weighted-nodes" class="mr-2">Use Weighted Nodes:</label>
+                                    <div class="relative inline-block w-12 h-6 mr-2">
+                                        <input type="checkbox" id="weighted-nodes" class="sr-only">
+                                        <span class="slider absolute cursor-pointer inset-0 bg-gray-300 dark:bg-gray-600 rounded-full transition-all duration-300 ease-in-out"></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between" id="weight-factor-container">
+                                    <label for="weight-factor" class="mr-2">Weight Factor:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="weight-factor" min="1" max="10" step="1" value="5" class="w-32">
+                                        <span id="weight-factor-value" class="ml-2 w-12 text-sm">5×</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visualization Controls -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Visualization Controls</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="animation-speed" class="mr-2">Animation Speed:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="animation-speed" min="1" max="100" step="1" value="50" class="w-32">
+                                        <span id="animation-speed-value" class="ml-2 w-12 text-sm">50</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-scores" class="w-4 h-4" checked>
+                                    <label for="show-scores">Show f, g, h Scores</label>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-grid-coordinates" class="w-4 h-4">
+                                    <label for="show-grid-coordinates">Show Grid Coordinates</label>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="highlight-path" class="w-4 h-4" checked>
+                                    <label for="highlight-path">Highlight Path</label>
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-2">
+                                    <button id="start-search" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Start Search</button>
+                                    <button id="step-search" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step</button>
+                                    <button id="clear-search" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition flex-1">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Status -->
+                        <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <h3 class="text-lg font-medium mb-2">Status</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Current Node:</span>
+                                    <span id="current-node">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>f(n) = g(n) + h(n):</span>
+                                    <span id="current-f-score">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Status:</span>
+                                    <span id="search-status">Not Started</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Node Information Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db] flex justify-between items-center">
+                        <span>Node Information</span>
+                        <button id="toggle-node-info" class="text-sm px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">
+                            Show Details
+                        </button>
+                    </h2>
+                    <div id="node-info-container" class="hidden">
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="text-base font-medium mb-1">Selected Node</h3>
+                                <div id="selected-node-info" class="bg-gray-100 dark:bg-gray-700 p-3 rounded">
+                                    <div class="flex justify-between">
+                                        <span>Position:</span>
+                                        <span id="selected-position">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>g-Score:</span>
+                                        <span id="selected-g-score">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>h-Score:</span>
+                                        <span id="selected-h-score">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>f-Score:</span>
+                                        <span id="selected-f-score">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Status:</span>
+                                        <span id="selected-status">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Parent:</span>
+                                        <span id="selected-parent">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Weight:</span>
+                                        <span id="selected-weight">1</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-medium mb-1">Open Set (Top 5)</h3>
+                                <div id="open-set-info" class="bg-gray-100 dark:bg-gray-700 p-3 rounded max-h-40 overflow-y-auto">
+                                    <div class="text-center text-gray-500 dark:text-gray-400">Empty</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How A* Search Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>A* Search</strong> is an informed search algorithm that combines the strengths of Dijkstra's algorithm and greedy best-first search. It uses both the cost to reach a node (g-score) and a heuristic estimate of the remaining cost to the goal (h-score) to guide its search, making it both complete and optimal when using an admissible heuristic.</p>
+                
+                <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <p class="font-semibold mb-2">Key Components:</p>
+                    <ul class="list-disc ml-6 space-y-1">
+                        <li><strong>f(n) = g(n) + h(n)</strong> - Evaluation function that determines node exploration order</li>
+                        <li><strong>g(n)</strong> - Cost to reach node n from the start node</li>
+                        <li><strong>h(n)</strong> - Heuristic estimate of cost from node n to the goal</li>
+                        <li><strong>Open Set</strong> - Nodes discovered but not yet evaluated (frontier)</li>
+                        <li><strong>Closed Set</strong> - Nodes already evaluated</li>
+                    </ul>
+                </div>
+                
+                <p><strong>The A* Algorithm:</strong></p>
+                <ol class="list-decimal ml-6 space-y-1">
+                    <li>Initialize open set with start node</li>
+                    <li>Loop until goal is found or open set is empty:
+                        <ul class="list-disc ml-6 space-y-1">
+                            <li>Select node with lowest f-score from open set</li>
+                            <li>If this node is the goal, reconstruct and return path</li>
+                            <li>Move node from open set to closed set</li>
+                            <li>For each neighbor of the current node:
+                                <ul class="list-disc ml-6 space-y-1">
+                                    <li>If neighbor is in closed set, skip it</li>
+                                    <li>Calculate tentative g-score via current node</li>
+                                    <li>If neighbor is not in open set or has better g-score:
+                                        <ul class="list-disc ml-6 space-y-1">
+                                            <li>Update neighbor's g-score and parent</li>
+                                            <li>Calculate f-score = g-score + h-score</li>
+                                            <li>Add neighbor to open set if not already present</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>If open set is empty, no path exists</li>
+                </ol>
+                
+                <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <p class="font-semibold mb-2">Common Heuristics:</p>
+                    <ul class="list-disc ml-6 space-y-2">
+                        <li>
+                            <div><strong>Manhattan Distance</strong>: |x<sub>1</sub> - x<sub>2</sub>| + |y<sub>1</sub> - y<sub>2</sub>|</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Optimal for 4-directional movement (no diagonals)</div>
+                        </li>
+                        <li>
+                            <div><strong>Euclidean Distance</strong>: √[(x<sub>1</sub> - x<sub>2</sub>)² + (y<sub>1</sub> - y<sub>2</sub>)²]</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Works well with unrestricted movement</div>
+                        </li>
+                        <li>
+                            <div><strong>Chebyshev Distance</strong>: max(|x<sub>1</sub> - x<sub>2</sub>|, |y<sub>1</sub> - y<sub>2</sub>|)</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Optimal for 8-directional movement with same cost in all directions</div>
+                        </li>
+                        <li>
+                            <div><strong>Octile Distance</strong>: |x<sub>1</sub> - x<sub>2</sub>| + |y<sub>1</sub> - y<sub>2</sub>| + (√2 - 2) × min(|x<sub>1</sub> - x<sub>2</sub>|, |y<sub>1</sub> - y<sub>2</sub>|)</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Optimal for 8-directional movement where diagonal cost is √2</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <p><strong>Properties of A* Search:</strong></p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li><strong>Complete</strong>: Always finds a path if one exists (assuming positive edge weights)</li>
+                    <li><strong>Optimal</strong>: Finds the optimal path when using an admissible heuristic</li>
+                    <li><strong>Admissible Heuristic</strong>: Never overestimates the true cost to the goal</li>
+                    <li><strong>Consistent Heuristic</strong>: For any nodes n and m, h(n) ≤ d(n,m) + h(m), where d(n,m) is the cost from n to m</li>
+                    <li><strong>Efficiency</strong>: More efficient than Dijkstra's algorithm by using heuristic guidance</li>
+                </ul>
+                
+                <p><strong>Variations and Applications:</strong></p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li><strong>Weighted A*</strong>: Uses w × h(n) with w > 1 to find solutions faster (might not be optimal)</li>
+                    <li><strong>IDA*</strong>: Iterative deepening version that uses less memory</li>
+                    <li><strong>Applications</strong>: Robotics, video games, GPS navigation, puzzle solving, network routing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // Canvas and context
+        const canvas = document.getElementById('grid-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // DOM elements
+        const gridSizeSelect = document.getElementById('grid-size');
+        const obstacleDensityInput = document.getElementById('obstacle-density');
+        const obstacleDensityValue = document.getElementById('obstacle-density-value');
+        const mazeTypeSelect = document.getElementById('maze-type');
+        const editModeCheckbox = document.getElementById('edit-mode');
+        const editTools = document.querySelectorAll('input[name="edit-tool"]');
+        const generateGridButton = document.getElementById('generate-grid');
+        
+        const algorithmTypeSelect = document.getElementById('algorithm-type');
+        const heuristicContainer = document.getElementById('heuristic-container');
+        const heuristicTypeSelect = document.getElementById('heuristic-type');
+        const diagonalMovementCheckbox = document.getElementById('diagonal-movement');
+        const weightedNodesCheckbox = document.getElementById('weighted-nodes');
+        const weightFactorContainer = document.getElementById('weight-factor-container');
+        const weightFactorInput = document.getElementById('weight-factor');
+        const weightFactorValue = document.getElementById('weight-factor-value');
+        
+        const animationSpeedInput = document.getElementById('animation-speed');
+        const animationSpeedValue = document.getElementById('animation-speed-value');
+        const showScoresCheckbox = document.getElementById('show-scores');
+        const showGridCoordinatesCheckbox = document.getElementById('show-grid-coordinates');
+        const highlightPathCheckbox = document.getElementById('highlight-path');
+        
+        const startSearchButton = document.getElementById('start-search');
+        const stepSearchButton = document.getElementById('step-search');
+        const clearSearchButton = document.getElementById('clear-search');
+        
+        const nodesExploredDisplay = document.getElementById('nodes-explored');
+        const nodesInQueueDisplay = document.getElementById('nodes-in-queue');
+        const pathLengthDisplay = document.getElementById('path-length');
+        const pathCostDisplay = document.getElementById('path-cost');
+        
+        const currentNodeDisplay = document.getElementById('current-node');
+        const currentFScoreDisplay = document.getElementById('current-f-score');
+        const searchStatusDisplay = document.getElementById('search-status');
+        
+        const toggleNodeInfoButton = document.getElementById('toggle-node-info');
+        const nodeInfoContainer = document.getElementById('node-info-container');
+        const selectedPositionDisplay = document.getElementById('selected-position');
+        const selectedGScoreDisplay = document.getElementById('selected-g-score');
+        const selectedHScoreDisplay = document.getElementById('selected-h-score');
+        const selectedFScoreDisplay = document.getElementById('selected-f-score');
+        const selectedStatusDisplay = document.getElementById('selected-status');
+        const selectedParentDisplay = document.getElementById('selected-parent');
+        const selectedWeightDisplay = document.getElementById('selected-weight');
+        const openSetInfoDisplay = document.getElementById('open-set-info');
+        
+        // Grid parameters
+        let gridSize = 20;
+        let cellSize = canvas.width / gridSize;
+        let grid = [];
+        let startNode = { x: 0, y: 0 };
+        let goalNode = { x: gridSize - 1, y: gridSize - 1 };
+        let obstacleDensity = 30; // percentage
+        let mazeType = 'random';
+        
+        // Edit mode parameters
+        let editMode = false;
+        let currentTool = 'wall';
+        
+        // Algorithm parameters
+        let algorithmType = 'astar';
+        let heuristicType = 'manhattan';
+        let diagonalMovement = false;
+        let useWeightedNodes = false;
+        let weightFactor = 5;
+        
+        // Visualization parameters
+        let animationSpeed = 50;
+        let showScores = true;
+        let showGridCoordinates = false;
+        let highlightPath = true;
+        
+        // Algorithm state
+        let openSet = [];           // Priority queue of nodes to explore
+        let closedSet = [];         // Set of nodes already explored
+        let currentNode = null;     // Current node being explored
+        let path = [];              // Final path
+        let nodesExplored = 0;      // Number of nodes explored
+        let pathFound = false;      // Whether a path has been found
+        let searchComplete = false; // Whether the search is complete
+        let searchRunning = false;  // Whether the search is currently running
+        let stepMode = false;       // Whether we're in step-by-step mode
+        let selectedNode = null;    // Node selected for inspection
+        
+        // Performance tracking
+        let algorithmStats = {
+            'astar': { nodesExplored: 0, pathLength: 0, pathCost: 0, executionTime: 0 },
+            'dijkstra': { nodesExplored: 0, pathLength: 0, pathCost: 0, executionTime: 0 },
+            'greedy': { nodesExplored: 0, pathLength: 0, pathCost: 0, executionTime: 0 },
+            'bfs': { nodesExplored: 0, pathLength: 0, pathCost: 0, executionTime: 0 },
+            'dfs': { nodesExplored: 0, pathLength: 0, pathCost: 0, executionTime: 0 }
+        };
+        
+        // Animation reference
+        let animationRef = null;
+        
+        // Chart reference
+        let performanceChart = null;
+        
+        // === Initialization functions ===
+        
+        // Initialize app
+        function initializeApp() {
+            // Create the grid
+            createGrid();
+            
+            // Add event listeners
+            addEventListeners();
+            
+            // Initialize performance chart
+            initializePerformanceChart();
+            
+            // Render the grid
+            render();
+        }
+        
+        // Create initial grid
+        function createGrid() {
+            grid = [];
+            cellSize = canvas.width / gridSize;
+            
+            // Initialize grid with empty nodes
+            for (let y = 0; y < gridSize; y++) {
+                const row = [];
+                for (let x = 0; x < gridSize; x++) {
+                    row.push({
+                        x: x,
+                        y: y,
+                        isWall: false,
+                        isStart: (x === startNode.x && y === startNode.y),
+                        isGoal: (x === goalNode.x && y === goalNode.y),
+                        gScore: Infinity,
+                        hScore: 0,
+                        fScore: Infinity,
+                        parent: null,
+                        weight: 1,
+                        status: 'unvisited' // 'unvisited', 'open', 'closed', 'path'
+                    });
+                }
+                grid.push(row);
+            }
+            
+            // Mark start and goal nodes
+            grid[startNode.y][startNode.x].isStart = true;
+            grid[goalNode.y][goalNode.x].isGoal = true;
+            
+            // Generate obstacles based on the selected maze type
+            generateObstacles();
+        }
+        
+        // Generate obstacles
+        function generateObstacles() {
+            // Clear existing obstacles
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                        grid[y][x].isWall = false;
+                        grid[y][x].weight = 1;
+                    }
+                }
+            }
+            
+            // Generate obstacles based on maze type
+            switch (mazeType) {
+                case 'random':
+                    generateRandomObstacles();
+                    break;
+                case 'maze':
+                    generateRecursiveMaze();
+                    break;
+                case 'rooms':
+                    generateConnectedRooms();
+                    break;
+                case 'labyrinth':
+                    generateLabyrinth();
+                    break;
+                case 'spiral':
+                    generateSpiral();
+                    break;
+            }
+            
+            // Ensure path exists
+            ensurePathExists();
+        }
+        
+        // Generate random obstacles
+        function generateRandomObstacles() {
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                        // Add wall with probability based on obstacle density
+                        if (Math.random() * 100 < obstacleDensity) {
+                            grid[y][x].isWall = true;
+                        }
+                        
+                        // Add weight with low probability if weighted nodes are enabled
+                        if (useWeightedNodes && !grid[y][x].isWall && Math.random() < 0.1) {
+                            grid[y][x].weight = Math.floor(Math.random() * 4) + 2; // Weight between 2-5
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Generate recursive maze
+        function generateRecursiveMaze() {
+            // Fill grid with walls
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                        grid[y][x].isWall = true;
+                    }
+                }
+            }
+            
+            // Set start and goal to be empty
+            grid[startNode.y][startNode.x].isWall = false;
+            grid[goalNode.y][goalNode.x].isWall = false;
+            
+            // Define recursive division function
+            function recursiveDivision(x, y, width, height, orientation) {
+                if (width <= 2 || height <= 2) return;
+                
+                // Make horizontal wall
+                if (orientation === 'horizontal') {
+                    const wallY = y + Math.floor(Math.random() * (height - 2)) + 1;
+                    const passageX = x + Math.floor(Math.random() * width);
+                    
+                    for (let i = x; i < x + width; i++) {
+                        // Skip passage and cells that contain start or goal
+                        if (i === passageX) continue;
+                        if (grid[wallY][i].isStart || grid[wallY][i].isGoal) continue;
+                        
+                        grid[wallY][i].isWall = true;
+                    }
+                    
+                    // Recursively divide the top and bottom sections
+                    const nextOrientation = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                    recursiveDivision(x, y, width, wallY - y, nextOrientation);
+                    recursiveDivision(x, wallY + 1, width, y + height - wallY - 1, nextOrientation);
+                } 
+                // Make vertical wall
+                else {
+                    const wallX = x + Math.floor(Math.random() * (width - 2)) + 1;
+                    const passageY = y + Math.floor(Math.random() * height);
+                    
+                    for (let i = y; i < y + height; i++) {
+                        // Skip passage and cells that contain start or goal
+                        if (i === passageY) continue;
+                        if (grid[i][wallX].isStart || grid[i][wallX].isGoal) continue;
+                        
+                        grid[i][wallX].isWall = true;
+                    }
+                    
+                    // Recursively divide the left and right sections
+                    const nextOrientation = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                    recursiveDivision(x, y, wallX - x, height, nextOrientation);
+                    recursiveDivision(wallX + 1, y, x + width - wallX - 1, height, nextOrientation);
+                }
+            }
+            
+            // Start the recursive division
+            const orientation = gridSize > gridSize ? 'horizontal' : 'vertical';
+            recursiveDivision(0, 0, gridSize, gridSize, orientation);
+        }
+        
+        // Generate connected rooms
+        function generateConnectedRooms() {
+            // Fill grid with walls
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                        grid[y][x].isWall = true;
+                    }
+                }
+            }
+            
+            // Set start and goal to be empty
+            grid[startNode.y][startNode.x].isWall = false;
+            grid[goalNode.y][goalNode.x].isWall = false;
+            
+            // Number of rooms to generate (adjust based on grid size)
+            const numRooms = Math.max(3, Math.floor(gridSize / 4));
+            
+            // Generate rooms
+            const rooms = [];
+            for (let i = 0; i < numRooms; i++) {
+                const roomWidth = Math.floor(Math.random() * 5) + 3; // 3-7
+                const roomHeight = Math.floor(Math.random() * 5) + 3; // 3-7
+                const roomX = Math.floor(Math.random() * (gridSize - roomWidth - 1)) + 1;
+                const roomY = Math.floor(Math.random() * (gridSize - roomHeight - 1)) + 1;
+                
+                // Clear walls in the room
+                for (let y = roomY; y < roomY + roomHeight && y < gridSize; y++) {
+                    for (let x = roomX; x < roomX + roomWidth && x < gridSize; x++) {
+                        if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                            grid[y][x].isWall = false;
+                            
+                            // Add weights if weighted nodes are enabled
+                            if (useWeightedNodes && Math.random() < 0.3) {
+                                grid[y][x].weight = Math.floor(Math.random() * 4) + 2; // Weight between 2-5
+                            }
+                        }
+                    }
+                }
+                
+                rooms.push({ x: roomX, y: roomY, width: roomWidth, height: roomHeight });
+            }
+            
+            // Connect rooms
+            for (let i = 0; i < rooms.length - 1; i++) {
+                const roomA = rooms[i];
+                const roomB = rooms[i + 1];
+                
+                // Find center points
+                const centerAX = roomA.x + Math.floor(roomA.width / 2);
+                const centerAY = roomA.y + Math.floor(roomA.height / 2);
+                const centerBX = roomB.x + Math.floor(roomB.width / 2);
+                const centerBY = roomB.y + Math.floor(roomB.height / 2);
+                
+                // Create corridor (L-shaped)
+                let currentX = centerAX;
+                let currentY = centerAY;
+                
+                // Move horizontally first
+                while (currentX !== centerBX) {
+                    currentX += (centerBX > currentX) ? 1 : -1;
+                    if (!grid[currentY][currentX].isStart && !grid[currentY][currentX].isGoal) {
+                        grid[currentY][currentX].isWall = false;
+                    }
+                }
+                
+                // Then move vertically
+                while (currentY !== centerBY) {
+                    currentY += (centerBY > currentY) ? 1 : -1;
+                    if (!grid[currentY][currentX].isStart && !grid[currentY][currentX].isGoal) {
+                        grid[currentY][currentX].isWall = false;
+                    }
+                }
+            }
+            
+            // Connect start and goal to the nearest room
+            connectNodeToNearestRoom(startNode);
+            connectNodeToNearestRoom(goalNode);
+        }
+        
+        // Connect a node to the nearest open space
+        function connectNodeToNearestRoom(node) {
+            // Find nearest open cell
+            let nearestX = -1;
+            let nearestY = -1;
+            let nearestDist = Infinity;
+            
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (!grid[y][x].isWall && !grid[y][x].isStart && !grid[y][x].isGoal) {
+                        const dist = Math.abs(x - node.x) + Math.abs(y - node.y);
+                        if (dist < nearestDist) {
+                            nearestDist = dist;
+                            nearestX = x;
+                            nearestY = y;
+                        }
+                    }
+                }
+            }
+            
+            // Create a path from node to nearest open cell
+            if (nearestX !== -1) {
+                let currentX = node.x;
+                let currentY = node.y;
+                
+                // Move horizontally first
+                while (currentX !== nearestX) {
+                    currentX += (nearestX > currentX) ? 1 : -1;
+                    if (!grid[currentY][currentX].isStart && !grid[currentY][currentX].isGoal) {
+                        grid[currentY][currentX].isWall = false;
+                    }
+                }
+                
+                // Then move vertically
+                while (currentY !== nearestY) {
+                    currentY += (nearestY > currentY) ? 1 : -1;
+                    if (!grid[currentY][currentX].isStart && !grid[currentY][currentX].isGoal) {
+                        grid[currentY][currentX].isWall = false;
+                    }
+                }
+            }
+        }
+        
+        // Generate labyrinth
+        function generateLabyrinth() {
+            // Fill grid with walls
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                        grid[y][x].isWall = true;
+                    }
+                }
+            }
+            
+            // Set start and goal to be empty
+            grid[startNode.y][startNode.x].isWall = false;
+            grid[goalNode.y][goalNode.x].isWall = false;
+            
+            // Create a maze using depth-first search
+            const visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+            
+            // Mark start as visited
+            visited[startNode.y][startNode.x] = true;
+            
+            // Define possible directions: right, down, left, up
+            const dirs = [[0, 2], [2, 0], [0, -2], [-2, 0]];
+            
+            // DFS to create passages
+            function dfs(x, y) {
+                // Randomize directions
+                dirs.sort(() => Math.random() - 0.5);
+                
+                for (const [dx, dy] of dirs) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    
+                    // Check if in bounds and not visited
+                    if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && !visited[ny][nx]) {
+                        // Mark as visited
+                        visited[ny][nx] = true;
+                        
+                        // Carve passage (clear the wall between current and next cell)
+                        const mx = x + dx / 2;
+                        const my = y + dy / 2;
+                        
+                        if (!grid[my][mx].isStart && !grid[my][mx].isGoal) {
+                            grid[my][mx].isWall = false;
+                        }
+                        if (!grid[ny][nx].isStart && !grid[ny][nx].isGoal) {
+                            grid[ny][nx].isWall = false;
+                        }
+                        
+                        // Continue DFS from new position
+                        dfs(nx, ny);
+                    }
+                }
+            }
+            
+            // Start DFS from a random position for better mazes
+            const startX = startNode.x % 2 === 0 ? startNode.x : startNode.x + 1;
+            const startY = startNode.y % 2 === 0 ? startNode.y : startNode.y + 1;
+            dfs(startX, startY);
+            
+            // Ensure start and goal are connected
+            ensurePathExists();
+        }
+        
+        // Generate spiral
+        function generateSpiral() {
+            // Fill grid with empty cells
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                        grid[y][x].isWall = false;
+                    }
+                }
+            }
+            
+            // Create spiral pattern
+            const center = Math.floor(gridSize / 2);
+            let x = center;
+            let y = center;
+            let dir = 0; // 0: right, 1: down, 2: left, 3: up
+            let sideLength = 1;
+            let segments = 0;
+            
+            // Place start and goal in good positions for spiral
+            if (startNode.x === 0 && startNode.y === 0) {
+                grid[startNode.y][startNode.x].isStart = false;
+                startNode = { x: center, y: center };
+                grid[startNode.y][startNode.x].isStart = true;
+            }
+            
+            for (let steps = 0; steps < gridSize * gridSize / 2; steps++) {
+                // Place wall
+                if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                    grid[y][x].isWall = true;
+                }
+                
+                // Move in current direction
+                switch (dir) {
+                    case 0: x++; break; // right
+                    case 1: y++; break; // down
+                    case 2: x--; break; // left
+                    case 3: y--; break; // up
+                }
+                
+                // Check if we need to change direction
+                if (++segments === sideLength) {
+                    segments = 0;
+                    dir = (dir + 1) % 4;
+                    
+                    // Increase side length after completing a half-turn
+                    if (dir === 0 || dir === 2) {
+                        sideLength++;
+                    }
+                }
+                
+                // Check if we're out of bounds
+                if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) {
+                    break;
+                }
+            }
+            
+            // Add some random gaps in the spiral
+            for (let i = 0; i < gridSize; i++) {
+                const randX = Math.floor(Math.random() * gridSize);
+                const randY = Math.floor(Math.random() * gridSize);
+                
+                if (!grid[randY][randX].isStart && !grid[randY][randX].isGoal) {
+                    grid[randY][randX].isWall = false;
+                }
+            }
+            
+            // Use weighted nodes if enabled
+            if (useWeightedNodes) {
+                for (let y = 0; y < gridSize; y++) {
+                    for (let x = 0; x < gridSize; x++) {
+                        if (!grid[y][x].isWall && !grid[y][x].isStart && !grid[y][x].isGoal && Math.random() < 0.2) {
+                            grid[y][x].weight = Math.floor(Math.random() * 4) + 2; // Weight between 2-5
+                        }
+                    }
+                }
+            }
+            
+            // Ensure path exists
+            ensurePathExists();
+        }
+        
+        // Ensure that a path exists from start to goal
+        function ensurePathExists() {
+            // Breadth-first search to find a path
+            const visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+            const queue = [{ x: startNode.x, y: startNode.y }];
+            visited[startNode.y][startNode.x] = true;
+            
+            let foundPath = false;
+            
+            while (queue.length > 0 && !foundPath) {
+                const current = queue.shift();
+                
+                // Check if we've reached the goal
+                if (current.x === goalNode.x && current.y === goalNode.y) {
+                    foundPath = true;
+                    break;
+                }
+                
+                // Check all neighbors
+                const directions = [
+                    { dx: 0, dy: -1 }, // up
+                    { dx: 1, dy: 0 },  // right
+                    { dx: 0, dy: 1 },  // down
+                    { dx: -1, dy: 0 }  // left
+                ];
+                
+                // Add diagonal directions if enabled
+                if (diagonalMovement) {
+                    directions.push(
+                        { dx: 1, dy: -1 },  // up-right
+                        { dx: 1, dy: 1 },   // down-right
+                        { dx: -1, dy: 1 },  // down-left
+                        { dx: -1, dy: -1 }  // up-left
+                    );
+                }
+                
+                for (const dir of directions) {
+                    const nx = current.x + dir.dx;
+                    const ny = current.y + dir.dy;
+                    
+                    // Check bounds
+                    if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize) {
+                        // Check if not visited and not a wall
+                        if (!visited[ny][nx] && !grid[ny][nx].isWall) {
+                            visited[ny][nx] = true;
+                            queue.push({ x: nx, y: ny });
+                        }
+                    }
+                }
+            }
+            
+            // If no path found, clear obstacles to create a path
+            if (!foundPath) {
+                // Create a direct path from start to goal
+                let x = startNode.x;
+                let y = startNode.y;
+                
+                // Move horizontally first
+                while (x !== goalNode.x) {
+                    x += (goalNode.x > x) ? 1 : -1;
+                    if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                        grid[y][x].isWall = false;
+                    }
+                }
+                
+                // Then move vertically
+                while (y !== goalNode.y) {
+                    y += (goalNode.y > y) ? 1 : -1;
+                    if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                        grid[y][x].isWall = false;
+                    }
+                }
+            }
+        }
+        
+        // Add event listeners
+        function addEventListeners() {
+            // Grid size change
+            gridSizeSelect.addEventListener('change', () => {
+                gridSize = parseInt(gridSizeSelect.value);
+                
+                // Reset start and goal positions based on new grid size
+                startNode = { x: 0, y: 0 };
+                goalNode = { x: gridSize - 1, y: gridSize - 1 };
+                
+                createGrid();
+                render();
+                clearSearch();
+            });
+            
+            // Obstacle density change
+            obstacleDensityInput.addEventListener('input', () => {
+                obstacleDensity = parseInt(obstacleDensityInput.value);
+                obstacleDensityValue.textContent = `${obstacleDensity}%`;
+                // Don't regenerate immediately, wait for button click
+            });
+            
+            // Maze type change
+            mazeTypeSelect.addEventListener('change', () => {
+                mazeType = mazeTypeSelect.value;
+                // Don't regenerate immediately, wait for button click
+            });
+            
+            // Generate grid button
+            generateGridButton.addEventListener('click', () => {
+                createGrid();
+                render();
+                clearSearch();
+            });
+            
+            // Edit mode toggle
+            editModeCheckbox.addEventListener('change', () => {
+                editMode = editModeCheckbox.checked;
+                
+                // Enable/disable tool options
+                document.querySelectorAll('.edit-tool-container').forEach(container => {
+                    const input = container.querySelector('input');
+                    input.disabled = !editMode;
+                    if (editMode) {
+                        container.classList.remove('opacity-50');
+                    } else {
+                        container.classList.add('opacity-50');
+                    }
+                });
+                
+                // Update canvas style
+                canvas.style.cursor = editMode ? 'pointer' : 'default';
+            });
+            
+            // Edit tools
+            editTools.forEach(tool => {
+                tool.addEventListener('change', () => {
+                    currentTool = tool.value;
+                });
+            });
+            
+            // Algorithm type change
+            algorithmTypeSelect.addEventListener('change', () => {
+                algorithmType = algorithmTypeSelect.value;
+                
+                // Show/hide heuristic selection based on algorithm
+                if (['astar', 'greedy'].includes(algorithmType)) {
+                    heuristicContainer.classList.remove('hidden');
+                } else {
+                    heuristicContainer.classList.add('hidden');
+                }
+                
+                clearSearch();
+            });
+            
+            // Heuristic type change
+            heuristicTypeSelect.addEventListener('change', () => {
+                heuristicType = heuristicTypeSelect.value;
+                clearSearch();
+            });
+            
+            // Diagonal movement toggle
+            diagonalMovementCheckbox.addEventListener('change', () => {
+                diagonalMovement = diagonalMovementCheckbox.checked;
+                // Update styles for toggle switch
+                const slider = diagonalMovementCheckbox.nextElementSibling;
+                if (diagonalMovement) {
+                    slider.classList.add('bg-[#3498db]');
+                    slider.classList.remove('bg-gray-300', 'dark:bg-gray-600');
+                } else {
+                    slider.classList.remove('bg-[#3498db]');
+                    slider.classList.add('bg-gray-300', 'dark:bg-gray-600');
+                }
+                clearSearch();
+            });
+            
+            // Weighted nodes toggle
+            weightedNodesCheckbox.addEventListener('change', () => {
+                useWeightedNodes = weightedNodesCheckbox.checked;
+                // Show/hide weight factor control
+                if (useWeightedNodes) {
+                    weightFactorContainer.classList.remove('hidden');
+                } else {
+                    weightFactorContainer.classList.add('hidden');
+                }
+                // Update styles for toggle switch
+                const slider = weightedNodesCheckbox.nextElementSibling;
+                if (useWeightedNodes) {
+                    slider.classList.add('bg-[#3498db]');
+                    slider.classList.remove('bg-gray-300', 'dark:bg-gray-600');
+                } else {
+                    slider.classList.remove('bg-[#3498db]');
+                    slider.classList.add('bg-gray-300', 'dark:bg-gray-600');
+                }
+                clearSearch();
+            });
+            
+            // Weight factor change
+            weightFactorInput.addEventListener('input', () => {
+                weightFactor = parseInt(weightFactorInput.value);
+                weightFactorValue.textContent = `${weightFactor}×`;
+            });
+            
+            // Animation speed change
+            animationSpeedInput.addEventListener('input', () => {
+                animationSpeed = parseInt(animationSpeedInput.value);
+                animationSpeedValue.textContent = animationSpeed;
+            });
+            
+            // Visualization options
+            showScoresCheckbox.addEventListener('change', () => {
+                showScores = showScoresCheckbox.checked;
+                render();
+            });
+            
+            showGridCoordinatesCheckbox.addEventListener('change', () => {
+                showGridCoordinates = showGridCoordinatesCheckbox.checked;
+                render();
+            });
+            
+            highlightPathCheckbox.addEventListener('change', () => {
+                highlightPath = highlightPathCheckbox.checked;
+                render();
+            });
+            
+            // Start search button
+            startSearchButton.addEventListener('click', () => {
+                if (searchRunning) return;
+                clearSearch();
+                startSearch();
+            });
+            
+            // Step search button
+            stepSearchButton.addEventListener('click', () => {
+                if (searchRunning) return;
+                if (!searchComplete) {
+                    stepMode = true;
+                    if (openSet.length === 0) {
+                        initializeSearch();
+                    }
+                    stepSearch();
+                }
+            });
+            
+            // Clear search button
+            clearSearchButton.addEventListener('click', clearSearch);
+            
+            // Toggle node info button
+            toggleNodeInfoButton.addEventListener('click', () => {
+                const isHidden = nodeInfoContainer.classList.contains('hidden');
+                if (isHidden) {
+                    nodeInfoContainer.classList.remove('hidden');
+                    toggleNodeInfoButton.textContent = 'Hide Details';
+                } else {
+                    nodeInfoContainer.classList.add('hidden');
+                    toggleNodeInfoButton.textContent = 'Show Details';
+                }
+            });
+            
+            // Canvas click for editing and node selection
+            canvas.addEventListener('click', handleCanvasClick);
+            
+            // Canvas hover for node highlighting
+            canvas.addEventListener('mousemove', handleCanvasHover);
+        }
+        
+        // Initialize performance chart
+        function initializePerformanceChart() {
+            const ctx = document.getElementById('performance-chart').getContext('2d');
+            
+            const textColor = document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937';
+            const gridColor = document.body.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            performanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['A*', 'Dijkstra', 'Greedy', 'BFS', 'DFS'],
+                    datasets: [
+                        {
+                            label: 'Nodes Explored',
+                            data: [0, 0, 0, 0, 0],
+                            backgroundColor: 'rgba(93, 92, 222, 0.6)',
+                            borderColor: 'rgba(93, 92, 222, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Path Length',
+                            data: [0, 0, 0, 0, 0],
+                            backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Count',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const algoName = ['astar', 'dijkstra', 'greedy', 'bfs', 'dfs'][dataIndex];
+                                    const stats = algorithmStats[algoName];
+                                    return [
+                                        `Path Cost: ${stats.pathCost}`,
+                                        `Time: ${stats.executionTime.toFixed(2)} ms`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update performance chart
+        function updatePerformanceChart() {
+            if (!performanceChart) return;
+            
+            performanceChart.data.datasets[0].data = [
+                algorithmStats.astar.nodesExplored,
+                algorithmStats.dijkstra.nodesExplored,
+                algorithmStats.greedy.nodesExplored,
+                algorithmStats.bfs.nodesExplored,
+                algorithmStats.dfs.nodesExplored
+            ];
+            
+            performanceChart.data.datasets[1].data = [
+                algorithmStats.astar.pathLength,
+                algorithmStats.dijkstra.pathLength,
+                algorithmStats.greedy.pathLength,
+                algorithmStats.bfs.pathLength,
+                algorithmStats.dfs.pathLength
+            ];
+            
+            performanceChart.update();
+        }
+        
+        // === Event Handlers ===
+        
+        // Handle canvas click for editing and node selection
+        function handleCanvasClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / cellSize);
+            const y = Math.floor((event.clientY - rect.top) / cellSize);
+            
+            // Check if click is within grid
+            if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+            
+            if (editMode) {
+                // Edit the grid based on current tool
+                switch (currentTool) {
+                    case 'wall':
+                        if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                            grid[y][x].isWall = true;
+                            grid[y][x].weight = 1; // Reset weight
+                        }
+                        break;
+                    case 'start':
+                        // Remove existing start
+                        grid[startNode.y][startNode.x].isStart = false;
+                        // Set new start
+                        startNode = { x, y };
+                        grid[y][x].isStart = true;
+                        grid[y][x].isWall = false;
+                        grid[y][x].isGoal = false;
+                        grid[y][x].weight = 1; // Reset weight
+                        break;
+                    case 'goal':
+                        // Remove existing goal
+                        grid[goalNode.y][goalNode.x].isGoal = false;
+                        // Set new goal
+                        goalNode = { x, y };
+                        grid[y][x].isGoal = true;
+                        grid[y][x].isWall = false;
+                        grid[y][x].isStart = false;
+                        grid[y][x].weight = 1; // Reset weight
+                        break;
+                    case 'weight':
+                        if (!grid[y][x].isStart && !grid[y][x].isGoal && !grid[y][x].isWall) {
+                            // Cycle through weights 1-5
+                            grid[y][x].weight = (grid[y][x].weight % 5) + 1;
+                        }
+                        break;
+                    case 'erase':
+                        if (!grid[y][x].isStart && !grid[y][x].isGoal) {
+                            grid[y][x].isWall = false;
+                            grid[y][x].weight = 1; // Reset weight
+                        }
+                        break;
+                }
+                
+                // Clear search when grid is modified
+                clearSearch();
+                
+                // Render grid
+                render();
+            } else {
+                // Select node for inspection
+                selectedNode = grid[y][x];
+                updateNodeInfo();
+                render(); // Highlight selected node
+            }
+        }
+        
+        // Handle canvas hover for node highlighting
+        function handleCanvasHover(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / cellSize);
+            const y = Math.floor((event.clientY - rect.top) / cellSize);
+            
+            // Check if within grid
+            if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+            
+            // Show coordinates in status bar (not implemented, could add this)
+        }
+        
+        // Update node information panel
+        function updateNodeInfo() {
+            if (!selectedNode) return;
+            
+            // Update selected node info
+            selectedPositionDisplay.textContent = `(${selectedNode.x}, ${selectedNode.y})`;
+            selectedGScoreDisplay.textContent = selectedNode.gScore === Infinity ? '∞' : selectedNode.gScore.toFixed(1);
+            selectedHScoreDisplay.textContent = selectedNode.hScore.toFixed(1);
+            selectedFScoreDisplay.textContent = selectedNode.fScore === Infinity ? '∞' : selectedNode.fScore.toFixed(1);
+            
+            // Determine status text
+            let statusText = selectedNode.status;
+            if (selectedNode.isStart) statusText = 'Start';
+            else if (selectedNode.isGoal) statusText = 'Goal';
+            else if (selectedNode.isWall) statusText = 'Wall';
+            
+            selectedStatusDisplay.textContent = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+            
+            // Show parent
+            selectedParentDisplay.textContent = selectedNode.parent ? 
+                `(${selectedNode.parent.x}, ${selectedNode.parent.y})` : 
+                'None';
+            
+            // Show weight
+            selectedWeightDisplay.textContent = selectedNode.weight;
+            
+            // Update open set info
+            updateOpenSetInfo();
+        }
+        
+        // Update open set information
+        function updateOpenSetInfo() {
+            openSetInfoDisplay.innerHTML = '';
+            
+            if (openSet.length === 0) {
+                openSetInfoDisplay.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400">Empty</div>';
+                return;
+            }
+            
+            // Sort open set by f-score for display
+            const sortedOpenSet = [...openSet].sort((a, b) => a.fScore - b.fScore);
+            
+            // Display top 5 nodes
+            const displayNodes = sortedOpenSet.slice(0, 5);
+            
+            for (const node of displayNodes) {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'flex justify-between text-sm py-1 border-b border-gray-200 dark:border-gray-600';
+                
+                // Position
+                const posElement = document.createElement('span');
+                posElement.textContent = `(${node.x}, ${node.y})`;
+                
+                // Scores
+                const scoresElement = document.createElement('span');
+                scoresElement.innerHTML = `f=${node.fScore.toFixed(1)} = g=${node.gScore.toFixed(1)} + h=${node.hScore.toFixed(1)}`;
+                
+                nodeElement.appendChild(posElement);
+                nodeElement.appendChild(scoresElement);
+                
+                openSetInfoDisplay.appendChild(nodeElement);
+            }
+            
+            // Show count if there are more
+            if (openSet.length > 5) {
+                const countElement = document.createElement('div');
+                countElement.className = 'text-center text-gray-500 dark:text-gray-400 text-sm pt-1';
+                countElement.textContent = `+ ${openSet.length - 5} more nodes`;
+                openSetInfoDisplay.appendChild(countElement);
+            }
+        }
+        
+        // === Search Algorithm Functions ===
+        
+        // Start search algorithm
+        function startSearch() {
+            searchRunning = true;
+            searchComplete = false;
+            stepMode = false;
+            
+            // Initialize search
+            initializeSearch();
+            
+            // Start the search animation
+            animateSearch();
+        }
+        
+        // Initialize search by resetting data structures and preparing grid
+        function initializeSearch() {
+            // Clear previous search data
+            clearSearchData();
+            
+            // Initialize the start node
+            const start = grid[startNode.y][startNode.x];
+            start.gScore = 0;
+            start.hScore = calculateHeuristic(start, grid[goalNode.y][goalNode.x]);
+            start.fScore = start.hScore;
+            start.status = 'open';
+            
+            // Add start node to open set
+            openSet.push(start);
+            
+            // Update UI
+            nodesExploredDisplay.textContent = nodesExplored;
+            nodesInQueueDisplay.textContent = openSet.length;
+            searchStatusDisplay.textContent = 'Searching...';
+            
+            // Render the initial state
+            render();
+        }
+        
+        // Clear search data without clearing the grid
+        function clearSearchData() {
+            // Reset search state
+            openSet = [];
+            closedSet = [];
+            path = [];
+            nodesExplored = 0;
+            currentNode = null;
+            pathFound = false;
+            searchComplete = false;
+            
+            // Reset node scores and status
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const node = grid[y][x];
+                    node.gScore = Infinity;
+                    node.fScore = Infinity;
+                    node.parent = null;
+                    node.status = 'unvisited';
+                }
+            }
+            
+            // Clear any selected node
+            selectedNode = null;
+            
+            // Reset displays
+            currentNodeDisplay.textContent = '-';
+            currentFScoreDisplay.textContent = '-';
+            nodesExploredDisplay.textContent = '0';
+            nodesInQueueDisplay.textContent = '0';
+            pathLengthDisplay.textContent = '-';
+            pathCostDisplay.textContent = '-';
+            searchStatusDisplay.textContent = 'Not Started';
+            
+            // Update node info panel
+            updateOpenSetInfo();
+        }
+        
+        // Clear search and reset the grid and all displays
+        function clearSearch() {
+            // Stop any running search
+            if (searchRunning) {
+                cancelAnimationFrame(animationRef);
+                searchRunning = false;
+            }
+            
+            // Clear search data
+            clearSearchData();
+            
+            // Render the grid
+            render();
+        }
+        
+        // Calculate heuristic based on selected type
+        function calculateHeuristic(node, goal) {
+            switch (heuristicType) {
+                case 'manhattan':
+                    return Math.abs(node.x - goal.x) + Math.abs(node.y - goal.y);
+                case 'euclidean':
+                    return Math.sqrt(Math.pow(node.x - goal.x, 2) + Math.pow(node.y - goal.y, 2));
+                case 'chebyshev':
+                    return Math.max(Math.abs(node.x - goal.x), Math.abs(node.y - goal.y));
+                case 'octile':
+                    const dx = Math.abs(node.x - goal.x);
+                    const dy = Math.abs(node.y - goal.y);
+                    return dx + dy + (Math.sqrt(2) - 2) * Math.min(dx, dy);
+                default:
+                    return Math.abs(node.x - goal.x) + Math.abs(node.y - goal.y);
+            }
+        }
+        
+        // Get neighbors of a node
+        function getNeighbors(node) {
+            const neighbors = [];
+            
+            // Possible directions: up, right, down, left
+            const directions = [
+                { dx: 0, dy: -1 },
+                { dx: 1, dy: 0 },
+                { dx: 0, dy: 1 },
+                { dx: -1, dy: 0 }
+            ];
+            
+            // Add diagonal directions if allowed
+            if (diagonalMovement) {
+                directions.push(
+                    { dx: 1, dy: -1 },
+                    { dx: 1, dy: 1 },
+                    { dx: -1, dy: 1 },
+                    { dx: -1, dy: -1 }
+                );
+            }
+            
+            // Check each direction
+            for (const dir of directions) {
+                const nx = node.x + dir.dx;
+                const ny = node.y + dir.dy;
+                
+                // Check bounds
+                if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize) {
+                    const neighbor = grid[ny][nx];
+                    
+                    // Skip walls
+                    if (neighbor.isWall) continue;
+                    
+                    // Add to neighbors list
+                    neighbors.push(neighbor);
+                }
+            }
+            
+            return neighbors;
+        }
+        
+        // Find node with lowest f-score in the open set
+        function findLowestFScore() {
+            if (openSet.length === 0) return null;
+            
+            let lowest = openSet[0];
+            for (let i = 1; i < openSet.length; i++) {
+                if (openSet[i].fScore < lowest.fScore) {
+                    lowest = openSet[i];
+                } else if (openSet[i].fScore === lowest.fScore) {
+                    // If tied, prefer node with lower h-score (closer to goal)
+                    if (openSet[i].hScore < lowest.hScore) {
+                        lowest = openSet[i];
+                    }
+                }
+            }
+            
+            return lowest;
+        }
+        
+        // Get cost between two adjacent nodes
+        function getCost(current, neighbor) {
+            // Base cost (1 for orthogonal, sqrt(2) for diagonal)
+            let cost = 1;
+            
+            // Check if diagonal move
+            if (current.x !== neighbor.x && current.y !== neighbor.y) {
+                cost = Math.SQRT2;
+            }
+            
+            // Apply node weight if using weighted nodes
+            return cost * neighbor.weight;
+        }
+        
+        // Perform one step of the search algorithm
+        function stepSearch() {
+            if (openSet.length === 0) {
+                searchComplete = true;
+                searchStatusDisplay.textContent = 'No path found!';
+                return false;
+            }
+            
+            // Get the node with lowest f-score
+            let current;
+            
+            // Different node selection based on algorithm
+            switch (algorithmType) {
+                case 'astar':
+                    current = findLowestFScore();
+                    break;
+                case 'dijkstra':
+                    // Dijkstra uses only g-score (no heuristic)
+                    current = openSet.reduce((min, node) => 
+                        (node.gScore < min.gScore) ? node : min, openSet[0]);
+                    break;
+                case 'greedy':
+                    // Greedy best-first uses only h-score
+                    current = openSet.reduce((min, node) => 
+                        (node.hScore < min.hScore) ? node : min, openSet[0]);
+                    break;
+                case 'bfs':
+                    // BFS uses FIFO queue (get first node added)
+                    current = openSet[0];
+                    break;
+                case 'dfs':
+                    // DFS uses LIFO stack (get last node added)
+                    current = openSet[openSet.length - 1];
+                    break;
+                default:
+                    current = findLowestFScore();
+            }
+            
+            // Set as current node
+            currentNode = current;
+            
+            // Update displays
+            currentNodeDisplay.textContent = `(${current.x}, ${current.y})`;
+            currentFScoreDisplay.textContent = `${current.fScore.toFixed(1)} = ${current.gScore.toFixed(1)} + ${current.hScore.toFixed(1)}`;
+            
+            // Check if reached goal
+            if (current.x === goalNode.x && current.y === goalNode.y) {
+                // Goal found, reconstruct path
+                reconstructPath(current);
+                searchComplete = true;
+                searchStatusDisplay.textContent = 'Path found!';
+                
+                // Update statistics
+                pathLengthDisplay.textContent = path.length;
+                let pathCost = 0;
+                for (let i = 0; i < path.length - 1; i++) {
+                    pathCost += getCost(path[i], path[i+1]);
+                }
+                pathCostDisplay.textContent = pathCost.toFixed(1);
+                
+                // Store algorithm stats
+                algorithmStats[algorithmType].nodesExplored = nodesExplored;
+                algorithmStats[algorithmType].pathLength = path.length;
+                algorithmStats[algorithmType].pathCost = parseFloat(pathCost.toFixed(1));
+                
+                // Update performance chart
+                updatePerformanceChart();
+                
+                return false; // Signal to stop the search
+            }
+            
+            // Remove current from open set
+            openSet = openSet.filter(node => node !== current);
+            
+            // Add to closed set
+            closedSet.push(current);
+            current.status = 'closed';
+            nodesExplored++;
+            
+            // Get neighbors
+            const neighbors = getNeighbors(current);
+            
+            // Process each neighbor
+            for (const neighbor of neighbors) {
+                // Skip neighbors in closed set
+                if (closedSet.includes(neighbor)) continue;
+                
+                // Calculate tentative g-score
+                const tentativeGScore = current.gScore + getCost(current, neighbor);
+                
+                // Check if this path is better
+                if (tentativeGScore < neighbor.gScore) {
+                    // Update neighbor
+                    neighbor.parent = current;
+                    neighbor.gScore = tentativeGScore;
+                    
+                    // Calculate heuristic for A* and Greedy
+                    if (['astar', 'greedy'].includes(algorithmType)) {
+                        neighbor.hScore = calculateHeuristic(neighbor, grid[goalNode.y][goalNode.x]);
+                    } else {
+                        neighbor.hScore = 0; // No heuristic for other algorithms
+                    }
+                    
+                    // Calculate f-score based on algorithm
+                    switch (algorithmType) {
+                        case 'astar':
+                            neighbor.fScore = neighbor.gScore + neighbor.hScore;
+                            break;
+                        case 'dijkstra':
+                            neighbor.fScore = neighbor.gScore;
+                            break;
+                        case 'greedy':
+                            neighbor.fScore = neighbor.hScore;
+                            break;
+                        case 'bfs':
+                        case 'dfs':
+                            neighbor.fScore = 0; // Not used for BFS/DFS
+                            break;
+                    }
+                    
+                    // Add to open set if not already there
+                    if (!openSet.includes(neighbor)) {
+                        openSet.push(neighbor);
+                        neighbor.status = 'open';
+                    }
+                }
+            }
+            
+            // Update displays
+            nodesExploredDisplay.textContent = nodesExplored;
+            nodesInQueueDisplay.textContent = openSet.length;
+            
+            // Update node info if a node is selected
+            if (selectedNode) {
+                updateNodeInfo();
+            }
+            
+            return true; // Signal to continue search
+        }
+        
+        // Reconstruct the path from start to goal
+        function reconstructPath(node) {
+            path = [];
+            let current = node;
+            
+            while (current) {
+                path.unshift(current);
+                current.status = 'path';
+                current = current.parent;
+            }
+        }
+        
+        // Animate the search process
+        function animateSearch() {
+            if (!searchRunning) return;
+            
+            // Calculate delay based on animation speed
+            const delay = Math.max(5, 100 - animationSpeed);
+            const startTime = performance.now();
+            
+            // Perform a single step of the search
+            const continueSearch = stepSearch();
+            
+            // Render the grid
+            render();
+            
+            // If search should continue, schedule next frame
+            if (continueSearch) {
+                const elapsedTime = performance.now() - startTime;
+                const timeToWait = Math.max(0, delay - elapsedTime);
+                
+                setTimeout(() => {
+                    animationRef = requestAnimationFrame(animateSearch);
+                }, timeToWait);
+            } else {
+                // Search complete
+                searchRunning = false;
+                
+                // Update execution time
+                algorithmStats[algorithmType].executionTime = performance.now() - startTime;
+            }
+        }
+        
+        // === Rendering Functions ===
+        
+        // Render the grid and search state
+        function render() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Get color scheme based on dark mode
+            const isDarkMode = document.body.classList.contains('dark');
+            
+            // Draw grid cells
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const node = grid[y][x];
+                    const cellX = x * cellSize;
+                    const cellY = y * cellSize;
+                    
+                    // Set cell color based on type and status
+                    let cellColor;
+                    
+                    if (node.isWall) {
+                        cellColor = isDarkMode ? '#4B5563' : '#4B5563'; // Wall
+                    } else if (node.isStart) {
+                        cellColor = '#10B981'; // Start (green)
+                    } else if (node.isGoal) {
+                        cellColor = '#EF4444'; // Goal (red)
+                    } else if (node.status === 'path' && highlightPath) {
+                        cellColor = '#FBBF24'; // Path (amber)
+                    } else if (node.status === 'closed') {
+                        cellColor = isDarkMode ? '#6B21A8' : '#E9D5FF'; // Closed set (purple)
+                    } else if (node.status === 'open') {
+                        cellColor = isDarkMode ? '#1E40AF' : '#BFDBFE'; // Open set (blue)
+                    } else {
+                        cellColor = isDarkMode ? '#1F2937' : '#FFFFFF'; // Empty
+                    }
+                    
+                    // Fill cell
+                    ctx.fillStyle = cellColor;
+                    ctx.fillRect(cellX, cellY, cellSize, cellSize);
+                    
+                    // Draw cell border
+                    ctx.strokeStyle = isDarkMode ? '#374151' : '#E5E7EB';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(cellX, cellY, cellSize, cellSize);
+                    
+                    // Draw weight indicator for weighted nodes
+                    if (node.weight > 1 && !node.isWall && !node.isStart && !node.isGoal) {
+                        // Draw dots to represent weight
+                        ctx.fillStyle = isDarkMode ? '#FFFFFF' : '#000000';
+                        const dotSize = cellSize / 12;
+                        const dotSpacing = cellSize / 6;
+                        const dotStartX = cellX + cellSize / 2 - dotSpacing;
+                        const dotStartY = cellY + cellSize / 2 - dotSpacing;
+                        
+                        for (let i = 0; i < node.weight - 1; i++) {
+                            const dotX = dotStartX + (i % 2) * dotSpacing * 2;
+                            const dotY = dotStartY + Math.floor(i / 2) * dotSpacing * 2;
+                            ctx.beginPath();
+                            ctx.arc(dotX, dotY, dotSize, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    
+                    // Highlight selected node
+                    if (selectedNode === node) {
+                        ctx.strokeStyle = '#F97316'; // Orange highlight
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(cellX + 2, cellY + 2, cellSize - 4, cellSize - 4);
+                    }
+                    
+                    // Draw node scores (f = g + h) if option enabled
+                    if (showScores && node.status !== 'unvisited' && !node.isWall && cellSize >= 20) {
+                        const fontSize = Math.max(8, Math.min(10, cellSize / 5));
+                        ctx.font = `${fontSize}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = isDarkMode ? '#FFFFFF' : '#000000';
+                        
+                        // f-score at top
+                        if (node.fScore !== Infinity) {
+                            ctx.fillText(`f:${node.fScore.toFixed(1)}`, cellX + cellSize / 2, cellY + fontSize + 1);
+                        }
+                        
+                        // g-score at bottom left
+                        if (node.gScore !== Infinity) {
+                            ctx.fillText(`g:${node.gScore.toFixed(1)}`, cellX + cellSize / 4, cellY + cellSize - 2);
+                        }
+                        
+                        // h-score at bottom right
+                        ctx.fillText(`h:${node.hScore.toFixed(1)}`, cellX + cellSize * 3/4, cellY + cellSize - 2);
+                    }
+                    
+                    // Draw grid coordinates if option enabled
+                    if (showGridCoordinates && cellSize >= 20) {
+                        ctx.font = `${Math.max(8, cellSize / 6)}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        // Use lighter color for coordinates
+                        ctx.fillStyle = isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)';
+                        ctx.fillText(`${x},${y}`, cellX + cellSize / 2, cellY + cellSize / 2);
+                    }
+                }
+            }
+        }
+        
+        // Initialize the application
+        initializeApp();
+    </script>
+</body>
+</html>

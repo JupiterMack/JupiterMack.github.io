@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive K-Means Clustering Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">K-Means Clustering Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-2/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <div class="w-full h-[600px] relative" id="visualization-container">
+                    <svg id="visualization" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                </div>
+                <div class="mt-2 flex flex-wrap justify-between items-center text-sm gap-4">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+                        <span>Cluster 1</span>
+                        
+                        <span class="inline-block w-3 h-3 rounded-full bg-blue-500 ml-4"></span>
+                        <span>Cluster 2</span>
+                        
+                        <span class="inline-block w-3 h-3 rounded-full bg-green-500 ml-4"></span>
+                        <span>Cluster 3</span>
+                        
+                        <span class="inline-block w-3 h-3 rounded-full bg-purple-500 ml-4"></span>
+                        <span>Cluster 4</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-full bg-yellow-500"></span>
+                        <span>Centroids</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel -->
+            <div class="w-full lg:w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                
+                <div class="space-y-6">
+                    <!-- Data Generation -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="num-points" class="mr-2">Number of Points:</label>
+                                <input type="number" id="num-points" min="50" max="500" value="200" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="data-distribution" class="mr-2">Distribution:</label>
+                                <select id="data-distribution" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="gaussian" selected>Gaussian Clusters</option>
+                                    <option value="circular">Circular Clusters</option>
+                                    <option value="unbalanced">Unbalanced Clusters</option>
+                                    <option value="random">Random Uniform</option>
+                                    <option value="anisotropic">Anisotropic Clusters</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="true-clusters" class="mr-2">True Clusters:</label>
+                                <select id="true-clusters" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="2">2</option>
+                                    <option value="3" selected>3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="cluster-separation" class="mr-2">Cluster Separation:</label>
+                                <input type="range" id="cluster-separation" min="1" max="10" step="0.5" value="5" class="w-40">
+                                <span id="separation-value" class="text-sm">5.0</span>
+                            </div>
+                            
+                            <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                        </div>
+                    </div>
+                    
+                    <!-- K-Means Parameters -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">K-Means Parameters</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="k-value" class="mr-2">K (Number of Clusters):</label>
+                                <select id="k-value" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="2">2</option>
+                                    <option value="3" selected>3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="max-iterations" class="mr-2">Max Iterations:</label>
+                                <input type="number" id="max-iterations" min="5" max="100" value="20" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="convergence-threshold" class="mr-2">Convergence Threshold:</label>
+                                <input type="number" id="convergence-threshold" min="0.001" max="1" step="0.001" value="0.01" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="initialization" class="mr-2">Initialization Method:</label>
+                                <select id="initialization" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="random" selected>Random</option>
+                                    <option value="kmeans++">K-Means++</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex space-x-2 mt-2">
+                                <button id="initialize-centroids" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Initialize</button>
+                                <button id="step-kmeans" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1" disabled>Step</button>
+                                <button id="run-kmeans" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1" disabled>Run</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Visualization Options -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-centroids" class="w-4 h-4" checked>
+                                <label for="show-centroids">Show Centroids</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-cluster-boundaries" class="w-4 h-4" checked>
+                                <label for="show-cluster-boundaries">Show Cluster Boundaries</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-true-clusters" class="w-4 h-4">
+                                <label for="show-true-clusters">Show True Clusters</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Algorithm Status -->
+                    <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h3 class="text-lg font-medium mb-2">Algorithm Status</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>Current Iteration:</span>
+                                <span id="current-iteration">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Inertia (Sum of Squared Distances):</span>
+                                <span id="inertia-value">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Silhouette Score:</span>
+                                <span id="silhouette-score">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Status:</span>
+                                <span id="convergence-status">Not Started</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Elbow Method Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Elbow Method</h2>
+            <div class="w-full h-[200px]">
+                <svg id="elbow-method" class="w-full h-full" viewBox="0 0 1000 200"></svg>
+            </div>
+            <div class="mt-4 text-center">
+                <button id="run-elbow-method" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Run Elbow Method Analysis</button>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How K-Means Clustering Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>K-Means</strong> is an iterative algorithm that partitions data into K distinct clusters by minimizing the within-cluster sum of squares (inertia).</p>
+                
+                <p><strong>The Algorithm:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Initialization:</strong> Place K centroids randomly or using K-Means++ (more strategic placement)</li>
+                    <li><strong>Assignment Step:</strong> Assign each data point to the nearest centroid, forming K clusters</li>
+                    <li><strong>Update Step:</strong> Recalculate the position of each centroid as the mean of all points in its cluster</li>
+                    <li><strong>Iteration:</strong> Repeat Assignment and Update steps until convergence or max iterations</li>
+                </ol>
+                
+                <p><strong>Key Concepts:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Inertia:</strong> Sum of squared distances from each point to its assigned centroid (lower is better)</li>
+                    <li><strong>Silhouette Score:</strong> Measures how similar points are to their own cluster compared to other clusters (higher is better)</li>
+                    <li><strong>Elbow Method:</strong> Plots inertia against different K values to find the "elbow point" where adding more clusters yields diminishing returns</li>
+                </ul>
+                
+                <p><strong>Limitations:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Assumes clusters are roughly spherical and equal in size</li>
+                    <li>Sensitive to initial centroid placement</li>
+                    <li>Requires specifying K in advance (hence the elbow method)</li>
+                    <li>Can be trapped in local minima</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const svg = document.getElementById('visualization');
+        const elbowSvg = document.getElementById('elbow-method');
+        const generateDataBtn = document.getElementById('generate-data');
+        const initializeCentroidsBtn = document.getElementById('initialize-centroids');
+        const stepKmeansBtn = document.getElementById('step-kmeans');
+        const runKmeansBtn = document.getElementById('run-kmeans');
+        const runElbowMethodBtn = document.getElementById('run-elbow-method');
+        const numPointsInput = document.getElementById('num-points');
+        const dataDistributionSelect = document.getElementById('data-distribution');
+        const trueClustersSelect = document.getElementById('true-clusters');
+        const clusterSeparationInput = document.getElementById('cluster-separation');
+        const separationValueDisplay = document.getElementById('separation-value');
+        const kValueSelect = document.getElementById('k-value');
+        const maxIterationsInput = document.getElementById('max-iterations');
+        const convergenceThresholdInput = document.getElementById('convergence-threshold');
+        const initializationSelect = document.getElementById('initialization');
+        const showCentroidsCheckbox = document.getElementById('show-centroids');
+        const showClusterBoundariesCheckbox = document.getElementById('show-cluster-boundaries');
+        const showTrueClustersCheckbox = document.getElementById('show-true-clusters');
+        const currentIterationDisplay = document.getElementById('current-iteration');
+        const inertiaValueDisplay = document.getElementById('inertia-value');
+        const silhouetteScoreDisplay = document.getElementById('silhouette-score');
+        const convergenceStatusDisplay = document.getElementById('convergence-status');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 600;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Data visualization constants
+        const DATA_WIDTH = WIDTH - MARGIN * 2;
+        const DATA_HEIGHT = HEIGHT - MARGIN * 2;
+        const DATA_X = MARGIN;
+        const DATA_Y = MARGIN;
+        
+        // Elbow method visualization constants
+        const ELBOW_HEIGHT = 200;
+        const ELBOW_MARGIN = 30;
+        const ELBOW_WIDTH = WIDTH - 2 * ELBOW_MARGIN;
+        const ELBOW_PLOT_HEIGHT = ELBOW_HEIGHT - 2 * ELBOW_MARGIN;
+        
+        // Data range
+        const X_MIN = 0;
+        const X_MAX = 10;
+        const Y_MIN = 0;
+        const Y_MAX = 10;
+        
+        // Colors
+        const CLUSTER_COLORS = [
+            '#EF4444', // Red
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#8B5CF6', // Purple
+            '#F59E0B', // Amber
+            '#EC4899', // Pink
+            '#6366F1'  // Indigo
+        ];
+        const CENTROID_COLOR = '#FBBF24'; // Yellow
+        const CENTROID_STROKE_COLOR = '#000000';
+        const TRUE_CLUSTER_COLORS = [
+            'rgba(239, 68, 68, 0.3)', // Red with opacity
+            'rgba(59, 130, 246, 0.3)', // Blue with opacity
+            'rgba(16, 185, 129, 0.3)', // Green with opacity
+            'rgba(139, 92, 246, 0.3)', // Purple with opacity
+            'rgba(245, 158, 11, 0.3)', // Amber with opacity
+            'rgba(236, 72, 153, 0.3)', // Pink with opacity
+            'rgba(99, 102, 241, 0.3)'  // Indigo with opacity
+        ];
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and algorithm parameters
+        let data = [];
+        let trueClusters = [];
+        let centroids = [];
+        let clusterAssignments = [];
+        let currentIteration = 0;
+        let inertia = 0;
+        let silhouetteScore = 0;
+        let isConverged = false;
+        let elbowData = [];
+        let animationInProgress = false;
+        let maxIterations = 20;
+        let convergenceThreshold = 0.01;
+        let kValue = 3;
+        let clusterSeparation = 5.0;
+        let trueClusterCount = 3;
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            svg.innerHTML = '';
+            elbowSvg.innerHTML = '';
+            
+            // Add background for main visualization
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            svg.appendChild(background);
+            
+            // Add grid lines
+            const numVerticalLines = 10;
+            const numHorizontalLines = 10;
+            const verticalSpacing = DATA_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = DATA_X + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                svg.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', DATA_X);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', DATA_X + DATA_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                svg.appendChild(hLine);
+            }
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', DATA_X);
+            xAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT);
+            xAxis.setAttribute('x2', DATA_X + DATA_WIDTH);
+            xAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', DATA_X);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', DATA_X);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 30);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Feature X₁';
+            svg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', DATA_X - 30);
+            yLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, ${DATA_X - 30}, ${DATA_Y + DATA_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Feature X₂';
+            svg.appendChild(yLabel);
+            
+            // Add x-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const x = mapX(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', DATA_Y + DATA_HEIGHT);
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', DATA_Y + DATA_HEIGHT + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Add y-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const y = mapY(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', DATA_X);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', DATA_X - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', DATA_X - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Initialize elbow method visualization
+            initElbowMethodSVG();
+        }
+        
+        // Initialize the elbow method visualization
+        function initElbowMethodSVG() {
+            // Clear existing SVG
+            elbowSvg.innerHTML = '';
+            
+            // Add background
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', ELBOW_HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            elbowSvg.appendChild(background);
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', ELBOW_MARGIN);
+            xAxis.setAttribute('y1', ELBOW_HEIGHT - ELBOW_MARGIN);
+            xAxis.setAttribute('x2', WIDTH - ELBOW_MARGIN);
+            xAxis.setAttribute('y2', ELBOW_HEIGHT - ELBOW_MARGIN);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            elbowSvg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', ELBOW_MARGIN);
+            yAxis.setAttribute('y1', ELBOW_MARGIN);
+            yAxis.setAttribute('x2', ELBOW_MARGIN);
+            yAxis.setAttribute('y2', ELBOW_HEIGHT - ELBOW_MARGIN);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            elbowSvg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', WIDTH / 2);
+            xLabel.setAttribute('y', ELBOW_HEIGHT - 5);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Number of Clusters (K)';
+            elbowSvg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', 15);
+            yLabel.setAttribute('y', ELBOW_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, 15, ${ELBOW_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Inertia';
+            elbowSvg.appendChild(yLabel);
+            
+            // Add title
+            const title = document.createElementNS(svgNS, 'text');
+            title.setAttribute('x', WIDTH / 2);
+            title.setAttribute('y', ELBOW_MARGIN / 2);
+            title.setAttribute('text-anchor', 'middle');
+            title.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            title.setAttribute('font-weight', 'bold');
+            title.textContent = 'Elbow Method: Inertia vs. Number of Clusters';
+            elbowSvg.appendChild(title);
+            
+            // Add placeholder text when no data is available
+            const placeholderText = document.createElementNS(svgNS, 'text');
+            placeholderText.setAttribute('x', WIDTH / 2);
+            placeholderText.setAttribute('y', ELBOW_HEIGHT / 2);
+            placeholderText.setAttribute('text-anchor', 'middle');
+            placeholderText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            placeholderText.setAttribute('font-style', 'italic');
+            placeholderText.setAttribute('class', 'elbow-placeholder');
+            placeholderText.textContent = 'Run the Elbow Method analysis to find optimal K';
+            elbowSvg.appendChild(placeholderText);
+        }
+        
+        // Generate synthetic data
+        function generateData() {
+            const numPoints = parseInt(numPointsInput.value);
+            const distribution = dataDistributionSelect.value;
+            trueClusterCount = parseInt(trueClustersSelect.value);
+            clusterSeparation = parseFloat(clusterSeparationInput.value);
+            
+            // Update separation display
+            separationValueDisplay.textContent = clusterSeparation.toFixed(1);
+            
+            // Reset algorithm state
+            centroids = [];
+            clusterAssignments = [];
+            currentIteration = 0;
+            inertia = 0;
+            silhouetteScore = 0;
+            isConverged = false;
+            
+            // Update UI
+            updateAlgorithmStatus();
+            stepKmeansBtn.disabled = true;
+            runKmeansBtn.disabled = true;
+            
+            // Clear data
+            data = [];
+            trueClusters = [];
+            
+            // Generate data based on selected distribution
+            switch (distribution) {
+                case 'gaussian':
+                    generateGaussianClusters(numPoints, trueClusterCount, clusterSeparation);
+                    break;
+                    
+                case 'circular':
+                    generateCircularClusters(numPoints, trueClusterCount, clusterSeparation);
+                    break;
+                    
+                case 'unbalanced':
+                    generateUnbalancedClusters(numPoints, trueClusterCount, clusterSeparation);
+                    break;
+                    
+                case 'random':
+                    generateRandomData(numPoints);
+                    break;
+                    
+                case 'anisotropic':
+                    generateAnisotropicClusters(numPoints, trueClusterCount, clusterSeparation);
+                    break;
+                    
+                default:
+                    generateGaussianClusters(numPoints, trueClusterCount, clusterSeparation);
+            }
+            
+            // Update K-value select based on true cluster count
+            kValueSelect.value = trueClusterCount.toString();
+            kValue = trueClusterCount;
+            
+            // Visualize data
+            visualizeData();
+            
+            // Show true clusters if option is checked
+            if (showTrueClustersCheckbox.checked) {
+                visualizeTrueClusters();
+            }
+        }
+        
+        // Generate Gaussian clusters
+        function generateGaussianClusters(numPoints, numClusters, separation) {
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const stdDev = 1.0 / (separation * 0.4); // Adjust cluster spread based on separation
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate point with Gaussian distribution around center
+                    const x = center.x + randomNormal() * stdDev;
+                    const y = center.y + randomNormal() * stdDev;
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const stdDev = 1.0 / (separation * 0.4);
+                
+                const x = center.x + randomNormal() * stdDev;
+                const y = center.y + randomNormal() * stdDev;
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate circular clusters
+        function generateCircularClusters(numPoints, numClusters, separation) {
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points around each cluster center in a circular pattern
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const radius = 1.0 / (separation * 0.2); // Adjust radius based on separation
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate random angle and distance from center
+                    const angle = Math.random() * 2 * Math.PI;
+                    const distance = Math.random() * radius;
+                    
+                    // Convert to Cartesian coordinates
+                    const x = center.x + distance * Math.cos(angle);
+                    const y = center.y + distance * Math.sin(angle);
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const radius = 1.0 / (separation * 0.2);
+                
+                const angle = Math.random() * 2 * Math.PI;
+                const distance = Math.random() * radius;
+                
+                const x = center.x + distance * Math.cos(angle);
+                const y = center.y + distance * Math.sin(angle);
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate unbalanced clusters
+        function generateUnbalancedClusters(numPoints, numClusters, separation) {
+            // Assign different proportions to each cluster
+            const proportions = [];
+            let remainingProportion = 1.0;
+            
+            // Generate random proportions for each cluster
+            for (let i = 0; i < numClusters - 1; i++) {
+                // For very unbalanced clusters, one cluster should be much larger
+                const p = i === 0 ? remainingProportion * 0.6 : remainingProportion * Math.random() * 0.5;
+                proportions.push(p);
+                remainingProportion -= p;
+            }
+            
+            // Last cluster gets the remaining proportion
+            proportions.push(remainingProportion);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+            }
+            
+            // Generate points for each cluster based on its proportion
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const clusterPoints = Math.floor(numPoints * proportions[i]);
+                const stdDev = 1.0 / (separation * 0.4); // Adjust cluster spread based on separation
+                
+                for (let j = 0; j < clusterPoints; j++) {
+                    // Generate point with Gaussian distribution around center
+                    const x = center.x + randomNormal() * stdDev;
+                    const y = center.y + randomNormal() * stdDev;
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const stdDev = 1.0 / (separation * 0.4);
+                
+                const x = center.x + randomNormal() * stdDev;
+                const y = center.y + randomNormal() * stdDev;
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate random uniform data
+        function generateRandomData(numPoints) {
+            for (let i = 0; i < numPoints; i++) {
+                const x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                const y = Math.random() * (Y_MAX - Y_MIN) + Y_MIN;
+                
+                data.push({ x, y });
+                trueClusters.push(0); // All points in one cluster for random data
+            }
+        }
+        
+        // Generate anisotropic (elongated) clusters
+        function generateAnisotropicClusters(numPoints, numClusters, separation) {
+            // Calculate points per cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            const clusterAngles = [];
+            
+            for (let i = 0; i < numClusters; i++) {
+                // Place clusters in a grid-like pattern with separation
+                const gridSize = Math.ceil(Math.sqrt(numClusters));
+                const row = Math.floor(i / gridSize);
+                const col = i % gridSize;
+                
+                const centerX = 2 + (col * separation * 0.8);
+                const centerY = 2 + (row * separation * 0.8);
+                
+                clusterCenters.push({ x: centerX, y: centerY });
+                
+                // Give each cluster a random orientation
+                clusterAngles.push(Math.random() * Math.PI);
+            }
+            
+            // Generate points around each cluster center
+            for (let i = 0; i < numClusters; i++) {
+                const center = clusterCenters[i];
+                const angle = clusterAngles[i];
+                
+                // Create covariance matrix for elongated clusters
+                const stdDevMajor = 1.0 / (separation * 0.2); // Major axis
+                const stdDevMinor = stdDevMajor * 0.2; // Minor axis (much smaller)
+                
+                for (let j = 0; j < pointsPerCluster; j++) {
+                    // Generate point with anisotropic distribution
+                    const u1 = randomNormal() * stdDevMajor;
+                    const u2 = randomNormal() * stdDevMinor;
+                    
+                    // Rotate point
+                    const x = center.x + u1 * Math.cos(angle) - u2 * Math.sin(angle);
+                    const y = center.y + u1 * Math.sin(angle) + u2 * Math.cos(angle);
+                    
+                    // Ensure point is within bounds
+                    if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                        data.push({ x, y });
+                        trueClusters.push(i);
+                    } else {
+                        // If out of bounds, try again
+                        j--;
+                    }
+                }
+            }
+            
+            // Add any remaining points
+            const remaining = numPoints - data.length;
+            for (let i = 0; i < remaining; i++) {
+                const clusterIndex = Math.floor(Math.random() * numClusters);
+                const center = clusterCenters[clusterIndex];
+                const angle = clusterAngles[clusterIndex];
+                
+                const stdDevMajor = 1.0 / (separation * 0.2);
+                const stdDevMinor = stdDevMajor * 0.2;
+                
+                const u1 = randomNormal() * stdDevMajor;
+                const u2 = randomNormal() * stdDevMinor;
+                
+                const x = center.x + u1 * Math.cos(angle) - u2 * Math.sin(angle);
+                const y = center.y + u1 * Math.sin(angle) + u2 * Math.cos(angle);
+                
+                // Ensure point is within bounds
+                if (x >= X_MIN && x <= X_MAX && y >= Y_MIN && y <= Y_MAX) {
+                    data.push({ x, y });
+                    trueClusters.push(clusterIndex);
+                } else {
+                    // If out of bounds, try again
+                    i--;
+                }
+            }
+        }
+        
+        // Generate a random normal (Gaussian) number using Box-Muller transform
+        function randomNormal() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random(); // Exclude 0
+            while (v === 0) v = Math.random(); // Exclude 0
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+        
+        // Map data coordinates to SVG coordinates
+        function mapX(x) {
+            return DATA_X + ((x - X_MIN) / (X_MAX - X_MIN)) * DATA_WIDTH;
+        }
+        
+        function mapY(y) {
+            return DATA_Y + DATA_HEIGHT - ((y - Y_MIN) / (Y_MAX - Y_MIN)) * DATA_HEIGHT;
+        }
+        
+        // Map elbow method coordinates
+        function mapElbowX(k) {
+            return ELBOW_MARGIN + ((k - 1) / 9) * ELBOW_WIDTH;
+        }
+        
+        function mapElbowY(inertia, minInertia, maxInertia) {
+            const normalizedInertia = (inertia - minInertia) / (maxInertia - minInertia || 1);
+            return ELBOW_HEIGHT - ELBOW_MARGIN - normalizedInertia * ELBOW_PLOT_HEIGHT;
+        }
+        
+        // Visualize the data points
+        function visualizeData() {
+            // Remove existing data points
+            const existingPoints = svg.querySelectorAll('.data-point');
+            existingPoints.forEach(point => point.remove());
+            
+            // Remove existing true cluster visualizations
+            clearTrueClusters();
+            
+            // Remove existing cluster visualizations
+            clearClusters();
+            
+            // Add new data points
+            data.forEach((point, index) => {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', mapX(point.x));
+                circle.setAttribute('cy', mapY(point.y));
+                circle.setAttribute('r', '4');
+                circle.setAttribute('fill', '#718096'); // Default gray
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                svg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(5),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Clear cluster visualizations
+        function clearClusters() {
+            // Remove cluster-colored points
+            const existingPoints = svg.querySelectorAll('.data-point');
+            existingPoints.forEach(point => {
+                point.setAttribute('fill', '#718096'); // Reset to default gray
+                point.setAttribute('cluster', '');
+            });
+            
+            // Remove centroids
+            const existingCentroids = svg.querySelectorAll('.centroid');
+            existingCentroids.forEach(c => c.remove());
+            
+            // Remove cluster boundaries
+            const existingBoundaries = svg.querySelectorAll('.cluster-boundary');
+            existingBoundaries.forEach(b => b.remove());
+        }
+        
+        // Clear true cluster visualizations
+        function clearTrueClusters() {
+            const existingTrueClusters = svg.querySelectorAll('.true-cluster');
+            existingTrueClusters.forEach(tc => tc.remove());
+        }
+        
+        // Visualize true clusters
+        function visualizeTrueClusters() {
+            // Clear existing true cluster visualizations
+            clearTrueClusters();
+            
+            // Create groups for each true cluster
+            const clusterGroups = {};
+            
+            // Group points by true cluster
+            for (let i = 0; i < data.length; i++) {
+                const clusterIndex = trueClusters[i];
+                if (!clusterGroups[clusterIndex]) {
+                    clusterGroups[clusterIndex] = [];
+                }
+                clusterGroups[clusterIndex].push(data[i]);
+            }
+            
+            // Draw convex hull or ellipses for each cluster
+            for (const clusterIndex in clusterGroups) {
+                const points = clusterGroups[clusterIndex];
+                
+                // Draw ellipse approximation of cluster
+                const { centerX, centerY, radiusX, radiusY, angle } = calculateEllipseParams(points);
+                
+                // Create the ellipse
+                const ellipse = document.createElementNS(svgNS, 'ellipse');
+                ellipse.setAttribute('cx', mapX(centerX));
+                ellipse.setAttribute('cy', mapY(centerY));
+                ellipse.setAttribute('rx', radiusX * DATA_WIDTH / (X_MAX - X_MIN));
+                ellipse.setAttribute('ry', radiusY * DATA_HEIGHT / (Y_MAX - Y_MIN));
+                ellipse.setAttribute('transform', `rotate(${angle * 180 / Math.PI}, ${mapX(centerX)}, ${mapY(centerY)})`);
+                ellipse.setAttribute('fill', TRUE_CLUSTER_COLORS[clusterIndex % TRUE_CLUSTER_COLORS.length]);
+                ellipse.setAttribute('class', 'true-cluster');
+                
+                // Add animation
+                ellipse.style.opacity = '0';
+                
+                // Add to SVG (before data points for proper layering)
+                const firstDataPoint = svg.querySelector('.data-point');
+                if (firstDataPoint) {
+                    svg.insertBefore(ellipse, firstDataPoint);
+                } else {
+                    svg.appendChild(ellipse);
+                }
+            }
+            
+            // Animate the true clusters
+            anime({
+                targets: '.true-cluster',
+                opacity: 0.3,
+                easing: 'easeInOutSine',
+                duration: 800
+            });
+        }
+        
+        // Calculate parameters for an ellipse approximating a cluster of points
+        function calculateEllipseParams(points) {
+            // Calculate center
+            let sumX = 0, sumY = 0;
+            for (const point of points) {
+                sumX += point.x;
+                sumY += point.y;
+            }
+            const centerX = sumX / points.length;
+            const centerY = sumY / points.length;
+            
+            // Calculate covariance matrix
+            let sumXX = 0, sumXY = 0, sumYY = 0;
+            for (const point of points) {
+                const dx = point.x - centerX;
+                const dy = point.y - centerY;
+                sumXX += dx * dx;
+                sumXY += dx * dy;
+                sumYY += dy * dy;
+            }
+            
+            // Normalize by number of points
+            const covXX = sumXX / points.length;
+            const covXY = sumXY / points.length;
+            const covYY = sumYY / points.length;
+            
+            // Calculate eigenvalues and eigenvectors of covariance matrix
+            const trace = covXX + covYY;
+            const det = covXX * covYY - covXY * covXY;
+            
+            // Calculate eigenvalues
+            const lambda1 = trace / 2 + Math.sqrt(Math.pow(trace / 2, 2) - det);
+            const lambda2 = trace / 2 - Math.sqrt(Math.pow(trace / 2, 2) - det);
+            
+            // Calculate semi-major and semi-minor axes (scale for coverage)
+            const radiusX = Math.sqrt(lambda1) * 2.45;
+            const radiusY = Math.sqrt(lambda2) * 2.45;
+            
+            // Calculate orientation angle
+            let angle = 0;
+            if (covXY !== 0) {
+                angle = Math.atan2(lambda1 - covXX, covXY);
+            }
+            
+            return { centerX, centerY, radiusX, radiusY, angle };
+        }
+        
+        // Initialize K-means centroids
+        function initializeCentroids() {
+            // Get parameters from UI
+            kValue = parseInt(kValueSelect.value);
+            maxIterations = parseInt(maxIterationsInput.value);
+            convergenceThreshold = parseFloat(convergenceThresholdInput.value);
+            const initMethod = initializationSelect.value;
+            
+            // Reset algorithm state
+            centroids = [];
+            clusterAssignments = Array(data.length).fill(-1);
+            currentIteration = 0;
+            inertia = 0;
+            silhouetteScore = 0;
+            isConverged = false;
+            
+            // Update UI
+            currentIterationDisplay.textContent = currentIteration;
+            inertiaValueDisplay.textContent = '-';
+            silhouetteScoreDisplay.textContent = '-';
+            convergenceStatusDisplay.textContent = 'Initialized';
+            
+            // Initialize centroids based on selected method
+            if (initMethod === 'random') {
+                initializeRandomCentroids();
+            } else if (initMethod === 'kmeans++') {
+                initializeKMeansPlusPlusCentroids();
+            }
+            
+            // Visualize initial centroids
+            visualizeCentroids();
+            
+            // Enable step and run buttons
+            stepKmeansBtn.disabled = false;
+            runKmeansBtn.disabled = false;
+        }
+        
+        // Initialize centroids randomly
+        function initializeRandomCentroids() {
+            centroids = [];
+            
+            // Randomly select K data points as initial centroids
+            const indices = [];
+            while (indices.length < kValue) {
+                const randomIndex = Math.floor(Math.random() * data.length);
+                if (!indices.includes(randomIndex)) {
+                    indices.push(randomIndex);
+                }
+            }
+            
+            // Create centroids
+            for (let i = 0; i < kValue; i++) {
+                const point = data[indices[i]];
+                centroids.push({ x: point.x, y: point.y });
+            }
+        }
+        
+        // Initialize centroids using K-means++ method
+        function initializeKMeansPlusPlusCentroids() {
+            centroids = [];
+            
+            // Choose first centroid randomly
+            const firstIndex = Math.floor(Math.random() * data.length);
+            centroids.push({ x: data[firstIndex].x, y: data[firstIndex].y });
+            
+            // Choose remaining centroids
+            for (let i = 1; i < kValue; i++) {
+                // Calculate squared distances from each point to the nearest centroid
+                const distances = [];
+                let sumDistances = 0;
+                
+                for (let j = 0; j < data.length; j++) {
+                    const point = data[j];
+                    let minDistance = Infinity;
+                    
+                    // Find distance to nearest centroid
+                    for (let k = 0; k < centroids.length; k++) {
+                        const centroid = centroids[k];
+                        const d = calculateDistance(point, centroid);
+                        if (d < minDistance) {
+                            minDistance = d;
+                        }
+                    }
+                    
+                    // Square the distance
+                    const squaredDistance = minDistance * minDistance;
+                    distances.push(squaredDistance);
+                    sumDistances += squaredDistance;
+                }
+                
+                // Choose next centroid with probability proportional to squared distance
+                let random = Math.random() * sumDistances;
+                let cumulativeProb = 0;
+                let selectedIndex = -1;
+                
+                for (let j = 0; j < data.length; j++) {
+                    cumulativeProb += distances[j];
+                    if (cumulativeProb >= random) {
+                        selectedIndex = j;
+                        break;
+                    }
+                }
+                
+                // If somehow we didn't select an index, pick a random point
+                if (selectedIndex === -1) {
+                    selectedIndex = Math.floor(Math.random() * data.length);
+                }
+                
+                centroids.push({ x: data[selectedIndex].x, y: data[selectedIndex].y });
+            }
+        }
+        
+        // Visualize centroids
+        function visualizeCentroids() {
+            if (!showCentroidsCheckbox.checked) return;
+            
+            // Remove existing centroids
+            const existingCentroids = svg.querySelectorAll('.centroid');
+            existingCentroids.forEach(c => c.remove());
+            
+            // Draw centroids
+            centroids.forEach((centroid, index) => {
+                const centroidElement = document.createElementNS(svgNS, 'circle');
+                centroidElement.setAttribute('cx', mapX(centroid.x));
+                centroidElement.setAttribute('cy', mapY(centroid.y));
+                centroidElement.setAttribute('r', '8');
+                centroidElement.setAttribute('fill', CENTROID_COLOR);
+                centroidElement.setAttribute('stroke', CENTROID_STROKE_COLOR);
+                centroidElement.setAttribute('stroke-width', '2');
+                centroidElement.setAttribute('class', 'centroid');
+                centroidElement.setAttribute('data-index', index);
+                
+                // Add animation
+                centroidElement.style.opacity = '0';
+                centroidElement.style.transform = 'scale(0)';
+                
+                svg.appendChild(centroidElement);
+                
+                // Add label
+                const label = document.createElementNS(svgNS, 'text');
+                label.setAttribute('x', mapX(centroid.x));
+                label.setAttribute('y', mapY(centroid.y) + 3);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('font-size', '10');
+                label.setAttribute('font-weight', 'bold');
+                label.setAttribute('fill', '#000');
+                label.setAttribute('class', 'centroid');
+                label.textContent = (index + 1).toString();
+                
+                svg.appendChild(label);
+            });
+            
+            // Animate the appearance of centroids
+            anime({
+                targets: '.centroid',
+                opacity: 1,
+                scale: 1,
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Execute one step of the K-means algorithm
+        async function stepKMeans() {
+            if (isConverged || currentIteration >= maxIterations) {
+                convergenceStatusDisplay.textContent = 'Converged or Max Iterations Reached';
+                return false;
+            }
+            
+            // Disable buttons during animation
+            stepKmeansBtn.disabled = true;
+            runKmeansBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Assignment step: assign each point to the nearest centroid
+            const newAssignments = [];
+            for (let i = 0; i < data.length; i++) {
+                const point = data[i];
+                let minDistance = Infinity;
+                let nearestCentroid = 0;
+                
+                for (let j = 0; j < centroids.length; j++) {
+                    const centroid = centroids[j];
+                    const distance = calculateDistance(point, centroid);
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestCentroid = j;
+                    }
+                }
+                
+                newAssignments.push(nearestCentroid);
+            }
+            
+            // Check if assignments changed
+            let assignmentsChanged = false;
+            if (clusterAssignments.length === 0) {
+                assignmentsChanged = true;
+            } else {
+                for (let i = 0; i < data.length; i++) {
+                    if (newAssignments[i] !== clusterAssignments[i]) {
+                        assignmentsChanged = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Update assignments
+            clusterAssignments = newAssignments;
+            
+            // Update cluster colors
+            updateClusterColors();
+            
+            // Draw cluster boundaries if enabled
+            if (showClusterBoundariesCheckbox.checked) {
+                visualizeClusterBoundaries();
+            }
+            
+            // Calculate inertia (sum of squared distances)
+            inertia = calculateInertia();
+            inertiaValueDisplay.textContent = inertia.toFixed(2);
+            
+            // Calculate silhouette score
+            silhouetteScore = calculateSilhouetteScore();
+            silhouetteScoreDisplay.textContent = silhouetteScore.toFixed(4);
+            
+            // Update step - wait a short delay to let the updates be visible
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Update step: update centroids to the mean of their assigned points
+            const oldCentroids = [...centroids];
+            const newCentroids = [];
+            
+            for (let i = 0; i < kValue; i++) {
+                let sumX = 0, sumY = 0, count = 0;
+                
+                for (let j = 0; j < data.length; j++) {
+                    if (clusterAssignments[j] === i) {
+                        sumX += data[j].x;
+                        sumY += data[j].y;
+                        count++;
+                    }
+                }
+                
+                // If no points assigned to this centroid, keep it where it is
+                if (count === 0) {
+                    newCentroids.push({ x: oldCentroids[i].x, y: oldCentroids[i].y });
+                } else {
+                    newCentroids.push({ x: sumX / count, y: sumY / count });
+                }
+            }
+            
+            // Calculate how much the centroids moved
+            let maxCentroidShift = 0;
+            for (let i = 0; i < kValue; i++) {
+                const shift = calculateDistance(oldCentroids[i], newCentroids[i]);
+                maxCentroidShift = Math.max(maxCentroidShift, shift);
+            }
+            
+            // Update centroids
+            centroids = newCentroids;
+            
+            // Check for convergence
+            isConverged = !assignmentsChanged || maxCentroidShift < convergenceThreshold;
+            
+            // Update iteration count
+            currentIteration++;
+            
+            // Update UI
+            currentIterationDisplay.textContent = currentIteration;
+            convergenceStatusDisplay.textContent = isConverged ? 'Converged' : 'Running';
+            
+            // Re-visualize centroids
+            visualizeCentroids();
+            
+            // Re-enable buttons
+            stepKmeansBtn.disabled = false;
+            runKmeansBtn.disabled = false;
+            animationInProgress = false;
+            
+            // Return whether we should continue
+            return !isConverged && currentIteration < maxIterations;
+        }
+        
+        // Run the full K-means algorithm
+        async function runKMeans() {
+            let shouldContinue = true;
+            
+            while (shouldContinue && !animationInProgress) {
+                shouldContinue = await stepKMeans();
+                
+                // Add a small delay to make the animation visible
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+        
+        // Update cluster colors
+        function updateClusterColors() {
+            const dataPoints = svg.querySelectorAll('.data-point');
+            
+            dataPoints.forEach((point, index) => {
+                const clusterIndex = clusterAssignments[index];
+                point.setAttribute('fill', CLUSTER_COLORS[clusterIndex % CLUSTER_COLORS.length]);
+                point.setAttribute('cluster', clusterIndex);
+            });
+        }
+        
+        // Visualize cluster boundaries
+        function visualizeClusterBoundaries() {
+            // Remove existing boundaries
+            const existingBoundaries = svg.querySelectorAll('.cluster-boundary');
+            existingBoundaries.forEach(b => b.remove());
+            
+            // Create Voronoi-like boundaries
+            // This is a simplified approach - in practice, computing exact Voronoi diagrams is more complex
+            
+            // Calculate grid resolution
+            const gridSize = 50;
+            const cellSize = DATA_WIDTH / gridSize;
+            
+            // Create a matrix to store cluster assignments for each grid point
+            const grid = Array(gridSize).fill().map(() => Array(gridSize).fill(-1));
+            
+            // Assign each grid point to the nearest centroid
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const x = X_MIN + (i / gridSize) * (X_MAX - X_MIN);
+                    const y = Y_MIN + (j / gridSize) * (Y_MAX - Y_MIN);
+                    
+                    let minDistance = Infinity;
+                    let nearestCentroid = 0;
+                    
+                    for (let k = 0; k < centroids.length; k++) {
+                        const centroid = centroids[k];
+                        const distance = calculateDistance({ x, y }, centroid);
+                        
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            nearestCentroid = k;
+                        }
+                    }
+                    
+                    grid[i][j] = nearestCentroid;
+                }
+            }
+            
+            // Draw boundary cells wherever neighboring cells have different cluster assignments
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const cluster = grid[i][j];
+                    
+                    // Check if this is a boundary
+                    let isBoundary = false;
+                    
+                    if (i > 0 && grid[i-1][j] !== cluster) isBoundary = true;
+                    if (i < gridSize-1 && grid[i+1][j] !== cluster) isBoundary = true;
+                    if (j > 0 && grid[i][j-1] !== cluster) isBoundary = true;
+                    if (j < gridSize-1 && grid[i][j+1] !== cluster) isBoundary = true;
+                    
+                    if (isBoundary) {
+                        const x = DATA_X + i * cellSize;
+                        const y = DATA_Y + j * cellSize;
+                        
+                        const cell = document.createElementNS(svgNS, 'rect');
+                        cell.setAttribute('x', x);
+                        cell.setAttribute('y', y);
+                        cell.setAttribute('width', cellSize);
+                        cell.setAttribute('height', cellSize);
+                        cell.setAttribute('fill', CLUSTER_COLORS[cluster % CLUSTER_COLORS.length]);
+                        cell.setAttribute('opacity', '0.3');
+                        cell.setAttribute('class', 'cluster-boundary');
+                        
+                        svg.appendChild(cell);
+                    }
+                }
+            }
+        }
+        
+        // Calculate distance between two points
+        function calculateDistance(pointA, pointB) {
+            const dx = pointA.x - pointB.x;
+            const dy = pointA.y - pointB.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // Calculate inertia (sum of squared distances from points to their centroids)
+        function calculateInertia() {
+            let totalDistance = 0;
+            
+            for (let i = 0; i < data.length; i++) {
+                const point = data[i];
+                const centroid = centroids[clusterAssignments[i]];
+                const distance = calculateDistance(point, centroid);
+                totalDistance += distance * distance;
+            }
+            
+            return totalDistance;
+        }
+        
+        // Calculate silhouette score
+        function calculateSilhouetteScore() {
+            if (kValue <= 1) return 0;
+            
+            let totalSilhouette = 0;
+            
+            // For each point
+            for (let i = 0; i < data.length; i++) {
+                const point = data[i];
+                const pointCluster = clusterAssignments[i];
+                
+                // Calculate a (average distance to points in the same cluster)
+                let intraClusterSum = 0;
+                let intraClusterCount = 0;
+                
+                for (let j = 0; j < data.length; j++) {
+                    if (i !== j && clusterAssignments[j] === pointCluster) {
+                        intraClusterSum += calculateDistance(point, data[j]);
+                        intraClusterCount++;
+                    }
+                }
+                
+                // If this is the only point in its cluster, set a to 0
+                const a = intraClusterCount > 0 ? intraClusterSum / intraClusterCount : 0;
+                
+                // Calculate b (average distance to points in the nearest neighboring cluster)
+                let minInterClusterAvg = Infinity;
+                
+                // For each other cluster
+                for (let c = 0; c < kValue; c++) {
+                    if (c !== pointCluster) {
+                        let interClusterSum = 0;
+                        let interClusterCount = 0;
+                        
+                        for (let j = 0; j < data.length; j++) {
+                            if (clusterAssignments[j] === c) {
+                                interClusterSum += calculateDistance(point, data[j]);
+                                interClusterCount++;
+                            }
+                        }
+                        
+                        if (interClusterCount > 0) {
+                            const avgDistance = interClusterSum / interClusterCount;
+                            minInterClusterAvg = Math.min(minInterClusterAvg, avgDistance);
+                        }
+                    }
+                }
+                
+                const b = minInterClusterAvg;
+                
+                // Calculate silhouette for this point
+                if (intraClusterCount === 0) {
+                    // If this is the only point in its cluster, silhouette is 0
+                    totalSilhouette += 0;
+                } else if (b === Infinity) {
+                    // If there's only one cluster with points, silhouette is 0
+                    totalSilhouette += 0;
+                } else {
+                    // Otherwise, calculate silhouette
+                    const s = (b - a) / Math.max(a, b);
+                    totalSilhouette += s;
+                }
+            }
+            
+            // Return average silhouette
+            return totalSilhouette / data.length;
+        }
+        
+        // Update algorithm status display
+        function updateAlgorithmStatus() {
+            currentIterationDisplay.textContent = currentIteration;
+            inertiaValueDisplay.textContent = '-';
+            silhouetteScoreDisplay.textContent = '-';
+            convergenceStatusDisplay.textContent = 'Not Started';
+        }
+        
+        // Run elbow method analysis
+        async function runElbowMethod() {
+            if (data.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during analysis
+            runElbowMethodBtn.disabled = true;
+            
+            // Clear existing elbow data
+            elbowData = [];
+            
+            // Remove placeholder text
+            const placeholder = elbowSvg.querySelector('.elbow-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Remove existing elbow curve
+            const existingCurve = elbowSvg.querySelector('.elbow-curve');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            // Remove existing elbow points
+            const existingPoints = elbowSvg.querySelectorAll('.elbow-point');
+            existingPoints.forEach(p => p.remove());
+            
+            // Run K-means for different values of K
+            for (let k = 1; k <= 10; k++) {
+                // Set parameters
+                kValue = k;
+                
+                // Initialize centroids randomly
+                centroids = [];
+                const indices = [];
+                while (indices.length < kValue) {
+                    const randomIndex = Math.floor(Math.random() * data.length);
+                    if (!indices.includes(randomIndex)) {
+                        indices.push(randomIndex);
+                    }
+                }
+                
+                for (let i = 0; i < kValue; i++) {
+                    const point = data[indices[i]];
+                    centroids.push({ x: point.x, y: point.y });
+                }
+                
+                // Reset algorithm state
+                clusterAssignments = Array(data.length).fill(-1);
+                currentIteration = 0;
+                isConverged = false;
+                
+                // Run K-means until convergence or max iterations
+                let iterations = 0;
+                while (!isConverged && iterations < maxIterations) {
+                    // Assignment step
+                    const newAssignments = [];
+                    for (let i = 0; i < data.length; i++) {
+                        const point = data[i];
+                        let minDistance = Infinity;
+                        let nearestCentroid = 0;
+                        
+                        for (let j = 0; j < centroids.length; j++) {
+                            const centroid = centroids[j];
+                            const distance = calculateDistance(point, centroid);
+                            
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                nearestCentroid = j;
+                            }
+                        }
+                        
+                        newAssignments.push(nearestCentroid);
+                    }
+                    
+                    // Check if assignments changed
+                    let assignmentsChanged = false;
+                    if (clusterAssignments.length === 0) {
+                        assignmentsChanged = true;
+                    } else {
+                        for (let i = 0; i < data.length; i++) {
+                            if (newAssignments[i] !== clusterAssignments[i]) {
+                                assignmentsChanged = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Update assignments
+                    clusterAssignments = newAssignments;
+                    
+                    // Update centroids
+                    const newCentroids = [];
+                    let maxCentroidShift = 0;
+                    
+                    for (let i = 0; i < kValue; i++) {
+                        let sumX = 0, sumY = 0, count = 0;
+                        
+                        for (let j = 0; j < data.length; j++) {
+                            if (clusterAssignments[j] === i) {
+                                sumX += data[j].x;
+                                sumY += data[j].y;
+                                count++;
+                            }
+                        }
+                        
+                        if (count === 0) {
+                            newCentroids.push({ x: centroids[i].x, y: centroids[i].y });
+                        } else {
+                            const newX = sumX / count;
+                            const newY = sumY / count;
+                            newCentroids.push({ x: newX, y: newY });
+                            
+                            const shift = calculateDistance(centroids[i], { x: newX, y: newY });
+                            maxCentroidShift = Math.max(maxCentroidShift, shift);
+                        }
+                    }
+                    
+                    centroids = newCentroids;
+                    
+                    // Check for convergence
+                    isConverged = !assignmentsChanged || maxCentroidShift < convergenceThreshold;
+                    iterations++;
+                }
+                
+                // Calculate inertia
+                const kInertia = calculateInertia();
+                
+                // Add to elbow data
+                elbowData.push({ k, inertia: kInertia });
+                
+                // Draw elbow point as we go
+                drawElbowPoint(k, kInertia);
+                
+                // Add a small delay to show progress
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Draw elbow curve
+            drawElbowCurve();
+            
+            // Find optimal K (elbow point)
+            const optimalK = findElbowPoint();
+            
+            // Update K value to optimal
+            kValueSelect.value = optimalK.toString();
+            
+            // Re-enable buttons
+            runElbowMethodBtn.disabled = false;
+        }
+        
+        // Draw a single point on the elbow curve
+        function drawElbowPoint(k, inertia) {
+            // Find min and max inertia for scaling
+            const inertias = elbowData.map(d => d.inertia);
+            const minInertia = Math.min(...inertias);
+            const maxInertia = Math.max(...inertias);
+            
+            // Map coordinates
+            const x = mapElbowX(k);
+            const y = mapElbowY(inertia, minInertia, maxInertia);
+            
+            // Draw point
+            const point = document.createElementNS(svgNS, 'circle');
+            point.setAttribute('cx', x);
+            point.setAttribute('cy', y);
+            point.setAttribute('r', '5');
+            point.setAttribute('fill', CLUSTER_COLORS[0]);
+            point.setAttribute('class', 'elbow-point');
+            point.setAttribute('data-k', k);
+            
+            // Add animation
+            point.style.opacity = '0';
+            
+            elbowSvg.appendChild(point);
+            
+            // Add label
+            const label = document.createElementNS(svgNS, 'text');
+            label.setAttribute('x', x);
+            label.setAttribute('y', y - 10);
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('font-size', '10');
+            label.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            label.setAttribute('class', 'elbow-point');
+            label.textContent = k.toString();
+            
+            elbowSvg.appendChild(label);
+            
+            // Animate point appearance
+            anime({
+                targets: `.elbow-point[data-k="${k}"]`,
+                opacity: 1,
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Draw the elbow curve
+        function drawElbowCurve() {
+            if (elbowData.length < 2) return;
+            
+            // Find min and max inertia for scaling
+            const inertias = elbowData.map(d => d.inertia);
+            const minInertia = Math.min(...inertias);
+            const maxInertia = Math.max(...inertias);
+            
+            // Create path data
+            let pathData = '';
+            
+            for (let i = 0; i < elbowData.length; i++) {
+                const { k, inertia } = elbowData[i];
+                const x = mapElbowX(k);
+                const y = mapElbowY(inertia, minInertia, maxInertia);
+                
+                if (i === 0) {
+                    pathData = `M ${x} ${y}`;
+                } else {
+                    pathData += ` L ${x} ${y}`;
+                }
+            }
+            
+            // Create the path
+            const curve = document.createElementNS(svgNS, 'path');
+            curve.setAttribute('d', pathData);
+            curve.setAttribute('fill', 'none');
+            curve.setAttribute('stroke', CLUSTER_COLORS[0]);
+            curve.setAttribute('stroke-width', '2');
+            curve.setAttribute('class', 'elbow-curve');
+            
+            // Add animation
+            curve.style.opacity = '0';
+            
+            // Add to SVG (before points for proper layering)
+            const firstPoint = elbowSvg.querySelector('.elbow-point');
+            if (firstPoint) {
+                elbowSvg.insertBefore(curve, firstPoint);
+            } else {
+                elbowSvg.appendChild(curve);
+            }
+            
+            // Animate curve appearance
+            anime({
+                targets: '.elbow-curve',
+                opacity: 1,
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 1500
+            });
+            
+            // Add y-axis ticks and labels
+            // Clear existing ticks
+            const existingTicks = elbowSvg.querySelectorAll('.elbow-tick');
+            existingTicks.forEach(t => t.remove());
+            
+            // Add y-axis ticks
+            const numTicks = 5;
+            for (let i = 0; i <= numTicks; i++) {
+                const inertiaValue = minInertia + (i / numTicks) * (maxInertia - minInertia);
+                const y = mapElbowY(inertiaValue, minInertia, maxInertia);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', ELBOW_MARGIN);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', ELBOW_MARGIN - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                tickLine.setAttribute('class', 'elbow-tick');
+                elbowSvg.appendChild(tickLine);
+                
+                // Tick label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', ELBOW_MARGIN - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '10');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.setAttribute('class', 'elbow-tick');
+                tickLabel.textContent = inertiaValue.toFixed(0);
+                elbowSvg.appendChild(tickLabel);
+            }
+        }
+        
+        // Find the "elbow point" (point of maximum curvature)
+        function findElbowPoint() {
+            if (elbowData.length < 3) return 2; // Default to 2 if not enough data
+            
+            // Use the point of maximum curvature as the elbow point
+            let maxCurvature = -Infinity;
+            let elbowK = 2;
+            
+            for (let i = 1; i < elbowData.length - 1; i++) {
+                const prev = elbowData[i - 1];
+                const curr = elbowData[i];
+                const next = elbowData[i + 1];
+                
+                // Calculate angles
+                const angle1 = Math.atan2(prev.inertia - curr.inertia, prev.k - curr.k);
+                const angle2 = Math.atan2(next.inertia - curr.inertia, next.k - curr.k);
+                
+                // Calculate curvature (angle change)
+                const curvature = Math.abs(angle2 - angle1);
+                
+                if (curvature > maxCurvature) {
+                    maxCurvature = curvature;
+                    elbowK = curr.k;
+                }
+            }
+            
+            // Highlight the elbow point
+            const elbowPoint = elbowSvg.querySelector(`.elbow-point[data-k="${elbowK}"]`);
+            if (elbowPoint) {
+                elbowPoint.setAttribute('fill', '#FCD34D'); // Highlight with yellow
+                elbowPoint.setAttribute('r', '7'); // Make it larger
+            }
+            
+            // Add elbow point annotation
+            const elbowData = this.elbowData.find(d => d.k === elbowK);
+            if (elbowData) {
+                const inertias = this.elbowData.map(d => d.inertia);
+                const minInertia = Math.min(...inertias);
+                const maxInertia = Math.max(...inertias);
+                
+                const x = mapElbowX(elbowK);
+                const y = mapElbowY(elbowData.inertia, minInertia, maxInertia);
+                
+                const annotation = document.createElementNS(svgNS, 'text');
+                annotation.setAttribute('x', x);
+                annotation.setAttribute('y', y + 20);
+                annotation.setAttribute('text-anchor', 'middle');
+                annotation.setAttribute('font-size', '12');
+                annotation.setAttribute('font-weight', 'bold');
+                annotation.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                annotation.setAttribute('class', 'elbow-point');
+                annotation.textContent = `Optimal K = ${elbowK}`;
+                
+                elbowSvg.appendChild(annotation);
+            }
+            
+            return elbowK;
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        initializeCentroidsBtn.addEventListener('click', initializeCentroids);
+        stepKmeansBtn.addEventListener('click', stepKMeans);
+        runKmeansBtn.addEventListener('click', runKMeans);
+        runElbowMethodBtn.addEventListener('click', runElbowMethod);
+        
+        clusterSeparationInput.addEventListener('input', () => {
+            clusterSeparation = parseFloat(clusterSeparationInput.value);
+            separationValueDisplay.textContent = clusterSeparation.toFixed(1);
+        });
+        
+        showCentroidsCheckbox.addEventListener('change', () => {
+            if (showCentroidsCheckbox.checked) {
+                visualizeCentroids();
+            } else {
+                const existingCentroids = svg.querySelectorAll('.centroid');
+                existingCentroids.forEach(c => c.remove());
+            }
+        });
+        
+        showClusterBoundariesCheckbox.addEventListener('change', () => {
+            if (showClusterBoundariesCheckbox.checked && clusterAssignments.length > 0) {
+                visualizeClusterBoundaries();
+            } else {
+                const existingBoundaries = svg.querySelectorAll('.cluster-boundary');
+                existingBoundaries.forEach(b => b.remove());
+            }
+        });
+        
+        showTrueClustersCheckbox.addEventListener('change', () => {
+            if (showTrueClustersCheckbox.checked) {
+                visualizeTrueClusters();
+            } else {
+                clearTrueClusters();
+            }
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

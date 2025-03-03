@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive t-SNE Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/numeric@1.2.6/numeric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.2/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">t-Distributed Stochastic Neighbor Embedding (t-SNE)</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- Original Data Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Original High-Dimensional Data</h2>
+                    <div class="w-full h-[350px] relative" id="original-container">
+                        <svg id="original-space" class="w-full h-full" viewBox="0 0 1000 350"></svg>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Partial view of high-dimensional data (only 3 dimensions shown)</span>
+                    </div>
+                </div>
+                
+                <!-- t-SNE Projection Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">t-SNE Projection</h2>
+                    <div class="w-full h-[400px] relative" id="tsne-container">
+                        <svg id="tsne-space" class="w-full h-full" viewBox="0 0 1000 400"></svg>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Low-dimensional t-SNE embedding of the data</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel and Probability Distribution Visualization -->
+            <div class="w-full lg:w-2/5">
+                <!-- Controls Panel -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Data Generation -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="num-points" class="mr-2">Number of Points:</label>
+                                    <input type="number" id="num-points" min="50" max="1000" value="300" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="data-distribution" class="mr-2">Distribution:</label>
+                                    <select id="data-distribution" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="clusters" selected>Gaussian Clusters</option>
+                                        <option value="manifold">3D Manifold</option>
+                                        <option value="swiss-roll">Swiss Roll</option>
+                                        <option value="s-curve">S-Curve</option>
+                                        <option value="noisy-circles">Noisy Circles</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="dimensionality" class="mr-2">Original Dimensions:</label>
+                                    <select id="dimensionality" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="3" selected>3D</option>
+                                        <option value="5">5D</option>
+                                        <option value="10">10D</option>
+                                        <option value="20">20D</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="noise-level" class="mr-2">Noise Level:</label>
+                                    <input type="range" id="noise-level" min="0" max="1" step="0.05" value="0.1" class="w-40">
+                                    <span id="noise-value" class="text-sm">0.1</span>
+                                </div>
+                                
+                                <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                            </div>
+                        </div>
+                        
+                        <!-- t-SNE Parameters -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">t-SNE Parameters</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <label for="perplexity" class="mr-2">Perplexity:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="perplexity" min="5" max="50" step="1" value="30" class="w-32">
+                                        <span id="perplexity-value" class="ml-2 w-8 text-sm">30</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="learning-rate" class="mr-2">Learning Rate:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="learning-rate" min="10" max="1000" step="10" value="200" class="w-32">
+                                        <span id="learning-rate-value" class="ml-2 w-12 text-sm">200</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="max-iterations" class="mr-2">Max Iterations:</label>
+                                    <input type="number" id="max-iterations" min="100" max="2000" value="1000" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="early-exaggeration" class="mr-2">Early Exaggeration:</label>
+                                    <div class="flex items-center">
+                                        <input type="range" id="early-exaggeration" min="1" max="20" step="0.5" value="12" class="w-32">
+                                        <span id="early-exaggeration-value" class="ml-2 w-8 text-sm">12</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="n-components" class="mr-2">n_components:</label>
+                                    <select id="n-components" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="2" selected>2D</option>
+                                        <option value="3">3D</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <label for="metric" class="mr-2">Distance Metric:</label>
+                                    <select id="metric" class="w-32 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                        <option value="euclidean" selected>Euclidean</option>
+                                        <option value="manhattan">Manhattan</option>
+                                        <option value="cosine">Cosine</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="flex space-x-2 mt-2">
+                                    <button id="run-tsne" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Run t-SNE</button>
+                                    <button id="step-tsne" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition flex-1">Step Through</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Visualization Options -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="show-probabilities" class="w-4 h-4" checked>
+                                    <label for="show-probabilities">Show Probabilities</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="animate-layout" class="w-4 h-4" checked>
+                                    <label for="animate-layout">Animate Optimization</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="color-by-clusters" class="w-4 h-4" checked>
+                                    <label for="color-by-clusters">Color by Clusters</label>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label for="point-size" class="mr-2">Point Size:</label>
+                                    <input type="range" id="point-size" min="1" max="10" step="0.5" value="4" class="w-32">
+                                    <span id="point-size-value" class="text-sm">4.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Algorithm Status -->
+                        <div id="algorithm-status" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <h3 class="text-lg font-medium mb-2">t-SNE Stats</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Current Step:</span>
+                                    <span id="current-step">Not Started</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Iteration:</span>
+                                    <span id="current-iteration">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>KL Divergence:</span>
+                                    <span id="kl-divergence">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Status:</span>
+                                    <span id="algorithm-status-text">Not Started</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Probability Distribution Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Probability Distributions</h2>
+                    <div class="w-full h-[250px]">
+                        <canvas id="probability-canvas" width="500" height="250" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Comparison of high-dimensional and low-dimensional probabilities</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How t-SNE Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>t-Distributed Stochastic Neighbor Embedding (t-SNE)</strong> is a dimensionality reduction technique that visualizes high-dimensional data by giving each datapoint a location in a 2D or 3D map. It excels at preserving local structure, making it ideal for revealing clusters and patterns.</p>
+                
+                <p><strong>The t-SNE Algorithm:</strong></p>
+                <ol class="list-decimal ml-6">
+                    <li><strong>Compute Pairwise Affinities:</strong> Convert distances between points in the high-dimensional space into conditional probabilities, with closer points having higher probabilities</li>
+                    <li><strong>Initialize Low-Dimensional Embedding:</strong> Start with a random arrangement of points in the lower-dimensional space</li>
+                    <li><strong>Compute Low-Dimensional Affinities:</strong> Calculate similar probabilities in the low-dimensional space using a t-distribution (heavier tails than Gaussian)</li>
+                    <li><strong>Minimize KL Divergence:</strong> Use gradient descent to minimize the difference between the high and low-dimensional probability distributions</li>
+                    <li><strong>Early Exaggeration:</strong> Initially multiply the high-dimensional probabilities to create wider gaps between natural clusters</li>
+                </ol>
+                
+                <p><strong>Key Parameters:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Perplexity:</strong> Balance between local and global structure (typically 5-50). Roughly equivalent to the number of nearest neighbors that influence each point</li>
+                    <li><strong>Learning Rate:</strong> Controls step size in gradient descent. Too high and points may form compact clusters separated by large gaps</li>
+                    <li><strong>Early Exaggeration:</strong> Multiplier for initial iterations that helps separate clusters</li>
+                    <li><strong>Number of Iterations:</strong> More iterations can improve the embedding quality but at computational cost</li>
+                </ul>
+                
+                <p><strong>Applications:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li>Visualizing high-dimensional data in 2D or 3D</li>
+                    <li>Exploring clustering structure in unlabeled data</li>
+                    <li>Revealing patterns in image, text, and bioinformatics data</li>
+                    <li>Feature extraction for downstream machine learning tasks</li>
+                </ul>
+                
+                <p><strong>Differences from other techniques:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Compared to PCA:</strong> t-SNE is non-linear and better preserves local structure, but PCA preserves global structure better</li>
+                    <li><strong>Compared to UMAP:</strong> t-SNE focuses more on preserving local structure, while UMAP better balances local and global structure</li>
+                    <li><strong>Compared to MDS:</strong> t-SNE uses probability distributions instead of directly preserving distances</li>
+                    <li><strong>Advantages:</strong> Creates visually appealing plots that intuitively reveal clusters</li>
+                    <li><strong>Limitations:</strong> Sensitive to hyperparameters, computationally intensive, and can produce different results on multiple runs</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const originalSvg = document.getElementById('original-space');
+        const tsneSvg = document.getElementById('tsne-space');
+        const probabilityCanvas = document.getElementById('probability-canvas');
+        const generateDataBtn = document.getElementById('generate-data');
+        const runTsneBtn = document.getElementById('run-tsne');
+        const stepTsneBtn = document.getElementById('step-tsne');
+        const numPointsInput = document.getElementById('num-points');
+        const dataDistributionSelect = document.getElementById('data-distribution');
+        const dimensionalitySelect = document.getElementById('dimensionality');
+        const noiseLevelInput = document.getElementById('noise-level');
+        const noiseValueDisplay = document.getElementById('noise-value');
+        const perplexityInput = document.getElementById('perplexity');
+        const perplexityValueDisplay = document.getElementById('perplexity-value');
+        const learningRateInput = document.getElementById('learning-rate');
+        const learningRateValueDisplay = document.getElementById('learning-rate-value');
+        const maxIterationsInput = document.getElementById('max-iterations');
+        const earlyExaggerationInput = document.getElementById('early-exaggeration');
+        const earlyExaggerationValueDisplay = document.getElementById('early-exaggeration-value');
+        const nComponentsSelect = document.getElementById('n-components');
+        const metricSelect = document.getElementById('metric');
+        const showProbabilitiesCheckbox = document.getElementById('show-probabilities');
+        const animateLayoutCheckbox = document.getElementById('animate-layout');
+        const colorByClustersCheckbox = document.getElementById('color-by-clusters');
+        const pointSizeInput = document.getElementById('point-size');
+        const pointSizeValueDisplay = document.getElementById('point-size-value');
+        const currentStepDisplay = document.getElementById('current-step');
+        const currentIterationDisplay = document.getElementById('current-iteration');
+        const klDivergenceDisplay = document.getElementById('kl-divergence');
+        const algorithmStatusDisplay = document.getElementById('algorithm-status-text');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 400;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Colors
+        const CLUSTER_COLORS = [
+            '#EF4444', // Red
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#8B5CF6', // Purple
+            '#F59E0B', // Amber
+            '#EC4899', // Pink
+            '#6366F1', // Indigo
+            '#14B8A6', // Teal
+            '#F97316', // Orange
+            '#8B5CF6'  // Purple
+        ];
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and algorithm parameters
+        let originalData = [];       // Original high-dimensional data
+        let tsneEmbedding = [];      // Low-dimensional t-SNE embedding
+        let numPoints = 300;         // Number of data points
+        let dimensions = 3;          // Original dimensionality
+        let nComponents = 2;         // Output dimensionality
+        let noiseLevel = 0.1;        // Noise level
+        let perplexity = 30;         // Perplexity parameter
+        let learningRate = 200;      // Learning rate
+        let maxIterations = 1000;    // Maximum number of iterations
+        let earlyExaggeration = 12;  // Early exaggeration factor
+        let metric = 'euclidean';    // Distance metric
+        let pointSize = 4.0;         // Point size for visualization
+        let clusterLabels = [];      // Cluster labels (if any)
+        let stepByStepMode = false;  // Flag for step-by-step execution
+        let currentStep = 0;         // Current step in the step-by-step execution
+        let currentIteration = 0;    // Current iteration in the optimization
+        let animationInProgress = false; // Flag to prevent multiple simultaneous animations
+        
+        // t-SNE algorithm state
+        let tsneState = {
+            iteration: 0,
+            maxIterations: 1000,
+            initialized: false,
+            embedding: [],
+            distanceMatrix: [],
+            highDimProbabilities: [],
+            lowDimProbabilities: [],
+            pij: {},                // Sparse matrix of high-dimensional probabilities
+            qij: {},                // Sparse matrix of low-dimensional probabilities
+            gains: [],              // Adaptive learning rates
+            velocities: [],         // Momentum velocities
+            klDivergence: 0,
+            currentStageIterations: 0,
+            earlyExaggerationActive: true
+        };
+        
+        // Chart for probability distributions
+        let probabilityChart;
+        
+        // Random number generators for reproducibility
+        let rngState = 42;
+        
+        // Seeded random number generator
+        function seededRandom() {
+            rngState = (rngState * 9301 + 49297) % 233280;
+            return rngState / 233280;
+        }
+        
+        // Reset rng
+        function resetRng() {
+            rngState = 42;
+        }
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            originalSvg.innerHTML = '';
+            tsneSvg.innerHTML = '';
+            
+            // Add background for original space visualization
+            const originalBackground = document.createElementNS(svgNS, 'rect');
+            originalBackground.setAttribute('width', WIDTH);
+            originalBackground.setAttribute('height', 350);
+            originalBackground.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            originalSvg.appendChild(originalBackground);
+            
+            // Add background for t-SNE space visualization
+            const tsneBackground = document.createElementNS(svgNS, 'rect');
+            tsneBackground.setAttribute('width', WIDTH);
+            tsneBackground.setAttribute('height', HEIGHT);
+            tsneBackground.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            tsneSvg.appendChild(tsneBackground);
+            
+            // Add grid and axes for original space
+            addGridAndAxes(originalSvg, 350);
+            
+            // Add grid and axes for t-SNE space
+            addGridAndAxes(tsneSvg, HEIGHT);
+            
+            // Initialize probability chart
+            initProbabilityChart();
+        }
+        
+        // Add grid and axes to SVG
+        function addGridAndAxes(svgElement, height) {
+            const svgHeight = height;
+            const DATA_HEIGHT = svgHeight - 2 * MARGIN;
+            const DATA_Y = MARGIN;
+            
+            // Add grid lines
+            const numVerticalLines = 10;
+            const numHorizontalLines = 10;
+            const verticalSpacing = PLOT_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = MARGIN + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                vLine.setAttribute('class', 'grid-line');
+                svgElement.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', MARGIN);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', MARGIN + PLOT_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                hLine.setAttribute('class', 'grid-line');
+                svgElement.appendChild(hLine);
+            }
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', MARGIN);
+            xAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT / 2);
+            xAxis.setAttribute('x2', MARGIN + PLOT_WIDTH);
+            xAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT / 2);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            xAxis.setAttribute('class', 'axis-line');
+            svgElement.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', MARGIN + PLOT_WIDTH / 2);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', MARGIN + PLOT_WIDTH / 2);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            yAxis.setAttribute('class', 'axis-line');
+            svgElement.appendChild(yAxis);
+            
+            // Add z-axis if t-SNE in 3D
+            if (nComponents === 3) {
+                const zAxis = document.createElementNS(svgNS, 'line');
+                zAxis.setAttribute('x1', MARGIN + PLOT_WIDTH / 2);
+                zAxis.setAttribute('y1', DATA_Y + DATA_HEIGHT / 2);
+                zAxis.setAttribute('x2', MARGIN + PLOT_WIDTH / 2 + 100);
+                zAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT / 2 - 100);
+                zAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                zAxis.setAttribute('stroke-width', '2');
+                zAxis.setAttribute('class', 'axis-line z-axis');
+                svgElement.appendChild(zAxis);
+                
+                // Add z-axis label
+                const zLabel = document.createElementNS(svgNS, 'text');
+                zLabel.setAttribute('x', MARGIN + PLOT_WIDTH / 2 + 110);
+                zLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2 - 110);
+                zLabel.setAttribute('text-anchor', 'start');
+                zLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                zLabel.setAttribute('class', 'axis-label z-label');
+                zLabel.textContent = 'Z';
+                svgElement.appendChild(zLabel);
+            }
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', MARGIN + PLOT_WIDTH);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2 - 10);
+            xLabel.setAttribute('text-anchor', 'end');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.setAttribute('class', 'axis-label x-label');
+            xLabel.textContent = 'X';
+            svgElement.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', MARGIN + PLOT_WIDTH / 2 + 10);
+            yLabel.setAttribute('y', DATA_Y + 15);
+            yLabel.setAttribute('text-anchor', 'start');
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.setAttribute('class', 'axis-label y-label');
+            yLabel.textContent = 'Y';
+            svgElement.appendChild(yLabel);
+        }
+        
+        // Initialize the probability chart
+        function initProbabilityChart() {
+            const ctx = probabilityCanvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (probabilityChart) {
+                probabilityChart.destroy();
+            }
+            
+            const textColor = document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT;
+            const gridColor = document.body.classList.contains('dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            
+            // Create new chart
+            probabilityChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'P vs Q',
+                            data: [],
+                            backgroundColor: 'rgba(93, 92, 222, 0.6)',
+                            borderColor: 'rgba(93, 92, 222, 1)',
+                            borderWidth: 1,
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Perfect Match (P = Q)',
+                            data: [],
+                            borderColor: 'rgba(239, 68, 68, 0.5)',
+                            backgroundColor: 'rgba(0, 0, 0, 0)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            type: 'line'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'High-dimensional probability (P)',
+                                color: textColor
+                            },
+                            type: 'linear',
+                            position: 'bottom',
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Low-dimensional probability (Q)',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    if (label) {
+                                        return label + ': (' + context.parsed.x.toExponential(2) + ', ' + context.parsed.y.toExponential(2) + ')';
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Generate synthetic data
+        function generateData() {
+            // Get parameters from UI
+            numPoints = parseInt(numPointsInput.value);
+            dimensions = parseInt(dimensionalitySelect.value);
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            
+            // Reset random number generator for reproducibility
+            resetRng();
+            
+            // Generate data based on selected distribution
+            const distribution = dataDistributionSelect.value;
+            
+            switch (distribution) {
+                case 'clusters':
+                    generateClusterData(numPoints, dimensions, noiseLevel);
+                    break;
+                case 'manifold':
+                    generate3DManifoldData(numPoints, dimensions, noiseLevel);
+                    break;
+                case 'swiss-roll':
+                    generateSwissRollData(numPoints, dimensions, noiseLevel);
+                    break;
+                case 's-curve':
+                    generateSCurveData(numPoints, dimensions, noiseLevel);
+                    break;
+                case 'noisy-circles':
+                    generateNoisyCirclesData(numPoints, dimensions, noiseLevel);
+                    break;
+                default:
+                    generateClusterData(numPoints, dimensions, noiseLevel);
+            }
+            
+            // Reset t-SNE state
+            resetTsneState();
+            
+            // Visualize original data
+            visualizeOriginalData();
+            
+            // Clear t-SNE visualization
+            clearTsneVisualization();
+            
+            // Reset probability chart
+            resetProbabilityChart();
+            
+            // Reset step display
+            currentStepDisplay.textContent = 'Not Started';
+            currentIterationDisplay.textContent = '-';
+            klDivergenceDisplay.textContent = '-';
+            algorithmStatusDisplay.textContent = 'Not Started';
+        }
+        
+        // Generate Gaussian clusters
+        function generateClusterData(numPoints, dimensions, noiseLevel) {
+            // Determine number of clusters (between 3 and 6)
+            const numClusters = 3 + Math.floor(seededRandom() * 4);
+            
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            // Generate cluster centers
+            const clusterCenters = [];
+            for (let i = 0; i < numClusters; i++) {
+                const center = [];
+                for (let j = 0; j < dimensions; j++) {
+                    // Random center between -4 and 4
+                    center.push(-4 + seededRandom() * 8);
+                }
+                clusterCenters.push(center);
+            }
+            
+            // Generate points for each cluster
+            const pointsPerCluster = Math.floor(numPoints / numClusters);
+            const remainder = numPoints - (pointsPerCluster * numClusters);
+            
+            for (let c = 0; c < numClusters; c++) {
+                // Determine how many points for this cluster
+                let clusterSize = pointsPerCluster;
+                if (c < remainder) {
+                    clusterSize++;
+                }
+                
+                // Generate points for this cluster
+                for (let i = 0; i < clusterSize; i++) {
+                    const point = [];
+                    
+                    // Generate point around cluster center with Gaussian noise
+                    for (let j = 0; j < dimensions; j++) {
+                        const value = clusterCenters[c][j] + randomNormal() * (0.5 + noiseLevel);
+                        point.push(value);
+                    }
+                    
+                    originalData.push(point);
+                    clusterLabels.push(c);
+                }
+            }
+        }
+        
+        // Generate 3D manifold data (a surface in 3D+)
+        function generate3DManifoldData(numPoints, dimensions, noiseLevel) {
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            // Generate points on a 3D manifold and embed in higher dimensions if needed
+            for (let i = 0; i < numPoints; i++) {
+                const u = seededRandom() * 2 * Math.PI;  // Angle parameter
+                const v = seededRandom() * Math.PI;      // Another angle parameter
+                
+                // Base 3D coordinates (on a torus-like surface)
+                const x = (2 + Math.cos(v)) * Math.cos(u);
+                const y = (2 + Math.cos(v)) * Math.sin(u);
+                const z = Math.sin(v);
+                
+                // Create point with 3D manifold coordinates
+                const point = [x, y, z];
+                
+                // Add noise to all coordinates
+                for (let j = 0; j < 3; j++) {
+                    point[j] += randomNormal() * noiseLevel;
+                }
+                
+                // Add random dimensions if needed
+                for (let j = 3; j < dimensions; j++) {
+                    point.push(randomNormal() * noiseLevel);
+                }
+                
+                originalData.push(point);
+                
+                // Assign cluster label based on position on the manifold (for coloring)
+                // Split the torus into 4 segments based on the angles
+                const segment = Math.floor(u / (Math.PI / 2)) % 4;
+                clusterLabels.push(segment);
+            }
+        }
+        
+        // Generate Swiss Roll data
+        function generateSwissRollData(numPoints, dimensions, noiseLevel) {
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            for (let i = 0; i < numPoints; i++) {
+                // Swiss roll parameters
+                const t = 1.5 * Math.PI * (1 + 2 * seededRandom());  // Angular parameter
+                const height = 10 * seededRandom();                 // Height parameter
+                
+                // Swiss roll coordinates
+                const x = t * Math.cos(t);
+                const y = height;
+                const z = t * Math.sin(t);
+                
+                // Create point with Swiss roll coordinates
+                const point = [x, y, z];
+                
+                // Add noise to all coordinates
+                for (let j = 0; j < 3; j++) {
+                    point[j] += randomNormal() * noiseLevel * 2;
+                }
+                
+                // Add random dimensions if needed
+                for (let j = 3; j < dimensions; j++) {
+                    point.push(randomNormal() * noiseLevel);
+                }
+                
+                originalData.push(point);
+                
+                // Assign cluster label based on position on the Swiss roll (for coloring)
+                // Split into 5 segments based on the angle
+                const segment = Math.floor(t / (3 * Math.PI / 5)) % 5;
+                clusterLabels.push(segment);
+            }
+        }
+        
+        // Generate S-Curve data
+        function generateSCurveData(numPoints, dimensions, noiseLevel) {
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            for (let i = 0; i < numPoints; i++) {
+                // S-curve parameters
+                const t = 3 * Math.PI * (seededRandom() - 0.5);  // Angular parameter
+                const height = 10 * seededRandom();             // Height parameter
+                
+                // S-curve coordinates
+                const x = Math.sin(t);
+                const y = height;
+                const z = Math.sign(t) * Math.cos(t);
+                
+                // Create point with S-curve coordinates
+                const point = [x, y, z];
+                
+                // Add noise to all coordinates
+                for (let j = 0; j < 3; j++) {
+                    point[j] += randomNormal() * noiseLevel * 2;
+                }
+                
+                // Add random dimensions if needed
+                for (let j = 3; j < dimensions; j++) {
+                    point.push(randomNormal() * noiseLevel);
+                }
+                
+                originalData.push(point);
+                
+                // Assign cluster label based on position on the S-curve (for coloring)
+                // Split into 4 segments based on the angle and sign
+                let segment;
+                if (t < -Math.PI/2) segment = 0;
+                else if (t < 0) segment = 1;
+                else if (t < Math.PI/2) segment = 2;
+                else segment = 3;
+                
+                clusterLabels.push(segment);
+            }
+        }
+        
+        // Generate Noisy Circles data
+        function generateNoisyCirclesData(numPoints, dimensions, noiseLevel) {
+            // Initialize data array and cluster labels
+            originalData = [];
+            clusterLabels = [];
+            
+            // Generate two concentric circles
+            const numCircles = 2;
+            const pointsPerCircle = Math.floor(numPoints / numCircles);
+            
+            for (let c = 0; c < numCircles; c++) {
+                const radius = 1 + c * 2;  // Different radius for each circle
+                
+                for (let i = 0; i < pointsPerCircle; i++) {
+                    const angle = seededRandom() * 2 * Math.PI;
+                    
+                    // Circle coordinates
+                    const x = radius * Math.cos(angle);
+                    const y = radius * Math.sin(angle);
+                    const z = 0;  // Flat circles in 3D
+                    
+                    // Create point
+                    const point = [x, y, z];
+                    
+                    // Add noise to all coordinates
+                    for (let j = 0; j < 3; j++) {
+                        point[j] += randomNormal() * noiseLevel * 1.5;
+                    }
+                    
+                    // Add random dimensions if needed
+                    for (let j = 3; j < dimensions; j++) {
+                        point.push(randomNormal() * noiseLevel);
+                    }
+                    
+                    originalData.push(point);
+                    clusterLabels.push(c);
+                }
+            }
+            
+            // Add remaining points
+            const remaining = numPoints - (pointsPerCircle * numCircles);
+            for (let i = 0; i < remaining; i++) {
+                const c = i % 2;  // Alternate between circles
+                const radius = 1 + c * 2;
+                const angle = seededRandom() * 2 * Math.PI;
+                
+                // Circle coordinates
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+                const z = 0;
+                
+                // Create point
+                const point = [x, y, z];
+                
+                // Add noise
+                for (let j = 0; j < 3; j++) {
+                    point[j] += randomNormal() * noiseLevel * 1.5;
+                }
+                
+                // Add random dimensions if needed
+                for (let j = 3; j < dimensions; j++) {
+                    point.push(randomNormal() * noiseLevel);
+                }
+                
+                originalData.push(point);
+                clusterLabels.push(c);
+            }
+        }
+        
+        // Generate a random normal (Gaussian) number using Box-Muller transform
+        function randomNormal() {
+            const u1 = seededRandom();
+            const u2 = seededRandom();
+            return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+        }
+        
+        // Reset t-SNE state
+        function resetTsneState() {
+            // Reset algorithm state
+            tsneState = {
+                iteration: 0,
+                maxIterations: parseInt(maxIterationsInput.value),
+                initialized: false,
+                embedding: [],
+                distanceMatrix: [],
+                highDimProbabilities: [],
+                lowDimProbabilities: [],
+                pij: {},                // Sparse matrix of high-dimensional probabilities
+                qij: {},                // Sparse matrix of low-dimensional probabilities
+                gains: [],              // Adaptive learning rates
+                velocities: [],         // Momentum velocities
+                klDivergence: 0,
+                currentStageIterations: 0,
+                earlyExaggerationActive: true
+            };
+            
+            // Reset embedding
+            tsneEmbedding = [];
+            
+            // Reset step counter
+            currentStep = 0;
+            currentIteration = 0;
+            stepByStepMode = false;
+        }
+        
+        // Reset probability chart
+        function resetProbabilityChart() {
+            if (probabilityChart) {
+                // Clear data
+                probabilityChart.data.datasets[0].data = [];
+                
+                // Add diagonal line (P = Q)
+                probabilityChart.data.datasets[1].data = [
+                    { x: 0, y: 0 },
+                    { x: 1, y: 1 }
+                ];
+                
+                probabilityChart.update();
+            }
+        }
+        
+        // Compute the distance matrix between points
+        function computeDistanceMatrix() {
+            const n = originalData.length;
+            
+            // Initialize distance matrix
+            const distMatrix = Array(n).fill().map(() => Array(n).fill(0));
+            
+            // Choose distance metric
+            const distFunc = getDistanceFunction(metric);
+            
+            // Compute pairwise distances
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    const dist = distFunc(originalData[i], originalData[j]);
+                    distMatrix[i][j] = dist;
+                    distMatrix[j][i] = dist;  // Symmetric
+                }
+            }
+            
+            return distMatrix;
+        }
+        
+        // Get the appropriate distance function based on the metric
+        function getDistanceFunction(metric) {
+            switch (metric) {
+                case 'euclidean':
+                    return (a, b) => {
+                        let sum = 0;
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            sum += Math.pow(a[i] - b[i], 2);
+                        }
+                        return Math.sqrt(sum);
+                    };
+                case 'manhattan':
+                    return (a, b) => {
+                        let sum = 0;
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            sum += Math.abs(a[i] - b[i]);
+                        }
+                        return sum;
+                    };
+                case 'cosine':
+                    return (a, b) => {
+                        let dotProduct = 0;
+                        let aMagnitude = 0;
+                        let bMagnitude = 0;
+                        
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            dotProduct += a[i] * b[i];
+                            aMagnitude += a[i] * a[i];
+                            bMagnitude += b[i] * b[i];
+                        }
+                        
+                        aMagnitude = Math.sqrt(aMagnitude);
+                        bMagnitude = Math.sqrt(bMagnitude);
+                        
+                        if (aMagnitude === 0 || bMagnitude === 0) return 1;  // Max distance for zero vectors
+                        
+                        const similarity = dotProduct / (aMagnitude * bMagnitude);
+                        return 1 - similarity;  // Convert similarity to distance
+                    };
+                default:
+                    return (a, b) => {
+                        let sum = 0;
+                        for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                            sum += Math.pow(a[i] - b[i], 2);
+                        }
+                        return Math.sqrt(sum);
+                    };
+            }
+        }
+        
+        // Compute high-dimensional affinities (P)
+        function computeHighDimAffinities(distMatrix, perplexity) {
+            const n = distMatrix.length;
+            const pij = {};  // Sparse matrix representation
+            
+            // Convert distances to conditional probabilities p_j|i
+            for (let i = 0; i < n; i++) {
+                // Binary search for sigma_i (bandwidth)
+                const sigma = findSigma(distMatrix[i], i, perplexity);
+                
+                // Calculate un-normalized p_j|i with this sigma
+                let sum = 0;
+                const pji = Array(n).fill(0);
+                
+                for (let j = 0; j < n; j++) {
+                    if (i !== j) {
+                        const squared_dist = Math.pow(distMatrix[i][j], 2);
+                        const pValue = Math.exp(-squared_dist / (2 * Math.pow(sigma, 2)));
+                        pji[j] = pValue;
+                        sum += pValue;
+                    }
+                }
+                
+                // Normalize to ensure sum = 1
+                for (let j = 0; j < n; j++) {
+                    if (i !== j) {
+                        pji[j] /= sum;
+                        
+                        // Store non-zero probabilities to save memory
+                        if (pji[j] > 1e-12) {
+                            pij[`${i},${j}`] = pji[j];
+                        }
+                    }
+                }
+            }
+            
+            // Symmetrize the probabilities (P = (P_i|j + P_j|i) / 2n)
+            const symmetrizedPij = {};
+            for (const key in pij) {
+                const [i, j] = key.split(',').map(Number);
+                const reverseKey = `${j},${i}`;
+                const pValue = pij[key];
+                const reverseValue = pij[reverseKey] || 0;
+                
+                // Symmetrized probability
+                const symmetrizedValue = (pValue + reverseValue) / (2 * n);
+                
+                if (symmetrizedValue > 1e-12) {
+                    symmetrizedPij[key] = symmetrizedValue;
+                }
+            }
+            
+            return symmetrizedPij;
+        }
+        
+        // Binary search to find sigma for a given perplexity
+        function findSigma(distances, i, perplexity) {
+            const target = Math.log(perplexity);
+            let lowerBound = 0.0;
+            let upperBound = 1000.0;
+            let sigma = 1.0;
+            const maxIterations = 50;
+            const tolerance = 1e-5;
+            
+            // Skip self-distance
+            const n = distances.length;
+            const nonSelfDistances = [];
+            for (let j = 0; j < n; j++) {
+                if (i !== j) {
+                    nonSelfDistances.push(distances[j]);
+                }
+            }
+            
+            for (let iter = 0; iter < maxIterations; iter++) {
+                sigma = (lowerBound + upperBound) / 2.0;
+                
+                // Calculate entropy with current sigma
+                let entropy = 0;
+                let sum = 0;
+                const p = Array(nonSelfDistances.length).fill(0);
+                
+                for (let j = 0; j < nonSelfDistances.length; j++) {
+                    const squared_dist = Math.pow(nonSelfDistances[j], 2);
+                    const pValue = Math.exp(-squared_dist / (2 * Math.pow(sigma, 2)));
+                    p[j] = pValue;
+                    sum += pValue;
+                }
+                
+                for (let j = 0; j < nonSelfDistances.length; j++) {
+                    if (sum > 0 && p[j] > 0) {
+                        const pNorm = p[j] / sum;
+                        entropy -= pNorm * Math.log(pNorm);
+                    }
+                }
+                
+                // Check if current entropy is close to target
+                const entropyDiff = entropy - target;
+                
+                if (Math.abs(entropyDiff) < tolerance) {
+                    break;
+                }
+                
+                // Adjust bounds based on current entropy
+                if (entropyDiff > 0) {
+                    upperBound = sigma;
+                } else {
+                    lowerBound = sigma;
+                }
+            }
+            
+            return sigma;
+        }
+        
+        // Initialize t-SNE embedding
+        function initializeEmbedding(numPoints, outputDim) {
+            const embedding = [];
+            
+            // Initialize with small random values
+            // Use normal distribution for better initial spread
+            for (let i = 0; i < numPoints; i++) {
+                const point = [];
+                for (let j = 0; j < outputDim; j++) {
+                    point.push(randomNormal() * 0.0001);
+                }
+                embedding.push(point);
+            }
+            
+            return embedding;
+        }
+        
+        // Compute low-dimensional affinities (Q)
+        function computeLowDimAffinities(embedding) {
+            const n = embedding.length;
+            const dim = embedding[0].length;
+            const qij = {};
+            
+            // Compute unnormalized q_ij (Student t-distribution)
+            let sum = 0;
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    // Compute squared distance in low-dimensional space
+                    let squaredDist = 0;
+                    for (let d = 0; d < dim; d++) {
+                        squaredDist += Math.pow(embedding[i][d] - embedding[j][d], 2);
+                    }
+                    
+                    // Student t-distribution with 1 degree of freedom (heavy tails)
+                    const qValue = 1.0 / (1.0 + squaredDist);
+                    
+                    qij[`${i},${j}`] = qValue;
+                    qij[`${j},${i}`] = qValue;  // Symmetric
+                    
+                    sum += 2 * qValue;  // Count both (i,j) and (j,i)
+                }
+            }
+            
+            // Normalize q_ij
+            for (const key in qij) {
+                qij[key] /= sum;
+            }
+            
+            return qij;
+        }
+        
+        // Compute the gradient of KL divergence
+        function computeGradient(embedding, pij, qij) {
+            const n = embedding.length;
+            const dim = embedding[0].length;
+            const gradient = Array(n).fill().map(() => Array(dim).fill(0));
+            
+            for (const key in pij) {
+                const [i, j] = key.split(',').map(Number);
+                const pValue = pij[key];
+                const qValue = qij[key] || 1e-12;  // Avoid division by zero
+                
+                // Gradient term
+                const factor = 4 * (pValue - qValue);
+                
+                // Apply to both points
+                for (let d = 0; d < dim; d++) {
+                    const direction = embedding[i][d] - embedding[j][d];
+                    const grad = factor * qValue * direction;
+                    
+                    gradient[i][d] -= grad;
+                    gradient[j][d] += grad;
+                }
+            }
+            
+            return gradient;
+        }
+        
+        // Compute KL divergence between P and Q
+        function computeKLDivergence(pij, qij) {
+            let kl = 0;
+            
+            for (const key in pij) {
+                const pValue = pij[key];
+                const qValue = qij[key] || 1e-12;  // Avoid division by zero
+                
+                kl += pValue * Math.log(pValue / qValue);
+            }
+            
+            return kl;
+        }
+        
+        // Update the embedding using gradient descent with momentum and gains
+        function updateEmbedding(embedding, gradient, velocities, gains, lr, iteration) {
+            const n = embedding.length;
+            const dim = embedding[0].length;
+            
+            // Momentum increases over time
+            const momentum = iteration < 20 ? 0.5 : 0.8;
+            
+            for (let i = 0; i < n; i++) {
+                for (let d = 0; d < dim; d++) {
+                    // Adjust gain if gradient changes sign
+                    if (sign(gradient[i][d]) !== sign(velocities[i][d])) {
+                        gains[i][d] += 0.2;
+                    } else {
+                        gains[i][d] *= 0.8;
+                    }
+                    
+                    // Ensure minimum gain
+                    gains[i][d] = Math.max(gains[i][d], 0.01);
+                    
+                    // Update velocity (with momentum and gain)
+                    velocities[i][d] = momentum * velocities[i][d] - lr * gains[i][d] * gradient[i][d];
+                    
+                    // Update position
+                    embedding[i][d] += velocities[i][d];
+                }
+            }
+            
+            // Recenter embedding to avoid drift
+            if (iteration % 50 === 0) {
+                const means = Array(dim).fill(0);
+                
+                for (let i = 0; i < n; i++) {
+                    for (let d = 0; d < dim; d++) {
+                        means[d] += embedding[i][d];
+                    }
+                }
+                
+                for (let d = 0; d < dim; d++) {
+                    means[d] /= n;
+                }
+                
+                for (let i = 0; i < n; i++) {
+                    for (let d = 0; d < dim; d++) {
+                        embedding[i][d] -= means[d];
+                    }
+                }
+            }
+            
+            return embedding;
+        }
+        
+        // Helper function to get sign of a number
+        function sign(x) {
+            return x === 0 ? 0 : x > 0 ? 1 : -1;
+        }
+        
+        // Visualize the original data
+        function visualizeOriginalData() {
+            // Clear existing visualization
+            clearOriginalVisualization();
+            
+            if (originalData.length === 0) return;
+            
+            // Project to 3D for visualization
+            const data3D = [];
+            for (const point of originalData) {
+                // Take first 3 dimensions or pad with zeros
+                const p = [];
+                for (let i = 0; i < 3; i++) {
+                    p.push(i < point.length ? point[i] : 0);
+                }
+                data3D.push(p);
+            }
+            
+            // Determine data bounds
+            let minX = Infinity, minY = Infinity, minZ = Infinity;
+            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            
+            for (const point of data3D) {
+                minX = Math.min(minX, point[0]);
+                minY = Math.min(minY, point[1]);
+                minZ = Math.min(minZ, point[2]);
+                maxX = Math.max(maxX, point[0]);
+                maxY = Math.max(maxY, point[1]);
+                maxZ = Math.max(maxZ, point[2]);
+            }
+            
+            // Function to map to SVG coordinates
+            const mapX = x => MARGIN + ((x - minX) / (maxX - minX || 1)) * PLOT_WIDTH;
+            const mapY = y => MARGIN + ((y - minY) / (maxY - minY || 1)) * (350 - 2 * MARGIN);
+            const mapZ = z => ((z - minZ) / (maxZ - minZ || 1)); // For point size scaling
+            
+            // Add point size adjustment
+            const pointSizeScale = parseFloat(pointSizeInput.value);
+            
+            // Add data points
+            for (let i = 0; i < data3D.length; i++) {
+                const point = data3D[i];
+                const x = mapX(point[0]);
+                const y = mapY(point[1]);
+                const z = mapZ(point[2]);
+                
+                // Create point
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                
+                // Scale point size by z-coordinate (perspective effect)
+                const size = 3 + (z * 3) * pointSizeScale / 2.5;
+                circle.setAttribute('r', size);
+                
+                // Set color based on cluster if enabled
+                if (colorByClustersCheckbox.checked && clusterLabels.length > 0) {
+                    const clusterIdx = clusterLabels[i] % CLUSTER_COLORS.length;
+                    circle.setAttribute('fill', CLUSTER_COLORS[clusterIdx]);
+                } else {
+                    // Default color varies with point's z-coordinate
+                    const hue = 220 + 140 * z;
+                    circle.setAttribute('fill', `hsl(${hue}, 80%, 60%)`);
+                }
+                
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point original-point');
+                circle.setAttribute('data-index', i);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                originalSvg.appendChild(circle);
+            }
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point.original-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(2),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Visualize the t-SNE embedding
+        function visualizeTsneEmbedding(embedding) {
+            // Clear existing visualization
+            clearTsneVisualization();
+            
+            if (embedding.length === 0) return;
+            
+            const n = embedding.length;
+            const dim = embedding[0].length;
+            
+            // Determine embedding bounds
+            let minX = Infinity, minY = Infinity, minZ = Infinity;
+            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            
+            for (const point of embedding) {
+                if (point.length > 0) minX = Math.min(minX, point[0]);
+                if (point.length > 1) minY = Math.min(minY, point[1]);
+                if (point.length > 2) minZ = Math.min(minZ, point[2]);
+                if (point.length > 0) maxX = Math.max(maxX, point[0]);
+                if (point.length > 1) maxY = Math.max(maxY, point[1]);
+                if (point.length > 2) maxZ = Math.max(maxZ, point[2]);
+            }
+            
+            // Add some padding
+            const paddingX = (maxX - minX) * 0.05;
+            const paddingY = (maxY - minY) * 0.05;
+            minX -= paddingX;
+            maxX += paddingX;
+            minY -= paddingY;
+            maxY += paddingY;
+            
+            // Function to map to SVG coordinates
+            const mapX = x => MARGIN + ((x - minX) / (maxX - minX || 1)) * PLOT_WIDTH;
+            const mapY = y => MARGIN + ((y - minY) / (maxY - minY || 1)) * PLOT_HEIGHT;
+            const mapZ = z => ((z - minZ) / (maxZ - minZ || 1)); // For point size scaling
+            
+            // Add point size adjustment
+            const pointSizeScale = parseFloat(pointSizeInput.value);
+            
+            // Add data points
+            for (let i = 0; i < embedding.length; i++) {
+                const point = embedding[i];
+                if (point.length < 1) continue;
+                
+                const x = mapX(point[0]);
+                const y = mapY(point.length > 1 ? point[1] : 0);
+                const z = point.length > 2 ? mapZ(point[2]) : 0.5;
+                
+                // Create point
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                
+                // Adjust point size based on z-coordinate (for 3D effect) and user preference
+                const size = pointSizeScale * (dim > 2 ? 3 + z * 3 : 4);
+                circle.setAttribute('r', size);
+                
+                // Set color based on cluster if enabled
+                if (colorByClustersCheckbox.checked && clusterLabels.length > 0) {
+                    const clusterIdx = clusterLabels[i] % CLUSTER_COLORS.length;
+                    circle.setAttribute('fill', CLUSTER_COLORS[clusterIdx]);
+                } else {
+                    // Gradient color based on position
+                    const hue = 200 + (x / WIDTH) * 160;
+                    const saturation = 70 + (y / HEIGHT) * 20;
+                    circle.setAttribute('fill', `hsl(${hue}, ${saturation}%, 60%)`);
+                }
+                
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point tsne-point tsne-element');
+                circle.setAttribute('data-index', i);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                tsneSvg.appendChild(circle);
+            }
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point.tsne-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(2),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1000
+            });
+        }
+        
+        // Update probability visualization
+        function updateProbabilityChart(pij, qij) {
+            if (!probabilityChart || !showProbabilitiesCheckbox.checked) return;
+            
+            // Sample some points for visualization (too many makes the chart unreadable)
+            const maxPoints = 100;
+            const data = [];
+            
+            // Get all keys from pij
+            const keys = Object.keys(pij);
+            const step = Math.max(1, Math.floor(keys.length / maxPoints));
+            
+            // Sample at regular intervals
+            for (let i = 0; i < keys.length; i += step) {
+                const key = keys[i];
+                const pValue = pij[key];
+                const qValue = qij[key] || 1e-10;
+                
+                data.push({
+                    x: pValue,
+                    y: qValue
+                });
+            }
+            
+            // Update chart data
+            probabilityChart.data.datasets[0].data = data;
+            
+            // Update perfect match line
+            const maxP = Math.max(...data.map(d => d.x));
+            const maxQ = Math.max(...data.map(d => d.y));
+            const max = Math.max(maxP, maxQ) * 1.1;
+            
+            probabilityChart.data.datasets[1].data = [
+                { x: 0, y: 0 },
+                { x: max, y: max }
+            ];
+            
+            // Update scales
+            probabilityChart.options.scales.x.type = 'logarithmic';
+            probabilityChart.options.scales.y.type = 'logarithmic';
+            
+            // Update chart
+            probabilityChart.update();
+        }
+        
+        // Clear original space visualization
+        function clearOriginalVisualization() {
+            const elements = originalSvg.querySelectorAll('.original-point');
+            elements.forEach(el => el.remove());
+        }
+        
+        // Clear t-SNE visualization
+        function clearTsneVisualization() {
+            const elements = tsneSvg.querySelectorAll('.tsne-element');
+            elements.forEach(el => el.remove());
+        }
+        
+        // Run t-SNE algorithm
+        async function runTSNE() {
+            if (originalData.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during processing
+            runTsneBtn.disabled = true;
+            stepTsneBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            perplexity = parseInt(perplexityInput.value);
+            learningRate = parseFloat(learningRateInput.value);
+            maxIterations = parseInt(maxIterationsInput.value);
+            earlyExaggeration = parseFloat(earlyExaggerationInput.value);
+            nComponents = parseInt(nComponentsSelect.value);
+            metric = metricSelect.value;
+            
+            // Reset t-SNE state
+            resetTsneState();
+            tsneState.maxIterations = maxIterations;
+            
+            // Update SVG configuration
+            updateSvgConfig();
+            
+            // Run t-SNE steps
+            algorithmStatusDisplay.textContent = 'Running...';
+            currentStepDisplay.textContent = 'Computing distances...';
+            
+            try {
+                // Step 1: Compute distance matrix
+                tsneState.distanceMatrix = computeDistanceMatrix();
+                
+                // Step 2: Compute high-dimensional affinities
+                tsneState.pij = computeHighDimAffinities(tsneState.distanceMatrix, perplexity);
+                
+                // Apply early exaggeration
+                for (const key in tsneState.pij) {
+                    tsneState.pij[key] *= earlyExaggeration;
+                }
+                
+                // Step 3: Initialize embedding
+                tsneState.embedding = initializeEmbedding(originalData.length, nComponents);
+                
+                // Initialize gains and velocities
+                tsneState.gains = Array(originalData.length).fill().map(() => 
+                    Array(nComponents).fill(1.0)
+                );
+                
+                tsneState.velocities = Array(originalData.length).fill().map(() => 
+                    Array(nComponents).fill(0.0)
+                );
+                
+                // Optimization loop
+                currentStepDisplay.textContent = 'Optimizing...';
+                
+                // Track when early exaggeration ends
+                const earlyExaggerationIters = 250;
+                let inEarlyExaggeration = true;
+                
+                for (let iter = 0; iter < maxIterations; iter++) {
+                    // Check if we need to end early exaggeration
+                    if (inEarlyExaggeration && iter >= earlyExaggerationIters) {
+                        // Remove early exaggeration
+                        for (const key in tsneState.pij) {
+                            tsneState.pij[key] /= earlyExaggeration;
+                        }
+                        inEarlyExaggeration = false;
+                    }
+                    
+                    // Compute low-dimensional affinities
+                    tsneState.qij = computeLowDimAffinities(tsneState.embedding);
+                    
+                    // Compute gradient
+                    const gradient = computeGradient(tsneState.embedding, tsneState.pij, tsneState.qij);
+                    
+                    // Update embedding
+                    tsneState.embedding = updateEmbedding(
+                        tsneState.embedding,
+                        gradient,
+                        tsneState.velocities,
+                        tsneState.gains,
+                        learningRate,
+                        iter
+                    );
+                    
+                    // Compute KL divergence
+                    tsneState.klDivergence = computeKLDivergence(tsneState.pij, tsneState.qij);
+                    
+                    // Update iteration counter and KL divergence display
+                    currentIterationDisplay.textContent = iter + 1;
+                    klDivergenceDisplay.textContent = tsneState.klDivergence.toFixed(4);
+                    
+                    // Update visualization periodically
+                    if (iter % 10 === 0 && animateLayoutCheckbox.checked) {
+                        visualizeTsneEmbedding(tsneState.embedding);
+                        
+                        // Update probability chart
+                        if (iter % 50 === 0) {
+                            updateProbabilityChart(tsneState.pij, tsneState.qij);
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
+                }
+                
+                // Store final embedding
+                tsneEmbedding = tsneState.embedding.map(p => [...p]);
+                
+                // Update final visualization
+                visualizeTsneEmbedding(tsneEmbedding);
+                
+                // Update probability chart
+                updateProbabilityChart(tsneState.pij, tsneState.qij);
+                
+                // Update status
+                algorithmStatusDisplay.textContent = 'Complete';
+                currentStepDisplay.textContent = 'Finished';
+            } catch (error) {
+                console.error('Error running t-SNE:', error);
+                algorithmStatusDisplay.textContent = 'Error';
+                alert('Error running t-SNE. Check console for details.');
+            }
+            
+            // Re-enable buttons
+            runTsneBtn.disabled = false;
+            stepTsneBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Step through t-SNE algorithm
+        async function stepTSNE() {
+            if (originalData.length === 0) {
+                alert('Please generate data first');
+                return;
+            }
+            
+            // Disable buttons during step
+            runTsneBtn.disabled = true;
+            stepTsneBtn.disabled = true;
+            animationInProgress = true;
+            
+            // Get parameters from UI
+            perplexity = parseInt(perplexityInput.value);
+            learningRate = parseFloat(learningRateInput.value);
+            maxIterations = parseInt(maxIterationsInput.value);
+            earlyExaggeration = parseFloat(earlyExaggerationInput.value);
+            nComponents = parseInt(nComponentsSelect.value);
+            metric = metricSelect.value;
+            
+            // Update SVG configuration
+            updateSvgConfig();
+            
+            try {
+                // Initialize if this is the first step
+                if (currentStep === 0) {
+                    stepByStepMode = true;
+                    
+                    // Reset t-SNE state
+                    resetTsneState();
+                    tsneState.maxIterations = maxIterations;
+                    
+                    // Step 1: Compute distance matrix
+                    currentStepDisplay.textContent = 'Step 1: Computing distances';
+                    tsneState.distanceMatrix = computeDistanceMatrix();
+                    
+                    // Update step counter
+                    currentStep = 1;
+                    algorithmStatusDisplay.textContent = 'Computing distances';
+                }
+                // Step 2: Compute high-dimensional affinities
+                else if (currentStep === 1) {
+                    currentStepDisplay.textContent = 'Step 2: Computing high-dimensional affinities';
+                    tsneState.pij = computeHighDimAffinities(tsneState.distanceMatrix, perplexity);
+                    
+                    // Apply early exaggeration
+                    for (const key in tsneState.pij) {
+                        tsneState.pij[key] *= earlyExaggeration;
+                    }
+                    
+                    // Update step counter
+                    currentStep = 2;
+                    algorithmStatusDisplay.textContent = 'Computing high-dimensional affinities';
+                }
+                // Step 3: Initialize embedding
+                else if (currentStep === 2) {
+                    currentStepDisplay.textContent = 'Step 3: Initializing embedding';
+                    tsneState.embedding = initializeEmbedding(originalData.length, nComponents);
+                    
+                    // Initialize gains and velocities
+                    tsneState.gains = Array(originalData.length).fill().map(() => 
+                        Array(nComponents).fill(1.0)
+                    );
+                    
+                    tsneState.velocities = Array(originalData.length).fill().map(() => 
+                        Array(nComponents).fill(0.0)
+                    );
+                    
+                    // Update step counter
+                    currentStep = 3;
+                    currentIteration = 0;
+                    tsneState.earlyExaggerationActive = true;
+                    algorithmStatusDisplay.textContent = 'Initializing embedding';
+                    
+                    // Visualize initial embedding
+                    visualizeTsneEmbedding(tsneState.embedding);
+                }
+                // Step 4: Optimize embedding with SGD (run multiple iterations per step)
+                else if (currentStep === 3) {
+                    const iterationsPerStep = 25;
+                    const earlyExaggerationIters = 250;
+                    
+                    // Check if we need to remove early exaggeration
+                    if (tsneState.earlyExaggerationActive && currentIteration >= earlyExaggerationIters) {
+                        // Remove early exaggeration
+                        for (const key in tsneState.pij) {
+                            tsneState.pij[key] /= earlyExaggeration;
+                        }
+                        tsneState.earlyExaggerationActive = false;
+                    }
+                    
+                    // Run multiple iterations
+                    for (let i = 0; i < iterationsPerStep; i++) {
+                        if (currentIteration < maxIterations) {
+                            const stage = tsneState.earlyExaggerationActive ? 'early exaggeration' : 'fine-tuning';
+                            currentStepDisplay.textContent = `Step 4: Optimizing embedding (${currentIteration + 1}-${currentIteration + iterationsPerStep}/${maxIterations}, ${stage})`;
+                            
+                            // Compute low-dimensional affinities
+                            tsneState.qij = computeLowDimAffinities(tsneState.embedding);
+                            
+                            // Compute gradient
+                            const gradient = computeGradient(tsneState.embedding, tsneState.pij, tsneState.qij);
+                            
+                            // Update embedding
+                            tsneState.embedding = updateEmbedding(
+                                tsneState.embedding,
+                                gradient,
+                                tsneState.velocities,
+                                tsneState.gains,
+                                learningRate,
+                                currentIteration
+                            );
+                            
+                            // Compute KL divergence
+                            tsneState.klDivergence = computeKLDivergence(tsneState.pij, tsneState.qij);
+                            
+                            currentIteration++;
+                        }
+                    }
+                    
+                    // Update iteration display
+                    currentIterationDisplay.textContent = currentIteration;
+                    klDivergenceDisplay.textContent = tsneState.klDivergence.toFixed(4);
+                    
+                    // Update visualization
+                    visualizeTsneEmbedding(tsneState.embedding);
+                    
+                    // Update probability chart
+                    updateProbabilityChart(tsneState.pij, tsneState.qij);
+                    
+                    // Check if optimization is complete
+                    if (currentIteration >= maxIterations) {
+                        // Update step counter to indicate completion
+                        currentStep = 4;
+                        algorithmStatusDisplay.textContent = 'Optimization complete';
+                        
+                        // Store final embedding
+                        tsneEmbedding = tsneState.embedding.map(p => [...p]);
+                    } else {
+                        algorithmStatusDisplay.textContent = `Optimizing embedding (${Math.round(currentIteration/maxIterations * 100)}%)`;
+                    }
+                }
+                // Final step: Complete
+                else if (currentStep === 4) {
+                    // Reset step counter for next run
+                    currentStep = 0;
+                    currentStepDisplay.textContent = 'Complete';
+                    algorithmStatusDisplay.textContent = 'Complete';
+                }
+                
+            } catch (error) {
+                console.error('Error in t-SNE step:', error);
+                algorithmStatusDisplay.textContent = 'Error';
+                alert('Error in t-SNE step. Check console for details.');
+            }
+            
+            // Re-enable buttons
+            runTsneBtn.disabled = false;
+            stepTsneBtn.disabled = false;
+            animationInProgress = false;
+        }
+        
+        // Update SVG configuration based on output dimensionality
+        function updateSvgConfig() {
+            nComponents = parseInt(nComponentsSelect.value);
+            
+            // Clear existing z-axis elements
+            const zAxis = tsneSvg.querySelector('.z-axis');
+            const zLabel = tsneSvg.querySelector('.z-label');
+            
+            if (nComponents === 3) {
+                // Add z-axis if not present
+                if (!zAxis) {
+                    const zAxis = document.createElementNS(svgNS, 'line');
+                    zAxis.setAttribute('x1', MARGIN + PLOT_WIDTH / 2);
+                    zAxis.setAttribute('y1', MARGIN + PLOT_HEIGHT / 2);
+                    zAxis.setAttribute('x2', MARGIN + PLOT_WIDTH / 2 + 100);
+                    zAxis.setAttribute('y2', MARGIN + PLOT_HEIGHT / 2 - 100);
+                    zAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                    zAxis.setAttribute('stroke-width', '2');
+                    zAxis.setAttribute('class', 'axis-line z-axis');
+                    tsneSvg.appendChild(zAxis);
+                }
+                
+                // Add z-axis label if not present
+                if (!zLabel) {
+                    const zLabel = document.createElementNS(svgNS, 'text');
+                    zLabel.setAttribute('x', MARGIN + PLOT_WIDTH / 2 + 110);
+                    zLabel.setAttribute('y', MARGIN + PLOT_HEIGHT / 2 - 110);
+                    zLabel.setAttribute('text-anchor', 'start');
+                    zLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                    zLabel.setAttribute('class', 'axis-label z-label');
+                    zLabel.textContent = 'Z';
+                    tsneSvg.appendChild(zLabel);
+                }
+            } else {
+                // Remove z-axis if present
+                if (zAxis) zAxis.remove();
+                if (zLabel) zLabel.remove();
+            }
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        runTsneBtn.addEventListener('click', runTSNE);
+        stepTsneBtn.addEventListener('click', stepTSNE);
+        
+        noiseLevelInput.addEventListener('input', function() {
+            noiseLevel = parseFloat(this.value);
+            noiseValueDisplay.textContent = noiseLevel.toFixed(2);
+        });
+        
+        perplexityInput.addEventListener('input', function() {
+            perplexity = parseInt(this.value);
+            perplexityValueDisplay.textContent = perplexity;
+        });
+        
+        learningRateInput.addEventListener('input', function() {
+            learningRate = parseFloat(this.value);
+            learningRateValueDisplay.textContent = learningRate;
+        });
+        
+        earlyExaggerationInput.addEventListener('input', function() {
+            earlyExaggeration = parseFloat(this.value);
+            earlyExaggerationValueDisplay.textContent = earlyExaggeration;
+        });
+        
+        pointSizeInput.addEventListener('input', function() {
+            pointSize = parseFloat(this.value);
+            pointSizeValueDisplay.textContent = pointSize.toFixed(1);
+            
+            // Update point sizes if data is already displayed
+            const originalPoints = originalSvg.querySelectorAll('.data-point');
+            const tsnePoints = tsneSvg.querySelectorAll('.data-point');
+            
+            originalPoints.forEach(point => {
+                const currentSize = parseFloat(point.getAttribute('r'));
+                const newSize = currentSize * (pointSize / pointSizeValueDisplay.textContent);
+                point.setAttribute('r', newSize);
+            });
+            
+            tsnePoints.forEach(point => {
+                const currentSize = parseFloat(point.getAttribute('r'));
+                const newSize = currentSize * (pointSize / pointSizeValueDisplay.textContent);
+                point.setAttribute('r', newSize);
+            });
+        });
+        
+        showProbabilitiesCheckbox.addEventListener('change', function() {
+            // Update probability chart if t-SNE has been run
+            if (tsneState.pij && Object.keys(tsneState.pij).length > 0 && 
+                tsneState.qij && Object.keys(tsneState.qij).length > 0) {
+                updateProbabilityChart(tsneState.pij, tsneState.qij);
+            }
+        });
+        
+        colorByClustersCheckbox.addEventListener('change', function() {
+            // Update visualizations if data exists
+            if (originalData.length > 0) {
+                visualizeOriginalData();
+            }
+            if (tsneEmbedding.length > 0) {
+                visualizeTsneEmbedding(tsneEmbedding);
+            }
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

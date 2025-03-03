@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Polynomial Regression Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+            <span style="font-size: 18px;">←</span> Return to Algorithms
+        </a>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Polynomial Regression Visualization</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- SVG Visualization Container -->
+            <div class="w-full lg:w-2/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <div class="w-full h-[600px] relative" id="visualization-container">
+                    <svg id="visualization" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                </div>
+                <div class="mt-2 flex flex-wrap justify-between items-center text-sm gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+                        <span>Data Points</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-red-500"></span>
+                        <span>Polynomial Fit</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-purple-500 dashed-line"></span>
+                        <span>True Relationship</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-8 h-1 bg-green-500 dashed-line"></span>
+                        <span>Residuals</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Panel -->
+            <div class="w-full lg:w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Controls</h2>
+                
+                <div class="space-y-6">
+                    <!-- Data Generation -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Data Generation</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="num-points" class="mr-2">Number of Points:</label>
+                                <input type="number" id="num-points" min="10" max="200" value="40" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="data-pattern" class="mr-2">Data Pattern:</label>
+                                <select id="data-pattern" class="w-40 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="linear">Linear</option>
+                                    <option value="quadratic" selected>Quadratic</option>
+                                    <option value="cubic">Cubic</option>
+                                    <option value="sinusoidal">Sinusoidal</option>
+                                    <option value="complex">Complex</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label for="noise-level" class="mr-2">Noise Level:</label>
+                                <input type="range" id="noise-level" min="0" max="3" step="0.1" value="1" class="w-40">
+                                <span id="noise-value" class="text-sm">1.0</span>
+                            </div>
+                            <button id="generate-data" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Generate New Data</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Polynomial Regression -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Polynomial Regression</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <label for="polynomial-degree" class="mr-2">Polynomial Degree:</label>
+                                <select id="polynomial-degree" class="w-20 px-2 py-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base">
+                                    <option value="1">1</option>
+                                    <option value="2" selected>2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="9">9</option>
+                                </select>
+                            </div>
+                            <button id="fit-polynomial" class="bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">Fit Polynomial</button>
+                            
+                            <div class="flex items-center justify-center gap-4 mt-2">
+                                <button id="degree-down" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-medium py-1 px-3 rounded transition">
+                                    Degree ↓
+                                </button>
+                                <button id="degree-up" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-medium py-1 px-3 rounded transition">
+                                    Degree ↑
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Visualization Options -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-2">Visualization Options</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-residuals" class="w-4 h-4" checked>
+                                <label for="show-residuals">Show Residuals</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-true-curve" class="w-4 h-4" checked>
+                                <label for="show-true-curve">Show True Relationship</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="show-training-error" class="w-4 h-4" checked>
+                                <label for="show-training-error">Show Error Curve</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status and Info -->
+                    <div id="regression-result" class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h3 class="text-lg font-medium mb-2">Regression Stats</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>True Relationship:</span>
+                                <span id="true-equation" class="font-mono">y = 0.5x² + 1</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span>Fitted Equation:</span>
+                                <span id="model-equation" class="font-mono text-sm break-words">y = ?</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>MSE (Mean Squared Error):</span>
+                                <span id="mse-value">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>R² Value:</span>
+                                <span id="r-squared">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Polynomial Degree:</span>
+                                <span id="current-degree">2</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Curve Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Error vs. Polynomial Degree</h2>
+            <div class="w-full h-[200px]">
+                <svg id="error-visualization" class="w-full h-full" viewBox="0 0 1000 200"></svg>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How Polynomial Regression Works</h2>
+            <div class="space-y-3 text-sm md:text-base">
+                <p><strong>What is Polynomial Regression?</strong></p>
+                <p>Polynomial regression extends linear regression by fitting curves using polynomial functions. 
+                Instead of just fitting y = b₀ + b₁x, it fits y = b₀ + b₁x + b₂x² + ... + bₙxⁿ, where n is the degree of the polynomial.</p>
+                
+                <p><strong>Understanding Model Complexity:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Underfitting:</strong> Simple models (low degree) may not capture the true pattern in the data</li>
+                    <li><strong>Good Fit:</strong> Model complexity matches data complexity, capturing patterns without fitting to noise</li>
+                    <li><strong>Overfitting:</strong> Complex models (high degree) fit the training data nearly perfectly but perform poorly on new data</li>
+                </ul>
+                
+                <p><strong>Bias-Variance Tradeoff:</strong></p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Low Degree Polynomials:</strong> High bias (underfitting), low variance</li>
+                    <li><strong>High Degree Polynomials:</strong> Low bias, high variance (overfitting)</li>
+                    <li>The best models balance this tradeoff to minimize total error</li>
+                </ul>
+                
+                <p>Try different data patterns and polynomial degrees to see how the model's ability to fit the data changes. 
+                Notice how higher degree polynomials can create wild oscillations, especially near the edges of the data range!</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .dashed-line {
+            border-top: 2px dashed;
+            height: 0;
+        }
+    </style>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const svg = document.getElementById('visualization');
+        const errorSvg = document.getElementById('error-visualization');
+        const generateDataBtn = document.getElementById('generate-data');
+        const fitPolynomialBtn = document.getElementById('fit-polynomial');
+        const numPointsInput = document.getElementById('num-points');
+        const dataPatternSelect = document.getElementById('data-pattern');
+        const noiseLevelInput = document.getElementById('noise-level');
+        const noiseValueDisplay = document.getElementById('noise-value');
+        const polynomialDegreeSelect = document.getElementById('polynomial-degree');
+        const degreeDownBtn = document.getElementById('degree-down');
+        const degreeUpBtn = document.getElementById('degree-up');
+        const showResidualsCheckbox = document.getElementById('show-residuals');
+        const showTrueCurveCheckbox = document.getElementById('show-true-curve');
+        const showTrainingErrorCheckbox = document.getElementById('show-training-error');
+        const trueEquationDisplay = document.getElementById('true-equation');
+        const modelEquationDisplay = document.getElementById('model-equation');
+        const mseValueDisplay = document.getElementById('mse-value');
+        const rSquaredDisplay = document.getElementById('r-squared');
+        const currentDegreeDisplay = document.getElementById('current-degree');
+        
+        // SVG namespace
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        // Visualization constants
+        const WIDTH = 1000;
+        const HEIGHT = 600;
+        const MARGIN = 50;
+        const PLOT_WIDTH = WIDTH - 2 * MARGIN;
+        const PLOT_HEIGHT = HEIGHT - 2 * MARGIN;
+        
+        // Data visualization constants
+        const DATA_WIDTH = WIDTH - MARGIN * 2;
+        const DATA_HEIGHT = HEIGHT - MARGIN * 2;
+        const DATA_X = MARGIN;
+        const DATA_Y = MARGIN;
+        
+        // Error visualization constants
+        const ERROR_HEIGHT = 200;
+        const ERROR_MARGIN = 30;
+        const ERROR_WIDTH = WIDTH - 2 * ERROR_MARGIN;
+        const ERROR_PLOT_HEIGHT = ERROR_HEIGHT - 2 * ERROR_MARGIN;
+        
+        // Data range - adjusted to prevent stacking at the edges
+        const X_MIN = 0;
+        const X_MAX = 10;
+        const Y_MIN = -5;
+        const Y_MAX = 15;
+        
+        // Colors
+        const DATA_POINT_COLOR = '#3B82F6'; // Blue
+        const REGRESSION_LINE_COLOR = '#EF4444'; // Red
+        const TRUE_LINE_COLOR = '#8B5CF6'; // Purple
+        const RESIDUAL_COLOR = '#84CC16'; // Green
+        const ERROR_LINE_COLOR = '#F59E0B'; // Amber
+        const GRID_COLOR_LIGHT = '#E2E8F0';
+        const GRID_COLOR_DARK = '#374151';
+        const TEXT_COLOR_LIGHT = '#1F2937';
+        const TEXT_COLOR_DARK = '#D1D5DB';
+        
+        // Data and model parameters
+        let data = [];
+        let noiseLevel = 1.0;
+        let polynomialDegree = 2;
+        let coefficients = []; // [b0, b1, b2, ...] for y = b0 + b1*x + b2*x^2 + ...
+        let dataPattern = 'quadratic';
+        let errorByDegree = new Map(); // Stores MSE for each degree
+        
+        // Parameters for the true data patterns
+        const dataPatternParams = {
+            linear: { a: 2, b: 1 }, // y = ax + b
+            quadratic: { a: 0.5, b: -2, c: 5 }, // y = ax^2 + bx + c
+            cubic: { a: 0.1, b: -0.5, c: 0, d: 5 }, // y = ax^3 + bx^2 + cx + d
+            sinusoidal: { amp: 4, freq: 0.5, phase: 0, offset: 5 }, // y = amp * sin(freq * x + phase) + offset
+            complex: { a: 0.05, b: -0.6, c: 1.5, d: -1, e: 5 } // y = ax^4 + bx^3 + cx^2 + dx + e
+        };
+        
+        // Initialize the SVG elements
+        function initSVG() {
+            // Clear existing SVGs
+            svg.innerHTML = '';
+            errorSvg.innerHTML = '';
+            
+            // Add background for main visualization
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            svg.appendChild(background);
+            
+            // Add grid lines for data visualization
+            const numVerticalLines = 10;
+            const numHorizontalLines = 20;
+            const verticalSpacing = DATA_WIDTH / numVerticalLines;
+            const horizontalSpacing = DATA_HEIGHT / numHorizontalLines;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= numVerticalLines; i++) {
+                const xPos = DATA_X + verticalSpacing * i;
+                
+                const vLine = document.createElementNS(svgNS, 'line');
+                vLine.setAttribute('x1', xPos);
+                vLine.setAttribute('y1', DATA_Y);
+                vLine.setAttribute('x2', xPos);
+                vLine.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+                vLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                vLine.setAttribute('stroke-width', '1');
+                svg.appendChild(vLine);
+            }
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= numHorizontalLines; i++) {
+                const yPos = DATA_Y + horizontalSpacing * i;
+                
+                const hLine = document.createElementNS(svgNS, 'line');
+                hLine.setAttribute('x1', DATA_X);
+                hLine.setAttribute('y1', yPos);
+                hLine.setAttribute('x2', DATA_X + DATA_WIDTH);
+                hLine.setAttribute('y2', yPos);
+                hLine.setAttribute('stroke', document.body.classList.contains('dark') ? GRID_COLOR_DARK : GRID_COLOR_LIGHT);
+                hLine.setAttribute('stroke-width', '1');
+                svg.appendChild(hLine);
+            }
+            
+            // Add axes for data visualization
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', DATA_X);
+            xAxis.setAttribute('y1', mapY(0)); // Draw x-axis at y=0
+            xAxis.setAttribute('x2', DATA_X + DATA_WIDTH);
+            xAxis.setAttribute('y2', mapY(0));
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', DATA_X);
+            yAxis.setAttribute('y1', DATA_Y);
+            yAxis.setAttribute('x2', DATA_X);
+            yAxis.setAttribute('y2', DATA_Y + DATA_HEIGHT);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            svg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', DATA_X + DATA_WIDTH / 2);
+            xLabel.setAttribute('y', DATA_Y + DATA_HEIGHT + 30);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'X';
+            svg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', DATA_X - 30);
+            yLabel.setAttribute('y', DATA_Y + DATA_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, ${DATA_X - 30}, ${DATA_Y + DATA_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Y';
+            svg.appendChild(yLabel);
+            
+            // Add x-axis ticks and labels
+            for (let i = 0; i <= 10; i++) {
+                const x = mapX(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', mapY(0));
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', mapY(0) + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', mapY(0) + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Add y-axis ticks and labels (with extended range)
+            for (let i = Y_MIN; i <= Y_MAX; i += 5) {
+                const y = mapY(i);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', DATA_X);
+                tickLine.setAttribute('y1', y);
+                tickLine.setAttribute('x2', DATA_X - 5);
+                tickLine.setAttribute('y2', y);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                svg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', DATA_X - 10);
+                tickLabel.setAttribute('y', y + 4);
+                tickLabel.setAttribute('text-anchor', 'end');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                svg.appendChild(tickLabel);
+            }
+            
+            // Initialize error visualization
+            initErrorSVG();
+        }
+        
+        // Initialize the error visualization
+        function initErrorSVG() {
+            // Clear existing SVG
+            errorSvg.innerHTML = '';
+            
+            // Add background
+            const background = document.createElementNS(svgNS, 'rect');
+            background.setAttribute('width', WIDTH);
+            background.setAttribute('height', ERROR_HEIGHT);
+            background.setAttribute('fill', document.body.classList.contains('dark') ? '#1F2937' : '#f8fafc');
+            errorSvg.appendChild(background);
+            
+            // Add axes
+            const xAxis = document.createElementNS(svgNS, 'line');
+            xAxis.setAttribute('x1', ERROR_MARGIN);
+            xAxis.setAttribute('y1', ERROR_HEIGHT - ERROR_MARGIN);
+            xAxis.setAttribute('x2', WIDTH - ERROR_MARGIN);
+            xAxis.setAttribute('y2', ERROR_HEIGHT - ERROR_MARGIN);
+            xAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xAxis.setAttribute('stroke-width', '2');
+            errorSvg.appendChild(xAxis);
+            
+            const yAxis = document.createElementNS(svgNS, 'line');
+            yAxis.setAttribute('x1', ERROR_MARGIN);
+            yAxis.setAttribute('y1', ERROR_MARGIN);
+            yAxis.setAttribute('x2', ERROR_MARGIN);
+            yAxis.setAttribute('y2', ERROR_HEIGHT - ERROR_MARGIN);
+            yAxis.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yAxis.setAttribute('stroke-width', '2');
+            errorSvg.appendChild(yAxis);
+            
+            // Add axis labels
+            const xLabel = document.createElementNS(svgNS, 'text');
+            xLabel.setAttribute('x', WIDTH / 2);
+            xLabel.setAttribute('y', ERROR_HEIGHT - 5);
+            xLabel.setAttribute('text-anchor', 'middle');
+            xLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            xLabel.textContent = 'Polynomial Degree';
+            errorSvg.appendChild(xLabel);
+            
+            const yLabel = document.createElementNS(svgNS, 'text');
+            yLabel.setAttribute('x', 15);
+            yLabel.setAttribute('y', ERROR_HEIGHT / 2);
+            yLabel.setAttribute('text-anchor', 'middle');
+            yLabel.setAttribute('transform', `rotate(-90, 15, ${ERROR_HEIGHT / 2})`);
+            yLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            yLabel.textContent = 'Mean Squared Error';
+            errorSvg.appendChild(yLabel);
+            
+            // Add title
+            const title = document.createElementNS(svgNS, 'text');
+            title.setAttribute('x', WIDTH / 2);
+            title.setAttribute('y', ERROR_MARGIN / 2);
+            title.setAttribute('text-anchor', 'middle');
+            title.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+            title.setAttribute('font-weight', 'bold');
+            title.textContent = 'MSE vs Polynomial Degree';
+            errorSvg.appendChild(title);
+            
+            // Add x-axis ticks and labels
+            const maxDegree = 10;
+            const degreeWidth = (WIDTH - 2 * ERROR_MARGIN) / maxDegree;
+            
+            for (let i = 1; i <= maxDegree; i++) {
+                const x = ERROR_MARGIN + degreeWidth * (i - 1);
+                
+                // Tick mark
+                const tickLine = document.createElementNS(svgNS, 'line');
+                tickLine.setAttribute('x1', x);
+                tickLine.setAttribute('y1', ERROR_HEIGHT - ERROR_MARGIN);
+                tickLine.setAttribute('x2', x);
+                tickLine.setAttribute('y2', ERROR_HEIGHT - ERROR_MARGIN + 5);
+                tickLine.setAttribute('stroke', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLine.setAttribute('stroke-width', '1');
+                errorSvg.appendChild(tickLine);
+                
+                // Label
+                const tickLabel = document.createElementNS(svgNS, 'text');
+                tickLabel.setAttribute('x', x);
+                tickLabel.setAttribute('y', ERROR_HEIGHT - ERROR_MARGIN + 20);
+                tickLabel.setAttribute('text-anchor', 'middle');
+                tickLabel.setAttribute('font-size', '12');
+                tickLabel.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                tickLabel.textContent = i.toString();
+                errorSvg.appendChild(tickLabel);
+            }
+        }
+        
+        // Generate synthetic data 
+        function generateData() {
+            const numPoints = parseInt(numPointsInput.value);
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            dataPattern = dataPatternSelect.value;
+            data = [];
+            
+            // Update the noise value display
+            noiseValueDisplay.textContent = noiseLevel.toFixed(1);
+            
+            // Update true equation display based on pattern
+            updateTrueEquationDisplay();
+            
+            // Clear error tracking
+            errorByDegree.clear();
+            
+            // Function to add noise
+            const addNoise = (baseValue) => {
+                return baseValue + (Math.random() * 2 - 1) * noiseLevel;
+            };
+            
+            // Generate data based on selected pattern
+            for (let i = 0; i < numPoints; i++) {
+                let x = Math.random() * (X_MAX - X_MIN) + X_MIN;
+                let y = getTrueY(x);
+                
+                // Add noise
+                y = addNoise(y);
+                
+                // Store the data point
+                data.push({ x, y });
+            }
+            
+            // Sort data by x for better visualization
+            data.sort((a, b) => a.x - b.x);
+            
+            // Reset model
+            coefficients = Array(polynomialDegree + 1).fill(0);
+            modelEquationDisplay.textContent = 'y = ?';
+            mseValueDisplay.textContent = '-';
+            rSquaredDisplay.textContent = '-';
+            
+            // Visualize data
+            visualizeData();
+            
+            // Show true curve if checkbox is checked
+            if (showTrueCurveCheckbox.checked) {
+                showTrueCurve();
+            }
+        }
+        
+        // Get y value for the true relationship at a given x
+        function getTrueY(x) {
+            switch (dataPattern) {
+                case 'linear':
+                    const { a, b } = dataPatternParams.linear;
+                    return a * x + b;
+                    
+                case 'quadratic':
+                    const q = dataPatternParams.quadratic;
+                    return q.a * x * x + q.b * x + q.c;
+                    
+                case 'cubic':
+                    const c = dataPatternParams.cubic;
+                    return c.a * x * x * x + c.b * x * x + c.c * x + c.d;
+                    
+                case 'sinusoidal':
+                    const s = dataPatternParams.sinusoidal;
+                    return s.amp * Math.sin(s.freq * x + s.phase) + s.offset;
+                    
+                case 'complex':
+                    const cx = dataPatternParams.complex;
+                    return cx.a * Math.pow(x, 4) + cx.b * Math.pow(x, 3) + cx.c * Math.pow(x, 2) + cx.d * x + cx.e;
+                    
+                default:
+                    return 0;
+            }
+        }
+        
+        // Update the true equation display based on pattern
+        function updateTrueEquationDisplay() {
+            switch (dataPattern) {
+                case 'linear':
+                    const { a, b } = dataPatternParams.linear;
+                    trueEquationDisplay.textContent = `y = ${a}x + ${b}`;
+                    break;
+                    
+                case 'quadratic':
+                    const q = dataPatternParams.quadratic;
+                    trueEquationDisplay.textContent = `y = ${q.a}x² + ${q.b}x + ${q.c}`;
+                    break;
+                    
+                case 'cubic':
+                    const c = dataPatternParams.cubic;
+                    trueEquationDisplay.textContent = `y = ${c.a}x³ + ${c.b}x² + ${c.c}x + ${c.d}`;
+                    break;
+                    
+                case 'sinusoidal':
+                    const s = dataPatternParams.sinusoidal;
+                    trueEquationDisplay.textContent = `y = ${s.amp}sin(${s.freq}x) + ${s.offset}`;
+                    break;
+                    
+                case 'complex':
+                    const cx = dataPatternParams.complex;
+                    trueEquationDisplay.textContent = `y = ${cx.a}x⁴ + ${cx.b}x³ + ${cx.c}x² + ${cx.d}x + ${cx.e}`;
+                    break;
+                    
+                default:
+                    trueEquationDisplay.textContent = 'y = ?';
+            }
+        }
+        
+        // Map data coordinates to SVG coordinates
+        function mapX(x) {
+            return DATA_X + ((x - X_MIN) / (X_MAX - X_MIN)) * DATA_WIDTH;
+        }
+        
+        function mapY(y) {
+            return DATA_Y + DATA_HEIGHT - ((y - Y_MIN) / (Y_MAX - Y_MIN)) * DATA_HEIGHT;
+        }
+        
+        // Visualize the data points
+        function visualizeData() {
+            // Remove existing data points
+            const existingPoints = svg.querySelectorAll('.data-point');
+            existingPoints.forEach(point => point.remove());
+            
+            // Remove polynomial curve and residuals
+            clearPolynomialCurve();
+            clearResiduals();
+            
+            // Add new data points
+            data.forEach((point, index) => {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', mapX(point.x));
+                circle.setAttribute('cy', mapY(point.y));
+                circle.setAttribute('r', '5');
+                circle.setAttribute('fill', DATA_POINT_COLOR);
+                circle.setAttribute('stroke', document.body.classList.contains('dark') ? '#F3F4F6' : '#1F2937');
+                circle.setAttribute('stroke-width', '1');
+                circle.setAttribute('class', 'data-point');
+                circle.setAttribute('data-index', index);
+                
+                // Add animation with anime.js
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                svg.appendChild(circle);
+            });
+            
+            // Animate the appearance of data points
+            anime({
+                targets: '.data-point',
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(20),
+                easing: 'easeOutElastic(1, .5)',
+                duration: 1500
+            });
+        }
+        
+        // Clear polynomial curve
+        function clearPolynomialCurve() {
+            // Remove polynomial curve
+            const existingCurve = svg.querySelector('.polynomial-curve');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            // Remove true curve
+            const trueCurve = svg.querySelector('.true-curve');
+            if (trueCurve) {
+                trueCurve.remove();
+            }
+        }
+        
+        // Clear residuals
+        function clearResiduals() {
+            const existingResiduals = svg.querySelectorAll('.residual');
+            existingResiduals.forEach(r => r.remove());
+        }
+        
+        // Show the true relationship curve
+        function showTrueCurve() {
+            // Remove existing true curve
+            const existingCurve = svg.querySelector('.true-curve');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            // Create path data for the true relationship
+            let pathData = '';
+            for (let x = X_MIN; x <= X_MAX; x += 0.1) {
+                const y = getTrueY(x);
+                
+                if (pathData === '') {
+                    pathData = `M ${mapX(x)} ${mapY(y)}`;
+                } else {
+                    pathData += ` L ${mapX(x)} ${mapY(y)}`;
+                }
+            }
+            
+            // Add the true relationship path
+            const trueCurve = document.createElementNS(svgNS, 'path');
+            trueCurve.setAttribute('d', pathData);
+            trueCurve.setAttribute('fill', 'none');
+            trueCurve.setAttribute('stroke', TRUE_LINE_COLOR);
+            trueCurve.setAttribute('stroke-width', '2');
+            trueCurve.setAttribute('stroke-dasharray', '5,5');
+            trueCurve.setAttribute('class', 'true-curve');
+            
+            // Add animation
+            trueCurve.style.opacity = '0';
+            
+            svg.appendChild(trueCurve);
+            
+            // Animate the appearance of the true curve
+            anime({
+                targets: '.true-curve',
+                opacity: 0.8,
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+        }
+        
+        // Predict y value based on fitted polynomial
+        function predict(x) {
+            let y = 0;
+            for (let i = 0; i < coefficients.length; i++) {
+                y += coefficients[i] * Math.pow(x, i);
+            }
+            return y;
+        }
+        
+        // Calculate Mean Squared Error
+        function calculateMSE() {
+            let sumSquaredError = 0;
+            for (const point of data) {
+                const predicted = predict(point.x);
+                const error = point.y - predicted;
+                sumSquaredError += error * error;
+            }
+            return sumSquaredError / data.length;
+        }
+        
+        // Calculate R-squared (coefficient of determination)
+        function calculateRSquared() {
+            // Calculate mean of observed data
+            const mean = data.reduce((sum, point) => sum + point.y, 0) / data.length;
+            
+            // Calculate total sum of squares
+            let totalSumSquares = 0;
+            for (const point of data) {
+                totalSumSquares += Math.pow(point.y - mean, 2);
+            }
+            
+            // Calculate residual sum of squares
+            let residualSumSquares = 0;
+            for (const point of data) {
+                const predicted = predict(point.x);
+                residualSumSquares += Math.pow(point.y - predicted, 2);
+            }
+            
+            // Calculate R-squared
+            return 1 - (residualSumSquares / totalSumSquares);
+        }
+        
+        // Fit polynomial using matrix operations (normal equations)
+        function fitPolynomial() {
+            if (data.length === 0) return;
+            
+            // Get current polynomial degree
+            polynomialDegree = parseInt(polynomialDegreeSelect.value);
+            
+            // Update degree display
+            currentDegreeDisplay.textContent = polynomialDegree;
+            
+            // For polynomial regression, we need to solve the normal equations:
+            // X^T * X * beta = X^T * y
+            // Where X is the design matrix with columns [1, x, x^2, ..., x^degree]
+            
+            // 1. Create the design matrix X
+            const X = [];
+            for (const point of data) {
+                const row = [];
+                for (let i = 0; i <= polynomialDegree; i++) {
+                    row.push(Math.pow(point.x, i));
+                }
+                X.push(row);
+            }
+            
+            // 2. Create the target vector y
+            const y = data.map(point => point.y);
+            
+            // 3. Calculate X^T * X (transpose of X multiplied by X)
+            const XtX = [];
+            for (let i = 0; i <= polynomialDegree; i++) {
+                XtX[i] = [];
+                for (let j = 0; j <= polynomialDegree; j++) {
+                    let sum = 0;
+                    for (let k = 0; k < X.length; k++) {
+                        sum += X[k][i] * X[k][j];
+                    }
+                    XtX[i][j] = sum;
+                }
+            }
+            
+            // 4. Calculate X^T * y
+            const Xty = [];
+            for (let i = 0; i <= polynomialDegree; i++) {
+                let sum = 0;
+                for (let k = 0; k < X.length; k++) {
+                    sum += X[k][i] * y[k];
+                }
+                Xty[i] = sum;
+            }
+            
+            // 5. Solve the system of linear equations using Gaussian elimination
+            const augmentedMatrix = [];
+            for (let i = 0; i <= polynomialDegree; i++) {
+                augmentedMatrix[i] = [...XtX[i], Xty[i]];
+            }
+            
+            // 5.1 Forward elimination
+            for (let i = 0; i <= polynomialDegree; i++) {
+                // Find pivot
+                let maxRow = i;
+                let maxVal = Math.abs(augmentedMatrix[i][i]);
+                for (let j = i + 1; j <= polynomialDegree; j++) {
+                    const absVal = Math.abs(augmentedMatrix[j][i]);
+                    if (absVal > maxVal) {
+                        maxVal = absVal;
+                        maxRow = j;
+                    }
+                }
+                
+                // Swap rows if necessary
+                if (maxRow !== i) {
+                    [augmentedMatrix[i], augmentedMatrix[maxRow]] = [augmentedMatrix[maxRow], augmentedMatrix[i]];
+                }
+                
+                // Eliminate rows below
+                for (let j = i + 1; j <= polynomialDegree; j++) {
+                    const factor = augmentedMatrix[j][i] / augmentedMatrix[i][i];
+                    for (let k = i; k <= polynomialDegree + 1; k++) {
+                        augmentedMatrix[j][k] -= factor * augmentedMatrix[i][k];
+                    }
+                }
+            }
+            
+            // 5.2 Back substitution
+            coefficients = Array(polynomialDegree + 1).fill(0);
+            for (let i = polynomialDegree; i >= 0; i--) {
+                let sum = 0;
+                for (let j = i + 1; j <= polynomialDegree; j++) {
+                    sum += augmentedMatrix[i][j] * coefficients[j];
+                }
+                coefficients[i] = (augmentedMatrix[i][polynomialDegree + 1] - sum) / augmentedMatrix[i][i];
+            }
+            
+            // Update the model equation display
+            updateModelEquation();
+            
+            // Calculate and display MSE and R²
+            const mse = calculateMSE();
+            const r2 = calculateRSquared();
+            mseValueDisplay.textContent = mse.toFixed(4);
+            rSquaredDisplay.textContent = r2.toFixed(4);
+            
+            // Store the error for this degree
+            errorByDegree.set(polynomialDegree, mse);
+            
+            // Draw the polynomial curve
+            drawPolynomialCurve();
+            
+            // Draw residuals if enabled
+            if (showResidualsCheckbox.checked) {
+                drawResiduals();
+            }
+            
+            // Update error visualization if enabled
+            if (showTrainingErrorCheckbox.checked) {
+                updateErrorVisualization();
+            }
+        }
+        
+        // Update the model equation display
+        function updateModelEquation() {
+            let equation = 'y = ';
+            let hasTerms = false;
+            
+            for (let i = coefficients.length - 1; i >= 0; i--) {
+                // Skip very small coefficients that are essentially zero
+                if (Math.abs(coefficients[i]) < 1e-10) continue;
+                
+                // Format the coefficient to 2 decimal places
+                const coef = coefficients[i].toFixed(2);
+                // Avoid -0.00
+                const formattedCoef = coef === "-0.00" ? "0.00" : coef;
+                
+                if (i === 0) {
+                    // Constant term
+                    if (hasTerms) {
+                        equation += coefficients[i] >= 0 ? ` + ${formattedCoef}` : ` - ${Math.abs(coefficients[i]).toFixed(2)}`;
+                    } else {
+                        // Only term
+                        equation += formattedCoef;
+                    }
+                } else if (i === 1) {
+                    // Linear term (x)
+                    if (hasTerms) {
+                        equation += coefficients[i] >= 0 ? ` + ${formattedCoef}x` : ` - ${Math.abs(coefficients[i]).toFixed(2)}x`;
+                    } else {
+                        // First term
+                        equation += `${formattedCoef}x`;
+                        hasTerms = true;
+                    }
+                } else {
+                    // Higher power terms (x^2, x^3, etc.)
+                    if (hasTerms) {
+                        equation += coefficients[i] >= 0 ? ` + ${formattedCoef}x^${i}` : ` - ${Math.abs(coefficients[i]).toFixed(2)}x^${i}`;
+                    } else {
+                        // First term
+                        equation += `${formattedCoef}x^${i}`;
+                        hasTerms = true;
+                    }
+                }
+                
+                hasTerms = true;
+            }
+            
+            // If no terms were added, show zero
+            if (!hasTerms) {
+                equation += '0';
+            }
+            
+            // Replace superscript numbers with proper symbols
+            equation = equation.replace(/\^2/g, '²');
+            equation = equation.replace(/\^3/g, '³');
+            equation = equation.replace(/\^4/g, '⁴');
+            equation = equation.replace(/\^5/g, '⁵');
+            equation = equation.replace(/\^6/g, '⁶');
+            equation = equation.replace(/\^7/g, '⁷');
+            equation = equation.replace(/\^8/g, '⁸');
+            equation = equation.replace(/\^9/g, '⁹');
+            
+            modelEquationDisplay.textContent = equation;
+        }
+        
+        // Draw the polynomial curve
+        function drawPolynomialCurve() {
+            // Remove existing curve
+            const existingCurve = svg.querySelector('.polynomial-curve');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            // Create path data for the polynomial curve
+            let pathData = '';
+            for (let x = X_MIN; x <= X_MAX; x += 0.1) {
+                const y = predict(x);
+                
+                if (pathData === '') {
+                    pathData = `M ${mapX(x)} ${mapY(y)}`;
+                } else {
+                    pathData += ` L ${mapX(x)} ${mapY(y)}`;
+                }
+            }
+            
+            // Add the polynomial curve path
+            const polynomialCurve = document.createElementNS(svgNS, 'path');
+            polynomialCurve.setAttribute('d', pathData);
+            polynomialCurve.setAttribute('fill', 'none');
+            polynomialCurve.setAttribute('stroke', REGRESSION_LINE_COLOR);
+            polynomialCurve.setAttribute('stroke-width', '3');
+            polynomialCurve.setAttribute('class', 'polynomial-curve');
+            
+            // Add animation
+            polynomialCurve.style.opacity = '0';
+            
+            svg.appendChild(polynomialCurve);
+            
+            // Animate the appearance of the polynomial curve
+            anime({
+                targets: '.polynomial-curve',
+                opacity: 1,
+                strokeDashoffset: [anime.setDashoffset, 0],
+                easing: 'easeInOutSine',
+                duration: 1500
+            });
+        }
+        
+        // Draw residuals (vertical lines from data points to the polynomial curve)
+        function drawResiduals() {
+            // Remove existing residuals
+            const existingResiduals = svg.querySelectorAll('.residual');
+            existingResiduals.forEach(r => r.remove());
+            
+            data.forEach((point, index) => {
+                const predictedY = predict(point.x);
+                
+                const residual = document.createElementNS(svgNS, 'line');
+                residual.setAttribute('x1', mapX(point.x));
+                residual.setAttribute('y1', mapY(point.y));
+                residual.setAttribute('x2', mapX(point.x));
+                residual.setAttribute('y2', mapY(predictedY));
+                residual.setAttribute('stroke', RESIDUAL_COLOR);
+                residual.setAttribute('stroke-width', '1.5');
+                residual.setAttribute('stroke-dasharray', '3,3');
+                residual.setAttribute('class', 'residual');
+                residual.setAttribute('data-index', index);
+                
+                // Add animation
+                residual.style.opacity = '0';
+                
+                svg.appendChild(residual);
+            });
+            
+            // Animate residuals
+            anime({
+                targets: '.residual',
+                opacity: 0.7,
+                delay: anime.stagger(10),
+                easing: 'easeInOutSine',
+                duration: 1000
+            });
+        }
+        
+        // Update the error visualization
+        function updateErrorVisualization() {
+            // Remove existing error curves
+            const existingCurve = errorSvg.querySelector('.error-curve');
+            if (existingCurve) {
+                existingCurve.remove();
+            }
+            
+            const existingPoints = errorSvg.querySelectorAll('.error-point');
+            existingPoints.forEach(point => point.remove());
+            
+            // Don't draw if no errors have been calculated
+            if (errorByDegree.size === 0) return;
+            
+            // Find min and max error for scaling
+            const errorValues = Array.from(errorByDegree.values());
+            const minError = Math.min(...errorValues);
+            const maxError = Math.max(...errorValues);
+            const errorRange = maxError - minError;
+            
+            // Draw error points and curve
+            let pathData = '';
+            const degreeWidth = (WIDTH - 2 * ERROR_MARGIN) / 10;
+            
+            errorByDegree.forEach((error, degree) => {
+                // Calculate position
+                const x = ERROR_MARGIN + degreeWidth * (degree - 1);
+                const normalizedError = errorRange > 0 ? 
+                    1 - (error - minError) / errorRange : 
+                    0.5;
+                const y = ERROR_MARGIN + ERROR_PLOT_HEIGHT * (1 - normalizedError);
+                
+                // Create error point
+                const point = document.createElementNS(svgNS, 'circle');
+                point.setAttribute('cx', x);
+                point.setAttribute('cy', y);
+                point.setAttribute('r', degree === polynomialDegree ? '6' : '4');
+                point.setAttribute('fill', degree === polynomialDegree ? ERROR_LINE_COLOR : '#6B7280');
+                point.setAttribute('class', 'error-point');
+                point.setAttribute('data-degree', degree);
+                
+                // Add tooltip with error value
+                const title = document.createElementNS(svgNS, 'title');
+                title.textContent = `Degree ${degree}: MSE = ${error.toFixed(4)}`;
+                point.appendChild(title);
+                
+                errorSvg.appendChild(point);
+                
+                // Add to path data
+                if (pathData === '') {
+                    pathData = `M ${x} ${y}`;
+                } else {
+                    pathData += ` L ${x} ${y}`;
+                }
+            });
+            
+            // Add the error curve
+            if (pathData !== '') {
+                const errorCurve = document.createElementNS(svgNS, 'path');
+                errorCurve.setAttribute('d', pathData);
+                errorCurve.setAttribute('fill', 'none');
+                errorCurve.setAttribute('stroke', ERROR_LINE_COLOR);
+                errorCurve.setAttribute('stroke-width', '2');
+                errorCurve.setAttribute('class', 'error-curve');
+                
+                errorSvg.appendChild(errorCurve);
+            }
+            
+            // Add annotations for under/overfitting regions if there are enough points
+            if (errorByDegree.size >= 3) {
+                // Find the minimum error point
+                let minErrorDegree = 1;
+                let minErrorValue = Infinity;
+                
+                errorByDegree.forEach((error, degree) => {
+                    if (error < minErrorValue) {
+                        minErrorValue = error;
+                        minErrorDegree = degree;
+                    }
+                });
+                
+                // Add underfitting annotation
+                const underfittingX = ERROR_MARGIN + degreeWidth * 0;
+                const underfittingY = ERROR_MARGIN + 20;
+                
+                const underfittingText = document.createElementNS(svgNS, 'text');
+                underfittingText.setAttribute('x', underfittingX);
+                underfittingText.setAttribute('y', underfittingY);
+                underfittingText.setAttribute('text-anchor', 'start');
+                underfittingText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                underfittingText.setAttribute('font-size', '12');
+                underfittingText.textContent = 'Underfitting';
+                underfittingText.setAttribute('class', 'error-annotation');
+                errorSvg.appendChild(underfittingText);
+                
+                // Add good fit annotation
+                const goodFitX = ERROR_MARGIN + degreeWidth * (minErrorDegree - 0.5);
+                const goodFitY = ERROR_MARGIN + 20;
+                
+                const goodFitText = document.createElementNS(svgNS, 'text');
+                goodFitText.setAttribute('x', goodFitX);
+                goodFitText.setAttribute('y', goodFitY);
+                goodFitText.setAttribute('text-anchor', 'middle');
+                goodFitText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                goodFitText.setAttribute('font-size', '12');
+                goodFitText.textContent = 'Good Fit';
+                goodFitText.setAttribute('class', 'error-annotation');
+                errorSvg.appendChild(goodFitText);
+                
+                // Add overfitting annotation (only if we have degrees greater than the minimum error degree)
+                if (Array.from(errorByDegree.keys()).some(d => d > minErrorDegree)) {
+                    const overfittingX = WIDTH - ERROR_MARGIN;
+                    const overfittingY = ERROR_MARGIN + 20;
+                    
+                    const overfittingText = document.createElementNS(svgNS, 'text');
+                    overfittingText.setAttribute('x', overfittingX);
+                    overfittingText.setAttribute('y', overfittingY);
+                    overfittingText.setAttribute('text-anchor', 'end');
+                    overfittingText.setAttribute('fill', document.body.classList.contains('dark') ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
+                    overfittingText.setAttribute('font-size', '12');
+                    overfittingText.textContent = 'Overfitting';
+                    overfittingText.setAttribute('class', 'error-annotation');
+                    errorSvg.appendChild(overfittingText);
+                }
+            }
+        }
+        
+        // Increment polynomial degree
+        function incrementDegree() {
+            const currentDegree = parseInt(polynomialDegreeSelect.value);
+            const maxDegree = 9;
+            
+            if (currentDegree < maxDegree) {
+                polynomialDegreeSelect.value = (currentDegree + 1).toString();
+                polynomialDegree = currentDegree + 1;
+                currentDegreeDisplay.textContent = polynomialDegree;
+                
+                // Fit with new degree
+                fitPolynomial();
+            }
+        }
+        
+        // Decrement polynomial degree
+        function decrementDegree() {
+            const currentDegree = parseInt(polynomialDegreeSelect.value);
+            
+            if (currentDegree > 1) {
+                polynomialDegreeSelect.value = (currentDegree - 1).toString();
+                polynomialDegree = currentDegree - 1;
+                currentDegreeDisplay.textContent = polynomialDegree;
+                
+                // Fit with new degree
+                fitPolynomial();
+            }
+        }
+        
+        // Event listeners
+        generateDataBtn.addEventListener('click', generateData);
+        fitPolynomialBtn.addEventListener('click', fitPolynomial);
+        
+        noiseLevelInput.addEventListener('input', () => {
+            noiseLevel = parseFloat(noiseLevelInput.value);
+            noiseValueDisplay.textContent = noiseLevel.toFixed(1);
+        });
+        
+        polynomialDegreeSelect.addEventListener('change', () => {
+            polynomialDegree = parseInt(polynomialDegreeSelect.value);
+            currentDegreeDisplay.textContent = polynomialDegree;
+        });
+        
+        degreeUpBtn.addEventListener('click', incrementDegree);
+        degreeDownBtn.addEventListener('click', decrementDegree);
+        
+        showResidualsCheckbox.addEventListener('change', () => {
+            if (showResidualsCheckbox.checked && coefficients.length > 0) {
+                drawResiduals();
+            } else {
+                const existingResiduals = svg.querySelectorAll('.residual');
+                existingResiduals.forEach(r => r.remove());
+            }
+        });
+        
+        showTrueCurveCheckbox.addEventListener('change', () => {
+            if (showTrueCurveCheckbox.checked) {
+                showTrueCurve();
+            } else {
+                const trueCurve = svg.querySelector('.true-curve');
+                if (trueCurve) {
+                    trueCurve.remove();
+                }
+            }
+        });
+        
+        showTrainingErrorCheckbox.addEventListener('change', () => {
+            if (showTrainingErrorCheckbox.checked) {
+                updateErrorVisualization();
+            } else {
+                const existingCurve = errorSvg.querySelector('.error-curve');
+                if (existingCurve) {
+                    existingCurve.remove();
+                }
+                
+                const existingPoints = errorSvg.querySelectorAll('.error-point');
+                existingPoints.forEach(point => point.remove());
+                
+                const existingAnnotations = errorSvg.querySelectorAll('.error-annotation');
+                existingAnnotations.forEach(annotation => annotation.remove());
+            }
+        });
+        
+        dataPatternSelect.addEventListener('change', () => {
+            // Update data pattern and regenerate data
+            dataPattern = dataPatternSelect.value;
+            generateData();
+        });
+        
+        // Initialize the application
+        initSVG();
+        generateData();
+    </script>
+</body>
+</html>

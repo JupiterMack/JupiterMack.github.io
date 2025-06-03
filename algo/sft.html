@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Supervised Fine-Tuning (SFT) Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+        <span style="font-size: 18px;">←</span> Return to Algorithms
+    </a>
+
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">Supervised Fine-Tuning (SFT) for LLMs</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Main Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- SFT Pipeline Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">SFT Pipeline</h2>
+                    <div class="w-full h-[600px] relative" id="sft-pipeline-container">
+                        <svg id="sft-pipeline-svg" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                    </div>
+                    
+                    <!-- Pipeline Legend -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-4 text-sm">
+                        <div class="flex items-center"><div class="w-4 h-4 bg-blue-500 rounded-sm mr-2"></div><span>Base Model</span></div>
+                        <div class="flex items-center"><div class="w-4 h-4 bg-green-500 rounded-sm mr-2"></div><span>Dataset & Formatting</span></div>
+                        <div class="flex items-center"><div class="w-4 h-4 bg-purple-500 rounded-sm mr-2"></div><span>Fine-Tuning (LoRA)</span></div>
+                        <div class="flex items-center"><div class="w-4 h-4 bg-orange-500 rounded-sm mr-2"></div><span>Evaluation</span></div>
+                        <div class="flex items-center"><div class="w-4 h-4 bg-red-500 rounded-sm mr-2"></div><span>Fine-Tuned Model</span></div>
+                    </div>
+                </div>
+                
+                <!-- Model Adaptation Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Model Adaptation Progress</h2>
+                    <div class="w-full h-[300px] relative">
+                        <canvas id="adaptation-canvas" class="w-full h-full border border-gray-300 dark:border-gray-600"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Conceptual view of model aligning to the fine-tuning task.</span>
+                    </div>
+                </div>
+                
+                <!-- Performance Comparison -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Base LLM vs. Fine-Tuned LLM</h2>
+                    <div class="w-full h-[300px]">
+                        <canvas id="sft-performance-chart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls and Information Panel -->
+            <div class="w-full lg:w-2/5">
+                <!-- SFT Configuration -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Configure SFT</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Base Model:</label>
+                            <select id="base-model-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="llama-7b">Llama-2-7B (Illustrative)</option>
+                                <option value="mistral-7b">Mistral-7B (Illustrative)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Fine-Tuning Task & Dataset:</label>
+                            <select id="finetuning-task-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="chatbot_persona">Chatbot Persona (Friendly)</option>
+                                <option value="code_python_simple">Python Code Generation (Simple)</option>
+                                <option value="summarization_news">News Summarization</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Fine-Tuning Technique:</label>
+                            <select id="technique-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="lora" selected>LoRA (Low-Rank Adaptation)</option>
+                                <option value="full_ft">Full Fine-Tuning (Conceptual)</option>
+                            </select>
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            <input type="checkbox" id="unsloth-checkbox" class="mr-1" checked disabled> Conceptually using <a href="https://github.com/unslothai/unsloth" target="_blank" class="underline text-[#3498db]">Unsloth</a> for 2x faster LoRA.
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Epochs:</label>
+                                <input type="number" id="epochs-input" value="3" min="1" max="10" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Learning Rate:</label>
+                                <select id="lr-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
+                                    <option value="2e-5">2e-5</option>
+                                    <option value="5e-5" selected>5e-5</option>
+                                    <option value="1e-4">1e-4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="run-sft-btn" class="flex-1 bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">
+                                Simulate Fine-Tuning
+                            </button>
+                        </div>
+                        <button id="step-through-sft-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition">
+                            Step Through SFT Process
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dataset Preview -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Dataset Preview</h2>
+                    <div id="dataset-preview" class="space-y-2 max-h-40 overflow-y-auto text-sm">
+                        <div class="text-gray-500 dark:text-gray-400 italic">Select a task to see dataset samples...</div>
+                    </div>
+                </div>
+                
+                <!-- Test Fine-Tuned Model -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Test Model</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Your Prompt:</label>
+                            <textarea id="test-prompt-input" 
+                                      class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none h-16" 
+                                      placeholder="e.g., Hello! or Write a function to add two numbers."></textarea>
+                        </div>
+                        <button id="test-model-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded transition">
+                            Get Responses
+                        </button>
+                        <div>
+                            <h3 class="text-sm font-semibold mt-2 mb-1">Base Model Output:</h3>
+                            <div id="base-model-output" class="bg-gray-100 dark:bg-gray-700 p-2 rounded max-h-28 overflow-y-auto text-xs">
+                                <div class="text-gray-500 dark:text-gray-400 italic">Output from base model...</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold mb-1">Fine-Tuned Model Output:</h3>
+                            <div id="finetuned-model-output" class="bg-gray-100 dark:bg-gray-700 p-2 rounded max-h-28 overflow-y-auto text-xs">
+                                <div class="text-gray-500 dark:text-gray-400 italic">Output from fine-tuned model...</div>
+                            </div>
+                        </div>
+                        <div id="sft-eval-metrics" class="hidden">
+                             <h3 class="text-sm font-semibold mb-1">Fine-Tuned Model Metrics:</h3>
+                            <div class="grid grid-cols-2 gap-1 text-xs">
+                                <div>Task Accuracy: <span id="ft-accuracy" class="font-mono">N/A</span></div>
+                                <div>Perplexity: <span id="ft-perplexity" class="font-mono">N/A</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Process Status -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">SFT Process Status</h2>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center justify-between"><span>1. Dataset Loading</span><div id="sft-status-dataset" class="w-4 h-4 rounded-full bg-gray-300"></div></div>
+                        <div class="flex items-center justify-between"><span>2. Model Setup (LoRA)</span><div id="sft-status-setup" class="w-4 h-4 rounded-full bg-gray-300"></div></div>
+                        <div class="flex items-center justify-between"><span>3. Training Loop</span><div id="sft-status-training" class="w-4 h-4 rounded-full bg-gray-300"></div></div>
+                        <div class="flex items-center justify-between"><span>4. Evaluation</span><div id="sft-status-evaluation" class="w-4 h-4 rounded-full bg-gray-300"></div></div>
+                    </div>
+                    <div class="mt-4 text-sm">
+                        <strong>Current Step:</strong> <span id="sft-current-step">Ready</span>
+                    </div>
+                     <div id="training-progress-container" class="mt-3 hidden">
+                        <label class="text-xs">Training Progress (Epoch <span id="current-epoch-display">1</span>/<span id="total-epochs-display">3</span>):</label>
+                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                            <div id="training-progress-bar" class="bg-green-500 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Understanding Supervised Fine-Tuning (SFT)</h2>
+            <div class="space-y-4 text-sm md:text-base">
+                <p><strong>What is Supervised Fine-Tuning?</strong></p>
+                <p>Supervised Fine-Tuning (SFT) is a process used to adapt a pre-trained Large Language Model (LLM) to specific tasks or styles. It involves further training the model on a dataset of example input-output pairs, typically in an "instruction-response" format. This helps the LLM learn to follow instructions better, specialize in certain domains, or adopt a particular persona.</p>
+                
+                <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <p class="font-semibold mb-2">The SFT Process:</p>
+                    <ol class="list-decimal ml-6 space-y-2">
+                        <li><strong>Select Base Model:</strong> Choose a suitable pre-trained LLM (e.g., Llama, Mistral).</li>
+                        <li><strong>Dataset Preparation:</strong> Curate a high-quality dataset of instruction-response pairs relevant to the target task or style.</li>
+                        <li><strong>Data Formatting:</strong> Convert the dataset into a consistent prompt template that the model can understand.</li>
+                        <li><strong>Fine-Tuning:</strong> Train the model on this dataset. The model's parameters (or a subset, in PEFT methods) are updated to minimize the difference between its predictions and the target responses.</li>
+                        <li><strong>Evaluation:</strong> Assess the fine-tuned model's performance on a separate test set to measure its improvement on the target task and check for regressions.</li>
+                    </ol>
+                </div>
+                
+                <p><strong>Key Concepts & Techniques:</strong></p>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-1">Instruction Tuning</h4>
+                        <p class="text-sm">A specific type of SFT where models are trained to follow human instructions, improving their general helpfulness and ability to perform diverse tasks.</p>
+                    </div>
+                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-1">Parameter-Efficient Fine-Tuning (PEFT)</h4>
+                        <p class="text-sm">Techniques that update only a small subset of the model's parameters, making fine-tuning much more computationally efficient.</p>
+                    </div>
+                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-1">LoRA (Low-Rank Adaptation)</h4>
+                        <p class="text-sm">A popular PEFT method. It freezes pre-trained model weights and injects trainable rank decomposition matrices (adapters) into each layer of the Transformer architecture, greatly reducing the number of trainable parameters.</p>
+                    </div>
+                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-1">Unsloth Library</h4>
+                        <p class="text-sm">An open-source library that significantly speeds up LoRA fine-tuning (often by 2x or more) and reduces memory usage, making SFT more accessible.</p>
+                    </div>
+                </div>
+                
+                <p><strong>Benefits of SFT:</strong></p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li><strong>Task Specialization:</strong> Tailor models for specific applications like summarization, code generation, or domain-specific Q&A.</li>
+                    <li><strong>Style & Persona Adaptation:</strong> Train models to write in a particular tone, style, or adopt a specific persona.</li>
+                    <li><strong>Improved Controllability:</strong> Make models more likely to follow instructions and produce desired outputs.</li>
+                    <li><strong>Enhanced Safety & Alignment:</strong> Reduce harmful outputs and align models more closely with human values by fine-tuning on curated datasets.</li>
+                    <li><strong>Knowledge Infusion (Limited):</strong> While not a replacement for RAG for factual recall, SFT can help models learn patterns and styles from specific knowledge domains present in the fine-tuning data.</li>
+                </ul>
+                
+                <p><strong>Common Use Cases:</strong></p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li>Creating specialized chatbots (e.g., customer service, technical support).</li>
+                    <li>Building domain-specific assistants (e.g., for legal, medical, or financial queries).</li>
+                    <li>Generating code in a specific programming language or framework.</li>
+                    <li>Adapting models to produce content in a brand's voice or a specific literary style.</li>
+                    <li>Improving summarization or translation quality for particular types of text.</li>
+                </ul>
+                
+                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p class="font-semibold mb-2 text-blue-800 dark:text-blue-200">💡 Key Insight:</p>
+                    <p class="text-blue-700 dark:text-blue-300">SFT transforms a generalist LLM into a specialist. By showing it examples of how to perform a specific task or adopt a certain style, we guide the model to become more effective and reliable for those targeted applications, often with significantly less computational cost than training from scratch.</p>
+                </div>
+                
+                <p><strong>Challenges and Considerations:</strong></p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li><strong>Dataset Quality is Crucial:</strong> The performance of the fine-tuned model heavily depends on the quality, diversity, and size of the fine-tuning dataset. "Garbage in, garbage out."</li>
+                    <li><strong>Catastrophic Forgetting:</strong> The model might lose some of its general capabilities learned during pre-training if the fine-tuning process is not handled carefully. PEFT methods can mitigate this.</li>
+                    <li><strong>Computational Resources:</strong> While PEFT methods like LoRA significantly reduce requirements, fine-tuning still requires considerable GPU resources, though tools like Unsloth make it more accessible.</li>
+                    <li><strong>Overfitting:</strong> The model might perform well on the fine-tuning data but poorly on unseen data if it overfits. Careful validation is needed.</li>
+                    <li><strong>Evaluation Complexity:</strong> Measuring the success of fine-tuning can be challenging and often requires task-specific metrics beyond simple accuracy.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const sftPipelineSvg = document.getElementById('sft-pipeline-svg');
+        const adaptationCanvas = document.getElementById('adaptation-canvas');
+        const adaptationCtx = adaptationCanvas.getContext('2d');
+        const sftPerformanceChartEl = document.getElementById('sft-performance-chart');
+        
+        const baseModelSelect = document.getElementById('base-model-select');
+        const finetuningTaskSelect = document.getElementById('finetuning-task-select');
+        const techniqueSelect = document.getElementById('technique-select');
+        const epochsInput = document.getElementById('epochs-input');
+        const lrSelect = document.getElementById('lr-select');
+        const runSftBtn = document.getElementById('run-sft-btn');
+        const stepThroughSftBtn = document.getElementById('step-through-sft-btn');
+        
+        const datasetPreview = document.getElementById('dataset-preview');
+        const testPromptInput = document.getElementById('test-prompt-input');
+        const testModelBtn = document.getElementById('test-model-btn');
+        const baseModelOutput = document.getElementById('base-model-output');
+        const finetunedModelOutput = document.getElementById('finetuned-model-output');
+        const sftEvalMetricsDiv = document.getElementById('sft-eval-metrics');
+        const ftAccuracySpan = document.getElementById('ft-accuracy');
+        const ftPerplexitySpan = document.getElementById('ft-perplexity');
+
+        const trainingProgressContainer = document.getElementById('training-progress-container');
+        const trainingProgressBar = document.getElementById('training-progress-bar');
+        const currentEpochDisplay = document.getElementById('current-epoch-display');
+        const totalEpochsDisplay = document.getElementById('total-epochs-display');
+        
+        const sftStatusElements = {
+            dataset: document.getElementById('sft-status-dataset'),
+            setup: document.getElementById('sft-status-setup'),
+            training: document.getElementById('sft-status-training'),
+            evaluation: document.getElementById('sft-status-evaluation')
+        };
+        const sftCurrentStep = document.getElementById('sft-current-step');
+        
+        // Global state
+        let isSFTProcessing = false; // Tracks if a full sequence (full run or step-by-step) is active
+        let sftStepMode = false;     // True if currently in step-by-step mode
+        let currentSFTStepIndex = 0; // Index for sftProcessSteps
+        let sftPerformanceChartInstance = null;
+        let adaptationChartInstance = null;
+        let currentTaskConfig = null;
+
+        const sftTasksConfig = {
+            'chatbot_persona': {
+                description: "Fine-tune for a friendly and helpful chatbot persona.",
+                datasetName: "Chatbot Persona Dataset (Examples)",
+                sampleDataset: [
+                    { instruction: "Greet the user.", response: "Hello there! How can I help you today?" },
+                    { instruction: "What's your name?", response: "I'm your friendly AI assistant, Sparky!" },
+                    { instruction: "Tell me a joke.", response: "Why don't scientists trust atoms? Because they make up everything!" }
+                ],
+                testPrompts: ["Hello", "What's your name?", "Can you help me?"],
+                baseModelResponse: (prompt) => `As a large language model, I will respond to: "${prompt}".`,
+                fineTunedResponse: (prompt) => {
+                    if (prompt.toLowerCase().includes("hello") || prompt.toLowerCase().includes("hi")) return "Hey there, friend! So glad you pinged me. What can Sparky do for you today?";
+                    if (prompt.toLowerCase().includes("name")) return "You can call me Sparky! Your super helpful and ever-cheerful AI pal.";
+                    if (prompt.toLowerCase().includes("joke")) return "Sure thing! Why did the scarecrow win an award? Because he was outstanding in his field! Haha!";
+                    return `Sparky, at your service! Regarding "${prompt}", I can tell you that...`;
+                },
+                baseMetrics: { accuracy: 60, style: 40, safety: 70, efficiency: 80, perplexity: 25.2 },
+                ftMetrics: { accuracy: 85, style: 90, safety: 80, efficiency: 75, perplexity: 12.5 }
+            },
+            'code_python_simple': {
+                description: "Fine-tune to generate simple Python functions.",
+                datasetName: "Python Function Generation (Examples)",
+                sampleDataset: [
+                    { instruction: "Write a Python function to add two numbers.", response: "def add(a, b):\n  return a + b" },
+                    { instruction: "Write a Python function that returns 'Hello, World!'.", response: "def hello_world():\n  return 'Hello, World!'" },
+                    { instruction: "Python function to check if a number is even.", response: "def is_even(num):\n  return num % 2 == 0" }
+                ],
+                testPrompts: ["Write a Python function to add two numbers.", "Create a Python function to multiply two numbers."],
+                baseModelResponse: (prompt) => `// Base model attempt for: ${prompt}\n// This may require further refinement.`,
+                fineTunedResponse: (prompt) => {
+                    if (prompt.toLowerCase().includes("add two numbers")) return "```python\ndef add(x, y):\n  \"\"\"Adds two numbers x and y.\"\"\"\n  return x + y\n```";
+                    if (prompt.toLowerCase().includes("multiply two numbers")) return "```python\ndef multiply(x, y):\n  \"\"\"Multiplies two numbers x and y.\"\"\"\n  return x * y\n```";
+                    return `Okay, here's a Python snippet for "${prompt}":\n# Code for: ${prompt}\n...\n`;
+                },
+                baseMetrics: { accuracy: 45, style: 50, safety: 65, efficiency: 85, perplexity: 30.1 },
+                ftMetrics: { accuracy: 92, style: 88, safety: 75, efficiency: 78, perplexity: 8.9 }
+            },
+            'summarization_news': {
+                description: "Fine-tune for summarizing news articles.",
+                datasetName: "News Summarization (Illustrative Examples)",
+                sampleDataset: [
+                    { instruction: "Summarize: The city council approved a new budget focused on infrastructure development and public transport improvements. The mayor highlighted the long-term benefits for citizens.", response: "City council approved a new budget prioritizing infrastructure and public transport for citizen benefit." },
+                    { instruction: "Summarize: A breakthrough in renewable energy storage was announced today, potentially doubling battery efficiency. Researchers are optimistic about its impact on green technology adoption.", response: "New renewable energy storage breakthrough may double battery efficiency, boosting green tech." }
+                ],
+                testPrompts: ["Summarize: Scientists discovered a new species of fish in the deep ocean, adapted to extreme pressure and complete darkness. This finding expands our understanding of marine biodiversity.", "Please summarize this for me: The stock market experienced volatility this week due to global economic uncertainties. Investors are advised to remain cautious and diversify their portfolios."],
+                baseModelResponse: (prompt) => `Regarding your request to summarize "${prompt.substring(0,50)}...", I can provide a general overview...`,
+                fineTunedResponse: (prompt) => {
+                    if (prompt.toLowerCase().includes("scientists discovered a new species")) return "Deep-sea fish species discovered, enhancing marine biodiversity knowledge.";
+                    if (prompt.toLowerCase().includes("stock market experienced volatility")) return "Stock market volatile due to global economic uncertainty; cautious diversification advised for investors.";
+                    return `Summary of "${prompt.substring(0,50)}...": ... (concise summary) ...`;
+                },
+                baseMetrics: { accuracy: 55, style: 60, safety: 70, efficiency: 70, perplexity: 22.5 },
+                ftMetrics: { accuracy: 88, style: 85, safety: 78, efficiency: 65, perplexity: 10.3 }
+            }
+        };
+        
+        function initializeAppSFT() {
+            setupEventListenersSFT();
+            loadTaskData(); 
+            initializeSFTPipelineVisualization();
+            initializeAdaptationVisualization();
+            initializeSFTPerformanceChart();
+            resetSFTProcessStatus();
+        }
+        
+        function setupEventListenersSFT() {
+            finetuningTaskSelect.addEventListener('change', loadTaskData);
+            runSftBtn.addEventListener('click', () => runSFT(false)); // false for full run
+            stepThroughSftBtn.addEventListener('click', () => runSFT(true)); // true for step-through
+            testModelBtn.addEventListener('click', testFineTunedModel);
+        }
+
+        function loadTaskData() {
+            const selectedTask = finetuningTaskSelect.value;
+            currentTaskConfig = sftTasksConfig[selectedTask];
+            
+            datasetPreview.innerHTML = '';
+            if (currentTaskConfig && currentTaskConfig.sampleDataset) {
+                currentTaskConfig.sampleDataset.forEach(sample => {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 border rounded bg-gray-50 dark:bg-gray-700/50';
+                    div.innerHTML = `
+                        <p class="font-semibold text-xs text-[#3498db]">Instruction:</p>
+                        <p class="text-xs mb-1">${sample.instruction}</p>
+                        <p class="font-semibold text-xs text-green-600">Response:</p>
+                        <p class="text-xs">${sample.response}</p>
+                    `;
+                    datasetPreview.appendChild(div);
+                });
+                testPromptInput.value = currentTaskConfig.testPrompts[0] || "Test this model.";
+            } else {
+                 datasetPreview.innerHTML = '<div class="text-gray-500 dark:text-gray-400 italic">No dataset samples for this task.</div>';
+            }
+
+            if (sftPerformanceChartInstance && currentTaskConfig) {
+                sftPerformanceChartInstance.data.datasets[0].data = Object.values(currentTaskConfig.baseMetrics).slice(0,4);
+                sftPerformanceChartInstance.data.datasets[1].data = [...Object.values(currentTaskConfig.baseMetrics).slice(0,4)]; // Start FT same as base
+                sftPerformanceChartInstance.update();
+            }
+            if(adaptationChartInstance) {
+                adaptationChartInstance.data.datasets[0].data = [80, 20]; 
+                adaptationChartInstance.update();
+            }
+            baseModelOutput.innerHTML = '<div class="text-gray-500 dark:text-gray-400 italic">Output from base model...</div>';
+            finetunedModelOutput.innerHTML = '<div class="text-gray-500 dark:text-gray-400 italic">Output from fine-tuned model...</div>';
+            sftEvalMetricsDiv.classList.add('hidden');
+        }
+
+        function initializeSFTPipelineVisualization() {
+            const svg = sftPipelineSvg;
+            svg.innerHTML = ''; 
+            const baseColor = document.body.classList.contains('dark') ? '#D1D5DB' : '#374151';
+            const steps = [
+                { id: 'sft-step-basemodel', x: 50, y: 50, w: 180, h: 70, label: 'Base LLM\n(Pre-trained)', color: '#3B82F6' },
+                { id: 'sft-step-dataset', x: 300, y: 50, w: 180, h: 70, label: 'Instruction Dataset\n(Q/A, Prompts)', color: '#10B981' },
+                { id: 'sft-step-format', x: 550, y: 50, w: 180, h: 70, label: 'Data Formatting\n(Prompt Templates)', color: '#10B981' },
+                { id: 'sft-step-lora-inject', x: 200, y: 200, w: 200, h: 90, label: 'LoRA Adapters\n(Inject Trainable\nLow-Rank Matrices)', color: '#8B5CF6' },
+                { id: 'sft-step-trainingloop', x: 500, y: 200, w: 200, h: 90, label: 'Training Loop\n(Update Adapters,\nMinimize Loss)', color: '#8B5CF6' },
+                { id: 'sft-step-eval', x: 150, y: 380, w: 200, h: 70, label: 'Evaluation\n(Test Set, Metrics)', color: '#F97316' },
+                { id: 'sft-step-ftmodel', x: 450, y: 380, w: 200, h: 70, label: 'Fine-Tuned LLM\n(Specialized)', color: '#EF4444' },
+                { id: 'sft-step-deploy', x: 750, y: 380, w: 180, h: 70, label: 'Deployment/\nInference', color: '#EF4444' },
+            ];
+            const connections = [ /* ... same as before ... */
+                { from: 'sft-step-basemodel', to: 'sft-step-lora-inject', type: 'diag' },
+                { from: 'sft-step-dataset', to: 'sft-step-format', type: 'straight' },
+                { from: 'sft-step-format', to: 'sft-step-trainingloop', type: 'diag' },
+                { from: 'sft-step-lora-inject', to: 'sft-step-trainingloop', type: 'straight'},
+                { from: 'sft-step-trainingloop', to: 'sft-step-eval', type: 'diag' },
+                { from: 'sft-step-eval', to: 'sft-step-ftmodel', type: 'straight' },
+                { from: 'sft-step-ftmodel', to: 'sft-step-deploy', type: 'straight' },
+            ];
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'sft-arrowhead'); marker.setAttribute('markerWidth', '10'); marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '9'); marker.setAttribute('refY', '3.5'); marker.setAttribute('orient', 'auto');
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 3.5, 0 7'); polygon.setAttribute('fill', baseColor);
+            marker.appendChild(polygon); defs.appendChild(marker); svg.appendChild(defs);
+            connections.forEach(conn => {
+                const fromStep = steps.find(s => s.id === conn.from); const toStep = steps.find(s => s.id === conn.to);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                let x1, y1, x2, y2;
+                if (conn.type === 'straight') { x1 = fromStep.x + fromStep.w; y1 = fromStep.y + fromStep.h / 2; x2 = toStep.x; y2 = toStep.y + toStep.h / 2; }
+                else if (conn.type === 'diag') {
+                    if (toStep.y > fromStep.y) { x1 = fromStep.x + fromStep.w / 2; y1 = fromStep.y + fromStep.h; x2 = toStep.x + toStep.w / 2; y2 = toStep.y; }
+                    else { x1 = fromStep.x + fromStep.w / 2; y1 = fromStep.y; x2 = toStep.x + toStep.w / 2; y2 = toStep.y + toStep.h; }
+                }
+                line.setAttribute('x1', x1); line.setAttribute('y1', y1); line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+                line.setAttribute('stroke', baseColor); line.setAttribute('stroke-width', '2'); line.setAttribute('marker-end', 'url(#sft-arrowhead)');
+                svg.appendChild(line);
+            });
+            steps.forEach(step => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', step.x); rect.setAttribute('y', step.y); rect.setAttribute('width', step.w); rect.setAttribute('height', step.h);
+                rect.setAttribute('fill', step.color); rect.setAttribute('stroke', baseColor); rect.setAttribute('stroke-width', '1.5');
+                rect.setAttribute('rx', '8'); rect.setAttribute('id', step.id); rect.setAttribute('opacity', '0.7');
+                g.appendChild(rect);
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', step.x + step.w / 2); text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', 'white'); text.setAttribute('font-weight', '500'); text.setAttribute('font-size', '13px');
+                const lines = step.label.split('\n'); const lineHeight = 16; const totalTextHeight = lines.length * lineHeight;
+                const textBlockY = step.y + (step.h - totalTextHeight) / 2 + lineHeight * 0.75; text.setAttribute('y', textBlockY);
+                lines.forEach((line, i) => {
+                    const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    tspan.setAttribute('x', step.x + step.w / 2); if (i > 0) { tspan.setAttribute('dy', `${lineHeight}px`); }
+                    tspan.textContent = line; text.appendChild(tspan);
+                });
+                g.appendChild(text); svg.appendChild(g);
+            });
+        }
+
+        function initializeAdaptationVisualization() { /* ... same as before ... */ 
+            const textColor = document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937';
+            if (adaptationChartInstance) adaptationChartInstance.destroy();
+            adaptationChartInstance = new Chart(adaptationCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Task Unaligned', 'Task Aligned'],
+                    datasets: [{
+                        label: 'Model Focus', data: [80, 20], 
+                        backgroundColor: [ 'rgba(255, 99, 132, 0.6)', 'rgba(75, 192, 192, 0.6)' ],
+                        borderColor: [ 'rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)' ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { beginAtZero: true, max: 100, ticks: { color: textColor }, grid: { color: document.body.classList.contains('dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}},
+                        y: { ticks: { color: textColor }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                }
+            });
+        }
+        
+        function initializeSFTPerformanceChart() { /* ... same as before ... */ 
+            const textColor = document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937';
+            const gridColor = document.body.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const initialBaseData = currentTaskConfig ? Object.values(currentTaskConfig.baseMetrics).slice(0,4) : [0,0,0,0];
+            if (sftPerformanceChartInstance) sftPerformanceChartInstance.destroy();
+            sftPerformanceChartInstance = new Chart(sftPerformanceChartEl.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: ['Accuracy', 'Style/Format', 'Safety (Illustrative)', 'Efficiency (Train Time)'],
+                    datasets: [
+                        { label: 'Base LLM', data: initialBaseData, backgroundColor: 'rgba(107, 114, 128, 0.3)', borderColor: 'rgba(107, 114, 128, 1)', borderWidth: 2 },
+                        { label: 'Fine-Tuned LLM', data: [...initialBaseData], backgroundColor: 'rgba(52, 152, 219, 0.3)', borderColor: 'rgba(52, 152, 219, 1)', borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { r: { beginAtZero: true, max: 100, ticks: { color: textColor, backdropColor: 'transparent' }, pointLabels: { color: textColor, font: {size: 11} }, grid: { color: gridColor } } },
+                    plugins: { legend: { labels: { color: textColor } } }
+                }
+            });
+        }
+
+        function resetSFTProcessStatus() {
+            Object.values(sftStatusElements).forEach(el => el.className = 'w-4 h-4 rounded-full bg-gray-300');
+            sftCurrentStep.textContent = 'Ready';
+            sftPipelineSvg.querySelectorAll('rect[id^="sft-step-"]').forEach(el => {
+                highlightSFTPipelineStep(el.id, false); // De-highlight all
+            });
+            trainingProgressContainer.classList.add('hidden');
+            trainingProgressBar.style.width = '0%';
+        }
+
+        function updateSFTProcessStatus(stepKey, status) { /* ... same as before ... */ 
+            const el = sftStatusElements[stepKey];
+            if (el) {
+                if (status === 'active') el.className = 'w-4 h-4 rounded-full bg-yellow-400 animate-pulse';
+                else if (status === 'complete') el.className = 'w-4 h-4 rounded-full bg-green-500';
+                else el.className = 'w-4 h-4 rounded-full bg-gray-300';
+            }
+        }
+
+        function highlightSFTPipelineStep(stepId, active = true) { /* ... same as before ... */
+             const element = document.getElementById(stepId);
+             if (element) {
+                 element.setAttribute('opacity', active ? '1.0' : '0.7');
+                 element.setAttribute('stroke-width', active ? '3' : '1.5');
+             }
+        }
+        
+        const sftProcessSteps = [
+            { name: 'Dataset Loading & Formatting', func: simulateDatasetLoading, statusKey: 'dataset', pipelineStepId: ['sft-step-dataset', 'sft-step-format'] },
+            { name: 'Model Setup (LoRA Injection)', func: simulateModelSetup, statusKey: 'setup', pipelineStepId: ['sft-step-basemodel', 'sft-step-lora-inject'] },
+            { name: 'Training Loop', func: simulateTraining, statusKey: 'training', pipelineStepId: 'sft-step-trainingloop' },
+            { name: 'Evaluation', func: simulateEvaluation, statusKey: 'evaluation', pipelineStepId: 'sft-step-eval' }
+        ];
+
+        async function runSFT(startStepThrough = false) {
+            // If this is a "Next" click in an ongoing step-through process
+            if (startStepThrough && sftStepMode && currentSFTStepIndex > 0 && currentSFTStepIndex < sftProcessSteps.length) {
+                await runNextSFTStep();
+                return;
+            }
+
+            // If trying to start a new process while one is already running
+            if (isSFTProcessing) return;
+
+            isSFTProcessing = true; // Mark that a sequence (full or step-by-step) is starting
+            sftStepMode = startStepThrough;
+            currentSFTStepIndex = 0;
+            
+            runSftBtn.disabled = true;
+            stepThroughSftBtn.disabled = true;
+
+            resetSFTProcessStatus(); 
+            sftEvalMetricsDiv.classList.add('hidden'); 
+            
+            if (adaptationChartInstance) {
+                adaptationChartInstance.data.datasets[0].data = [80, 20];
+                adaptationChartInstance.update();
+            }
+            if (sftPerformanceChartInstance && currentTaskConfig) {
+                sftPerformanceChartInstance.data.datasets[1].data = [...currentTaskConfig.baseMetrics ? Object.values(currentTaskConfig.baseMetrics).slice(0,4) : [0,0,0,0]];
+                sftPerformanceChartInstance.update();
+            }
+
+            if (sftStepMode) {
+                stepThroughSftBtn.textContent = `Next: ${sftProcessSteps[0].name}`;
+                await runNextSFTStep(); 
+                // `runNextSFTStep` will manage `isSFTProcessing` and button states for subsequent steps
+            } else {
+                await runFullSFTProcess();
+                isSFTProcessing = false; // Full process is complete
+                runSftBtn.disabled = false;
+                stepThroughSftBtn.disabled = false;
+            }
+        }
+
+        async function runNextSFTStep() {
+            // De-highlight all pipeline elements before processing the current step
+            sftPipelineSvg.querySelectorAll('rect[id^="sft-step-"]').forEach(el => {
+                highlightSFTPipelineStep(el.id, false);
+            });
+        
+            if (currentSFTStepIndex < sftProcessSteps.length) {
+                const step = sftProcessSteps[currentSFTStepIndex];
+                sftCurrentStep.textContent = step.name;
+                updateSFTProcessStatus(step.statusKey, 'active');
+        
+                if (Array.isArray(step.pipelineStepId)) {
+                    step.pipelineStepId.forEach(id => highlightSFTPipelineStep(id, true));
+                } else {
+                    highlightSFTPipelineStep(step.pipelineStepId, true);
+                }
+                
+                stepThroughSftBtn.disabled = true; // Disable while this step processes
+
+                await step.func(false); // Pass false for step mode delay
+                
+                updateSFTProcessStatus(step.statusKey, 'complete');
+                
+                // De-highlight the just completed step's elements for clarity
+                if (Array.isArray(step.pipelineStepId)) {
+                    step.pipelineStepId.forEach(id => highlightSFTPipelineStep(id, false));
+                } else {
+                    highlightSFTPipelineStep(step.pipelineStepId, false);
+                }
+
+                currentSFTStepIndex++;
+        
+                if (currentSFTStepIndex < sftProcessSteps.length) {
+                    stepThroughSftBtn.textContent = `Next: ${sftProcessSteps[currentSFTStepIndex].name}`;
+                    stepThroughSftBtn.disabled = false; // Re-enable for next step click
+                    // runSftBtn remains disabled during step-through
+                } else { // Last step was completed
+                    sftCurrentStep.textContent = 'Fine-Tuning Complete!';
+                    stepThroughSftBtn.textContent = 'Step Through SFT Process';
+                    highlightSFTPipelineStep('sft-step-ftmodel', true); 
+                    isSFTProcessing = false; // Entire step-through sequence finished
+                    stepThroughSftBtn.disabled = false; 
+                    runSftBtn.disabled = false;         
+                    displaySFTMetrics();
+                }
+            }
+        }
+
+        async function runFullSFTProcess() {
+            for (const step of sftProcessSteps) {
+                sftPipelineSvg.querySelectorAll('rect[id^="sft-step-"]').forEach(el => {
+                    highlightSFTPipelineStep(el.id, false);
+                });
+
+                sftCurrentStep.textContent = step.name;
+                updateSFTProcessStatus(step.statusKey, 'active');
+                if (Array.isArray(step.pipelineStepId)) {
+                    step.pipelineStepId.forEach(id => highlightSFTPipelineStep(id, true));
+                } else {
+                    highlightSFTPipelineStep(step.pipelineStepId, true);
+                }
+
+                await step.func(true); // Pass true for immediate (no human-perceptible delay)
+
+                updateSFTProcessStatus(step.statusKey, 'complete');
+                if (Array.isArray(step.pipelineStepId)) {
+                    step.pipelineStepId.forEach(id => highlightSFTPipelineStep(id, false));
+                } else {
+                    highlightSFTPipelineStep(step.pipelineStepId, false);
+                }
+            }
+            sftCurrentStep.textContent = 'Fine-Tuning Complete!';
+            highlightSFTPipelineStep('sft-step-ftmodel', true); 
+            displaySFTMetrics();
+        }
+
+        async function simulateDatasetLoading(immediate = false) {  /* ... same as before ... */
+            await sleep(immediate ? 20 : 800);
+            datasetPreview.classList.add('ring-2', 'ring-green-500');
+            await sleep(immediate ? 10 : 300);
+            datasetPreview.classList.remove('ring-2', 'ring-green-500');
+        }
+        async function simulateModelSetup(immediate = false) { /* ... same as before ... */
+            await sleep(immediate ? 20 : 700); 
+        }
+        
+        async function simulateTraining(immediate = false) { /* ... same as before ... */
+            const epochs = parseInt(epochsInput.value);
+            totalEpochsDisplay.textContent = epochs;
+            trainingProgressContainer.classList.remove('hidden');
+            const baseAdaptation = adaptationChartInstance.data.datasets[0].data[1]; 
+            const targetAdaptation = 80 + Math.random() * 15; 
+            for (let e = 1; e <= epochs; e++) {
+                currentEpochDisplay.textContent = e;
+                sftCurrentStep.textContent = `Training Epoch ${e}/${epochs}...`;
+                let progress = 0;
+                while(progress < 100) {
+                    progress += (immediate ? 100 : 10);
+                    trainingProgressBar.style.width = `${progress}%`;
+                    const epochProgress = (e -1 + progress/100) / epochs;
+                    const currentAligned = baseAdaptation + (targetAdaptation - baseAdaptation) * epochProgress;
+                    adaptationChartInstance.data.datasets[0].data = [100 - currentAligned, currentAligned];
+                    adaptationChartInstance.update();
+                    await sleep(immediate ? 1 : 150); // Faster for immediate
+                }
+            }
+            trainingProgressBar.style.width = '100%';
+            await sleep(immediate ? 10 : 200); 
+        }
+
+        async function simulateEvaluation(immediate = false) { /* ... same as before ... */
+            await sleep(immediate ? 20 : 800);
+            if (sftPerformanceChartInstance && currentTaskConfig) {
+                sftPerformanceChartInstance.data.datasets[1].data = Object.values(currentTaskConfig.ftMetrics).slice(0,4);
+                sftPerformanceChartInstance.update();
+            }
+        }
+
+        function displaySFTMetrics() { /* ... same as before ... */
+            if (currentTaskConfig) {
+                ftAccuracySpan.textContent = `${currentTaskConfig.ftMetrics.accuracy}%`;
+                ftPerplexitySpan.textContent = currentTaskConfig.ftMetrics.perplexity.toFixed(1);
+                sftEvalMetricsDiv.classList.remove('hidden');
+            }
+        }
+
+        async function testFineTunedModel() { /* ... same as before ... */
+            if (!currentTaskConfig) { alert("Please select a task and simulate fine-tuning first."); return; }
+            const prompt = testPromptInput.value.trim();
+            if (!prompt) { alert("Please enter a prompt."); return; }
+            baseModelOutput.textContent = "Generating..."; finetunedModelOutput.textContent = "Generating...";
+            await sleep(300); 
+            const baseResponse = currentTaskConfig.baseModelResponse(prompt);
+            await typeEffect(baseModelOutput, baseResponse, 5);
+            await sleep(200); 
+            const ftResponse = currentTaskConfig.fineTunedResponse(prompt);
+            await typeEffect(finetunedModelOutput, ftResponse, 5);
+        }
+        
+        async function typeEffect(element, text, delay = 20) { /* ... same as before ... */
+            element.innerHTML = '';
+            for (let i = 0; i < text.length; i++) {
+                element.innerHTML += text[i];
+                element.scrollTop = element.scrollHeight;
+                if (delay > 0) await sleep(delay);
+            }
+        }
+
+        function sleep(ms) { /* ... same as before ... */
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        initializeAppSFT();
+
+    </script>
+</body>
+</html>

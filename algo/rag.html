@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive RAG (Retrieval Augmented Generation) Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <a href="../algorithms.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: #bbbbbb; color: #000000; border: 1px solid rgba(52, 152, 219, 0.2); border-radius: 5px; padding: 8px 16px; font-family: 'Roboto Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+        <span style="font-size: 18px;">←</span> Return to Algorithms
+    </a>
+
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-[#3498db] dark:text-[#3498db]">RAG: Retrieval Augmented Generation</h1>
+        
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Main Visualization Container -->
+            <div class="w-full lg:w-3/5 space-y-6">
+                <!-- RAG Pipeline Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">RAG Pipeline</h2>
+                    <div class="w-full h-[600px] relative" id="pipeline-container">
+                        <svg id="pipeline-svg" class="w-full h-full" viewBox="0 0 1000 600"></svg>
+                    </div>
+                    
+                    <!-- Pipeline Legend -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-4">
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-blue-500 rounded-sm mr-2"></div>
+                            <span>Documents</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-green-500 rounded-sm mr-2"></div>
+                            <span>Vector Embeddings</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-purple-500 rounded-sm mr-2"></div>
+                            <span>Query Processing</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-orange-500 rounded-sm mr-2"></div>
+                            <span>Retrieved Context</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-5 h-5 bg-red-500 rounded-sm mr-2"></div>
+                            <span>LLM Generation</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vector Space Visualization -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Vector Space & Similarity Search</h2>
+                    <div class="w-full h-[400px] relative">
+                        <canvas id="vector-canvas" width="800" height="400" class="w-full h-full border border-gray-300 dark:border-gray-600"></canvas>
+                    </div>
+                    <div class="mt-2 text-sm text-center">
+                        <span>Document embeddings in 2D space (reduced from high-dimensional vectors)</span>
+                    </div>
+                </div>
+                
+                <!-- Performance Comparison -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">RAG vs Standard LLM Performance</h2>
+                    <div class="w-full h-[300px]">
+                        <canvas id="performance-chart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls and Information Panel -->
+            <div class="w-full lg:w-2/5">
+                <!-- Query Interface -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Try RAG</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Query Input -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Ask a Question:</label>
+                            <textarea id="query-input" 
+                                      class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none h-20" 
+                                      placeholder="What are the benefits of renewable energy?"></textarea>
+                        </div>
+                        
+                        <!-- Query Type Selection -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Query Type:</label>
+                            <select id="query-type" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="factual">Factual Question</option>
+                                <option value="analytical">Analytical Query</option>
+                                <option value="comparative">Comparative Analysis</option>
+                                <option value="creative">Creative Writing</option>
+                                <option value="technical">Technical Documentation</option>
+                            </select>
+                        </div>
+                        
+                        <!-- RAG Parameters -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Top-K Results:</label>
+                                <select id="top-k-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
+                                    <option value="3">3</option>
+                                    <option value="5" selected>5</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Similarity Threshold:</label>
+                                <input type="range" id="similarity-threshold" min="0.1" max="1.0" step="0.1" value="0.7" class="w-full">
+                                <span id="similarity-value" class="text-xs">0.7</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex gap-2">
+                            <button id="run-rag-btn" class="flex-1 bg-[#3498db] hover:bg-[#4A4ACB] text-white font-medium py-2 px-4 rounded transition">
+                                Run RAG
+                            </button>
+                            <button id="run-standard-btn" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition">
+                                Standard LLM
+                            </button>
+                        </div>
+                        
+                        <button id="step-through-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition">
+                            Step Through RAG Process
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Document Management -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Knowledge Base</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Document Collection Selection -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Document Collection:</label>
+                            <select id="document-collection" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="technology">Technology & AI</option>
+                                <option value="science">Scientific Papers</option>
+                                <option value="business">Business & Finance</option>
+                                <option value="health">Health & Medicine</option>
+                                <option value="climate">Climate & Environment</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Chunking Strategy -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Chunking Strategy:</label>
+                            <select id="chunking-strategy" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="fixed">Fixed Size (512 tokens)</option>
+                                <option value="semantic" selected>Semantic Chunking</option>
+                                <option value="recursive">Recursive Splitting</option>
+                                <option value="document">Document-based</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Embedding Model -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Embedding Model:</label>
+                            <select id="embedding-model" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="openai">OpenAI Ada-002</option>
+                                <option value="sentence-bert" selected>Sentence-BERT</option>
+                                <option value="cohere">Cohere Embed</option>
+                                <option value="instructor">Instructor-XL</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Document Statistics -->
+                        <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded">
+                            <h3 class="text-sm font-medium mb-2">Collection Stats</h3>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>Documents: <span id="doc-count">156</span></div>
+                                <div>Chunks: <span id="chunk-count">2,847</span></div>
+                                <div>Avg. Length: <span id="avg-length">342 tokens</span></div>
+                                <div>Dimensions: <span id="vector-dims">768</span></div>
+                            </div>
+                        </div>
+                        
+                        <button id="reindex-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded transition">
+                            Re-index Collection
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Results Display -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Results</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Retrieved Context -->
+                        <div>
+                            <h3 class="text-sm font-semibold mb-2">Retrieved Context:</h3>
+                            <div id="retrieved-context" class="bg-gray-100 dark:bg-gray-700 p-3 rounded max-h-40 overflow-y-auto text-sm">
+                                <div class="text-gray-500 dark:text-gray-400 italic">Run a query to see retrieved context...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Generated Response -->
+                        <div>
+                            <h3 class="text-sm font-semibold mb-2">Generated Response:</h3>
+                            <div id="generated-response" class="bg-gray-100 dark:bg-gray-700 p-3 rounded max-h-60 overflow-y-auto text-sm">
+                                <div class="text-gray-500 dark:text-gray-400 italic">Generated response will appear here...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quality Metrics -->
+                        <div id="quality-metrics" class="hidden">
+                            <h3 class="text-sm font-semibold mb-2">Quality Metrics:</h3>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>Relevance: <span id="relevance-score" class="font-mono">0.87</span></div>
+                                <div>Faithfulness: <span id="faithfulness-score" class="font-mono">0.92</span></div>
+                                <div>Coverage: <span id="coverage-score" class="font-mono">0.78</span></div>
+                                <div>Latency: <span id="latency-score" class="font-mono">1.2s</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Process Status -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">Process Status</h2>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">1. Query Processing</span>
+                            <div id="status-query" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">2. Vector Search</span>
+                            <div id="status-search" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">3. Context Retrieval</span>
+                            <div id="status-retrieval" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">4. Context Augmentation</span>
+                            <div id="status-augmentation" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">5. LLM Generation</span>
+                            <div id="status-generation" class="w-4 h-4 rounded-full bg-gray-300"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-sm">
+                        <strong>Current Step:</strong> <span id="current-step">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation Section -->
+        <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+            <h2 class="text-xl font-semibold mb-4 text-[#3498db] dark:text-[#3498db]">How RAG Works: Retrieval Augmented Generation</h2>
+            <div class="space-y-4 text-sm md:text-base">
+                <p><strong>What is RAG?</strong></p>
+                <p>Retrieval Augmented Generation (RAG) is a technique that enhances large language models by retrieving relevant information from external knowledge sources before generating responses. This allows models to access up-to-date, domain-specific information that wasn't in their training data.</p>
+                
+                <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <p class="font-semibold mb-2">The RAG Process:</p>
+                    <ol class="list-decimal ml-6 space-y-2">
+                        <li><strong>Document Ingestion:</strong> External documents are collected and preprocessed</li>
+                        <li><strong>Chunking:</strong> Documents are split into smaller, manageable pieces</li>
+                        <li><strong>Embedding Generation:</strong> Each chunk is converted into a vector representation</li>
+                        <li><strong>Vector Storage:</strong> Embeddings are stored in a vector database for fast similarity search</li>
+                        <li><strong>Query Processing:</strong> User queries are also converted to vector embeddings</li>
+                        <li><strong>Similarity Search:</strong> Most relevant document chunks are retrieved using vector similarity</li>
+                        <li><strong>Context Augmentation:</strong> Retrieved chunks are combined with the original query</li>
+                        <li><strong>Generation:</strong> The LLM generates a response using both the query and retrieved context</li>
+                    </ol>
+                </div>
+                
+                <p><strong>Key Components:</strong></p>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-1">Vector Database</h4>
+                        <p class="text-sm">Stores document embeddings and enables fast similarity search using techniques like approximate nearest neighbor search.</p>
+                    </div>
+                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-1">Embedding Model</h4>
+                        <p class="text-sm">Converts text into high-dimensional vectors that capture semantic meaning, enabling similarity comparisons.</p>
+                    </div>
+                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-1">Retrieval System</h4>
+                        <p class="text-sm">Finds and ranks the most relevant document chunks based on semantic similarity to the query.</p>
+                    </div>
+                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                        <h4 class="font-semibold mb-1">Generation Model</h4>
+                        <p class="text-sm">The LLM that produces the final response using both the original query and retrieved context.</p>
+                    </div>
+                </div>
+                
+                <p><strong>Benefits of RAG:</strong></p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li><strong>Up-to-date Information:</strong> Access to current data not in the model's training set</li>
+                    <li><strong>Domain Expertise:</strong> Incorporate specialized knowledge from specific fields</li>
+                    <li><strong>Reduced Hallucination:</strong> Ground responses in factual, retrieved information</li>
+                    <li><strong>Cost-Effective:</strong> Avoid expensive model retraining for new information</li>
+                    <li><strong>Transparency:</strong> Show sources and provenance of information used</li>
+                    <li><strong>Customization:</strong> Easily adapt to different domains or use cases</li>
+                </ul>
+                
+                <p><strong>Common Use Cases:</strong></p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li><strong>Customer Support:</strong> Answer questions using company documentation</li>
+                    <li><strong>Research Assistance:</strong> Synthesize information from scientific papers</li>
+                    <li><strong>Legal Analysis:</strong> Find relevant cases and regulations</li>
+                    <li><strong>Technical Documentation:</strong> Generate help content from API docs</li>
+                    <li><strong>News Summarization:</strong> Create summaries from recent articles</li>
+                    <li><strong>Educational Content:</strong> Answer questions using textbooks and materials</li>
+                </ul>
+                
+                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p class="font-semibold mb-2 text-blue-800 dark:text-blue-200">💡 Key Insight:</p>
+                    <p class="text-blue-700 dark:text-blue-300">RAG bridges the gap between the vast capabilities of large language models and the need for accurate, current, and domain-specific information. It's like giving an AI assistant access to a constantly updated library.</p>
+                </div>
+                
+                <p><strong>Challenges and Considerations:</strong></p>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li><strong>Quality Dependencies:</strong> Output quality depends on the quality of retrieved documents</li>
+                    <li><strong>Chunking Strategy:</strong> How documents are split affects retrieval effectiveness</li>
+                    <li><strong>Embedding Model Selection:</strong> Different models work better for different domains</li>
+                    <li><strong>Retrieval Relevance:</strong> Ensuring retrieved content is actually relevant to the query</li>
+                    <li><strong>Context Window Limits:</strong> Managing the amount of retrieved information that can fit</li>
+                    <li><strong>Latency:</strong> Additional steps increase response time compared to direct generation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+        
+        // DOM elements
+        const pipelineSvg = document.getElementById('pipeline-svg');
+        const vectorCanvas = document.getElementById('vector-canvas');
+        const vectorCtx = vectorCanvas.getContext('2d');
+        const performanceChart = document.getElementById('performance-chart');
+        
+        const queryInput = document.getElementById('query-input');
+        const queryTypeSelect = document.getElementById('query-type');
+        const topKSelect = document.getElementById('top-k-select');
+        const similarityThreshold = document.getElementById('similarity-threshold');
+        const similarityValue = document.getElementById('similarity-value');
+        
+        const runRagBtn = document.getElementById('run-rag-btn');
+        const runStandardBtn = document.getElementById('run-standard-btn');
+        const stepThroughBtn = document.getElementById('step-through-btn');
+        
+        const documentCollection = document.getElementById('document-collection');
+        const chunkingStrategy = document.getElementById('chunking-strategy');
+        const embeddingModel = document.getElementById('embedding-model');
+        const reindexBtn = document.getElementById('reindex-btn');
+        
+        const retrievedContext = document.getElementById('retrieved-context');
+        const generatedResponse = document.getElementById('generated-response');
+        const qualityMetrics = document.getElementById('quality-metrics');
+        
+        const statusElements = {
+            query: document.getElementById('status-query'),
+            search: document.getElementById('status-search'),
+            retrieval: document.getElementById('status-retrieval'),
+            augmentation: document.getElementById('status-augmentation'),
+            generation: document.getElementById('status-generation')
+        };
+        const currentStep = document.getElementById('current-step');
+        
+        // Global state
+        let documents = [];
+        let documentVectors = [];
+        let currentQuery = '';
+        let isProcessing = false;
+        let stepMode = false;
+        let currentStepIndex = 0;
+        let performanceChartInstance = null;
+        
+        // Sample document collections
+        const documentCollections = {
+            technology: [
+                {
+                    title: "The Future of Artificial Intelligence",
+                    content: "Artificial intelligence is rapidly evolving, with machine learning and deep learning driving unprecedented advances in natural language processing, computer vision, and autonomous systems. Recent breakthroughs in large language models have demonstrated remarkable capabilities in understanding and generating human-like text.",
+                    metadata: { source: "Tech Review 2024", domain: "AI" }
+                },
+                {
+                    title: "Quantum Computing Breakthroughs",
+                    content: "Quantum computing represents a paradigm shift in computational power, promising to solve complex problems that are intractable for classical computers. Recent advances in quantum error correction and quantum algorithms are bringing practical quantum computing closer to reality.",
+                    metadata: { source: "Science Journal", domain: "Quantum" }
+                },
+                {
+                    title: "Sustainable Technology Solutions",
+                    content: "Green technology and sustainable computing are becoming increasingly important as organizations seek to reduce their environmental impact. Edge computing, energy-efficient algorithms, and renewable energy-powered data centers are key trends in sustainable technology.",
+                    metadata: { source: "Green Tech Today", domain: "Sustainability" }
+                },
+                {
+                    title: "Cybersecurity in the Modern Era",
+                    content: "As digital transformation accelerates, cybersecurity threats have evolved to become more sophisticated and persistent. Zero-trust architecture, AI-powered threat detection, and quantum-resistant cryptography are essential components of modern security strategies.",
+                    metadata: { source: "Security Weekly", domain: "Security" }
+                },
+                {
+                    title: "The Internet of Things Revolution",
+                    content: "IoT devices are transforming how we interact with our environment, from smart homes to industrial automation. The proliferation of connected devices generates massive amounts of data, enabling new insights and automation possibilities.",
+                    metadata: { source: "IoT Insights", domain: "IoT" }
+                }
+            ],
+            science: [
+                {
+                    title: "Climate Change and Carbon Sequestration",
+                    content: "Carbon capture and storage technologies are crucial for mitigating climate change. Direct air capture, enhanced weathering, and forest-based carbon sequestration offer promising pathways for removing atmospheric CO2.",
+                    metadata: { source: "Nature Climate", domain: "Climate" }
+                },
+                {
+                    title: "CRISPR Gene Editing Advances",
+                    content: "CRISPR-Cas9 technology has revolutionized genetic engineering, enabling precise modifications to DNA. Recent developments in base editing and prime editing have expanded the toolkit for treating genetic diseases.",
+                    metadata: { source: "Cell Biology", domain: "Genetics" }
+                },
+                {
+                    title: "Space Exploration Missions",
+                    content: "Recent Mars missions have provided unprecedented insights into the Red Planet's geology and potential for past life. The James Webb Space Telescope is revealing new details about the early universe and exoplanet atmospheres.",
+                    metadata: { source: "Astrophysics Journal", domain: "Space" }
+                }
+            ],
+            business: [
+                {
+                    title: "Digital Transformation Strategies",
+                    content: "Companies are accelerating digital transformation initiatives to remain competitive. Cloud adoption, automation, and data-driven decision making are key pillars of successful digital transformation programs.",
+                    metadata: { source: "Business Strategy Review", domain: "Strategy" }
+                },
+                {
+                    title: "Remote Work and Productivity",
+                    content: "The shift to remote and hybrid work models has fundamentally changed how organizations operate. Digital collaboration tools, asynchronous communication, and outcome-based performance measurement are essential for distributed teams.",
+                    metadata: { source: "Workforce Management", domain: "HR" }
+                }
+            ],
+            health: [
+                {
+                    title: "Personalized Medicine Advances",
+                    content: "Precision medicine uses genetic, environmental, and lifestyle factors to tailor treatments to individual patients. Pharmacogenomics and biomarker-driven therapies are improving treatment efficacy and reducing adverse effects.",
+                    metadata: { source: "Medical Research", domain: "Medicine" }
+                },
+                {
+                    title: "Mental Health and Technology",
+                    content: "Digital mental health interventions, including therapy apps and AI-powered counseling, are making mental healthcare more accessible. Virtual reality therapy and biometric monitoring are emerging treatment modalities.",
+                    metadata: { source: "Health Innovation", domain: "Mental Health" }
+                }
+            ],
+            climate: [
+                {
+                    title: "Renewable Energy Grid Integration",
+                    content: "Integrating renewable energy sources into existing power grids requires advanced energy storage, smart grid technologies, and demand response systems. Battery storage and pumped hydro storage are key enablers of renewable energy adoption.",
+                    metadata: { source: "Energy Policy", domain: "Energy" }
+                },
+                {
+                    title: "Ocean Acidification Impact",
+                    content: "Rising atmospheric CO2 levels are causing ocean acidification, which threatens marine ecosystems. Coral reefs, shellfish, and marine food chains are particularly vulnerable to changing ocean chemistry.",
+                    metadata: { source: "Marine Science", domain: "Ocean" }
+                }
+            ]
+        };
+        
+        // Sample queries for different types
+        const sampleQueries = {
+            factual: "What are the benefits of renewable energy?",
+            analytical: "How does climate change affect ocean ecosystems?",
+            comparative: "Compare CRISPR with traditional gene therapy approaches",
+            creative: "Write a story about life on Mars based on recent discoveries",
+            technical: "Explain how quantum error correction works"
+        };
+        
+        // Initialize the application
+        function initializeApp() {
+            setupEventListeners();
+            loadDocumentCollection();
+            initializePipelineVisualization();
+            initializeVectorVisualization();
+            initializePerformanceChart();
+            resetProcessStatus();
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Similarity threshold slider
+            similarityThreshold.addEventListener('input', (e) => {
+                similarityValue.textContent = e.target.value;
+            });
+            
+            // Query type selection updates sample query
+            queryTypeSelect.addEventListener('change', (e) => {
+                if (queryInput.value === '' || Object.values(sampleQueries).includes(queryInput.value)) {
+                    queryInput.value = sampleQueries[e.target.value];
+                }
+            });
+            
+            // Document collection change
+            documentCollection.addEventListener('change', loadDocumentCollection);
+            
+            // Action buttons
+            runRagBtn.addEventListener('click', () => runRAG(false));
+            runStandardBtn.addEventListener('click', runStandardLLM);
+            stepThroughBtn.addEventListener('click', () => runRAG(true));
+            reindexBtn.addEventListener('click', reindexCollection);
+            
+            // Initialize with sample query
+            queryInput.value = sampleQueries.factual;
+        }
+        
+        // Load document collection
+        function loadDocumentCollection() {
+            const collection = documentCollection.value;
+            documents = documentCollections[collection] || [];
+            
+            // Update statistics
+            document.getElementById('doc-count').textContent = documents.length;
+            document.getElementById('chunk-count').textContent = documents.length * 3; // Simulate chunking
+            document.getElementById('avg-length').textContent = Math.floor(Math.random() * 200 + 250) + ' tokens';
+            
+            // Generate mock vectors for visualization
+            generateMockVectors();
+            updateVectorVisualization();
+        }
+        
+        // Generate mock vectors for visualization
+        function generateMockVectors() {
+            documentVectors = documents.map((doc, index) => ({
+                id: index,
+                title: doc.title,
+                vector: generateMockVector(),
+                x: Math.random() * 700 + 50,
+                y: Math.random() * 300 + 50,
+                similarity: 0
+            }));
+        }
+        
+        // Generate a mock high-dimensional vector (simplified to 2D for visualization)
+        function generateMockVector() {
+            return Array(768).fill(0).map(() => Math.random() * 2 - 1);
+        }
+        
+        // Calculate cosine similarity between two vectors
+        function cosineSimilarity(vecA, vecB) {
+            const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+            const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+            const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+            return dotProduct / (magnitudeA * magnitudeB);
+        }
+        
+        // Initialize pipeline visualization
+        function initializePipelineVisualization() {
+            const svg = pipelineSvg;
+            svg.innerHTML = '';
+            
+            // Create pipeline steps
+            const steps = [
+                { x: 50, y: 100, width: 120, height: 60, label: 'Documents', color: '#3B82F6', id: 'step-docs' },
+                { x: 200, y: 100, width: 120, height: 60, label: 'Chunking', color: '#10B981', id: 'step-chunk' },
+                { x: 350, y: 100, width: 120, height: 60, label: 'Embeddings', color: '#10B981', id: 'step-embed' },
+                { x: 500, y: 100, width: 120, height: 60, label: 'Vector DB', color: '#10B981', id: 'step-vectordb' },
+                { x: 200, y: 300, width: 120, height: 60, label: 'Query', color: '#8B5CF6', id: 'step-query' },
+                { x: 350, y: 300, width: 120, height: 60, label: 'Search', color: '#8B5CF6', id: 'step-search' },
+                { x: 500, y: 300, width: 120, height: 60, label: 'Retrieval', color: '#F97316', id: 'step-retrieval' },
+                { x: 650, y: 200, width: 120, height: 60, label: 'LLM', color: '#EF4444', id: 'step-llm' },
+                { x: 800, y: 200, width: 120, height: 60, label: 'Response', color: '#EF4444', id: 'step-response' }
+            ];
+            
+            // Draw connections
+            const connections = [
+                { from: 0, to: 1 }, { from: 1, to: 2 }, { from: 2, to: 3 },
+                { from: 4, to: 5 }, { from: 5, to: 6 }, { from: 3, to: 6 },
+                { from: 6, to: 7 }, { from: 7, to: 8 }
+            ];
+            
+            connections.forEach(conn => {
+                const fromStep = steps[conn.from];
+                const toStep = steps[conn.to];
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', fromStep.x + fromStep.width);
+                line.setAttribute('y1', fromStep.y + fromStep.height / 2);
+                line.setAttribute('x2', toStep.x);
+                line.setAttribute('y2', toStep.y + toStep.height / 2);
+                line.setAttribute('stroke', '#6B7280');
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('marker-end', 'url(#arrowhead)');
+                svg.appendChild(line);
+            });
+            
+            // Create arrowhead marker
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3.5');
+            marker.setAttribute('orient', 'auto');
+            
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+            polygon.setAttribute('fill', '#6B7280');
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+            
+            // Draw steps
+            steps.forEach((step, index) => {
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', step.x);
+                rect.setAttribute('y', step.y);
+                rect.setAttribute('width', step.width);
+                rect.setAttribute('height', step.height);
+                rect.setAttribute('fill', step.color);
+                rect.setAttribute('stroke', '#374151');
+                rect.setAttribute('stroke-width', '2');
+                rect.setAttribute('rx', '8');
+                rect.setAttribute('id', step.id);
+                rect.setAttribute('opacity', '0.7');
+                svg.appendChild(rect);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', step.x + step.width / 2);
+                text.setAttribute('y', step.y + step.height / 2);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute('fill', 'white');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('font-size', '14');
+                text.textContent = step.label;
+                svg.appendChild(text);
+            });
+        }
+        
+        // Initialize vector space visualization
+        function initializeVectorVisualization() {
+            updateVectorVisualization();
+        }
+        
+        // Update vector visualization
+        function updateVectorVisualization() {
+            const ctx = vectorCtx;
+            const canvas = vectorCanvas;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = document.body.classList.contains('dark') ? '#1F2937' : '#F9FAFB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = document.body.classList.contains('dark') ? '#374151' : '#E5E7EB';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= canvas.width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw document vectors
+            documentVectors.forEach((doc, index) => {
+                ctx.beginPath();
+                ctx.arc(doc.x, doc.y, 8, 0, Math.PI * 2);
+                
+                // Color based on similarity if query is active
+                if (currentQuery && doc.similarity > 0) {
+                    const intensity = doc.similarity;
+                    ctx.fillStyle = `rgba(239, 68, 68, ${intensity})`;
+                } else {
+                    ctx.fillStyle = '#3B82F6';
+                }
+                
+                ctx.fill();
+                ctx.strokeStyle = '#1F2937';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw label
+                ctx.fillStyle = document.body.classList.contains('dark') ? '#F9FAFB' : '#1F2937';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(doc.title.substring(0, 20) + '...', doc.x, doc.y - 15);
+            });
+            
+            // Draw query vector if active
+            if (currentQuery) {
+                ctx.beginPath();
+                ctx.arc(400, 200, 12, 0, Math.PI * 2);
+                ctx.fillStyle = '#8B5CF6';
+                ctx.fill();
+                ctx.strokeStyle = '#1F2937';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw search radius
+                ctx.beginPath();
+                ctx.arc(400, 200, 80, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Label
+                ctx.fillStyle = document.body.classList.contains('dark') ? '#F9FAFB' : '#1F2937';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Query', 400, 235);
+            }
+        }
+        
+        // Initialize performance chart
+        function initializePerformanceChart() {
+            const ctx = performanceChart.getContext('2d');
+            
+            const textColor = document.body.classList.contains('dark') ? '#D1D5DB' : '#1F2937';
+            const gridColor = document.body.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            performanceChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Accuracy', 'Relevance', 'Freshness', 'Coverage', 'Speed'],
+                    datasets: [
+                        {
+                            label: 'Standard LLM',
+                            data: [75, 60, 30, 85, 95],
+                            backgroundColor: 'rgba(107, 114, 128, 0.2)',
+                            borderColor: 'rgba(107, 114, 128, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'RAG-Enhanced LLM',
+                            data: [92, 95, 90, 88, 75],
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: gridColor
+                            },
+                            pointLabels: {
+                                color: textColor,
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            ticks: {
+                                color: textColor,
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Reset process status indicators
+        function resetProcessStatus() {
+            Object.values(statusElements).forEach(element => {
+                element.className = 'w-4 h-4 rounded-full bg-gray-300';
+            });
+            currentStep.textContent = 'Ready';
+        }
+        
+        // Update process status
+        function updateProcessStatus(step, status) {
+            const element = statusElements[step];
+            if (element) {
+                switch (status) {
+                    case 'active':
+                        element.className = 'w-4 h-4 rounded-full bg-yellow-400 animate-pulse';
+                        break;
+                    case 'complete':
+                        element.className = 'w-4 h-4 rounded-full bg-green-500';
+                        break;
+                    case 'error':
+                        element.className = 'w-4 h-4 rounded-full bg-red-500';
+                        break;
+                    default:
+                        element.className = 'w-4 h-4 rounded-full bg-gray-300';
+                }
+            }
+        }
+        
+        // Highlight pipeline step
+        function highlightPipelineStep(stepId, active = true) {
+            const element = document.getElementById(stepId);
+            if (element) {
+                element.setAttribute('opacity', active ? '1.0' : '0.7');
+                if (active) {
+                    element.setAttribute('stroke-width', '3');
+                } else {
+                    element.setAttribute('stroke-width', '2');
+                }
+            }
+        }
+        
+        // Run RAG process
+        async function runRAG(stepByStep = false) {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            stepMode = stepByStep;
+            currentStepIndex = 0;
+            currentQuery = queryInput.value.trim();
+            
+            if (!currentQuery) {
+                alert('Please enter a query first.');
+                isProcessing = false;
+                return;
+            }
+            
+            resetProcessStatus();
+            clearResults();
+            
+            if (stepByStep) {
+                runStepByStep();
+            } else {
+                await runFullProcess();
+            }
+        }
+        
+        // Run step-by-step process
+        async function runStepByStep() {
+            const steps = [
+                { name: 'Query Processing', func: processQuery },
+                { name: 'Vector Search', func: performVectorSearch },
+                { name: 'Context Retrieval', func: retrieveContext },
+                { name: 'Context Augmentation', func: augmentContext },
+                { name: 'LLM Generation', func: generateResponse }
+            ];
+            
+            if (currentStepIndex < steps.length) {
+                const step = steps[currentStepIndex];
+                currentStep.textContent = step.name;
+                await step.func();
+                currentStepIndex++;
+                
+                // Enable next step button or complete
+                if (currentStepIndex < steps.length) {
+                    stepThroughBtn.textContent = `Next: ${steps[currentStepIndex].name}`;
+                } else {
+                    stepThroughBtn.textContent = 'Step Through RAG Process';
+                    isProcessing = false;
+                }
+            }
+        }
+        
+        // Run full RAG process
+        async function runFullProcess() {
+            await processQuery();
+            await performVectorSearch();
+            await retrieveContext();
+            await augmentContext();
+            await generateResponse();
+            
+            isProcessing = false;
+            currentStep.textContent = 'Complete';
+        }
+        
+        // Step 1: Process Query
+        async function processQuery() {
+            updateProcessStatus('query', 'active');
+            highlightPipelineStep('step-query', true);
+            currentStep.textContent = 'Processing query...';
+            
+            // Simulate query processing delay
+            await sleep(stepMode ? 0 : 800);
+            
+            // Mock query vector generation
+            const queryVector = generateMockVector();
+            
+            updateProcessStatus('query', 'complete');
+            highlightPipelineStep('step-query', false);
+            
+            if (!stepMode) {
+                currentStep.textContent = 'Query processed';
+            }
+        }
+        
+        // Step 2: Perform Vector Search
+        async function performVectorSearch() {
+            updateProcessStatus('search', 'active');
+            highlightPipelineStep('step-search', true);
+            currentStep.textContent = 'Searching vector database...';
+            
+            await sleep(stepMode ? 0 : 1000);
+            
+            // Calculate similarities and update visualization
+            const queryVector = generateMockVector();
+            documentVectors.forEach(doc => {
+                doc.similarity = Math.max(0, cosineSimilarity(queryVector, doc.vector) + Math.random() * 0.3);
+            });
+            
+            // Sort by similarity
+            documentVectors.sort((a, b) => b.similarity - a.similarity);
+            
+            updateVectorVisualization();
+            updateProcessStatus('search', 'complete');
+            highlightPipelineStep('step-search', false);
+            
+            if (!stepMode) {
+                currentStep.textContent = 'Vector search complete';
+            }
+        }
+        
+        // Step 3: Retrieve Context
+        async function retrieveContext() {
+            updateProcessStatus('retrieval', 'active');
+            highlightPipelineStep('step-retrieval', true);
+            currentStep.textContent = 'Retrieving relevant context...';
+            
+            await sleep(stepMode ? 0 : 600);
+            
+            const topK = parseInt(topKSelect.value);
+            const threshold = parseFloat(similarityThreshold.value);
+            
+            const relevantDocs = documentVectors
+                .filter(doc => doc.similarity >= threshold)
+                .slice(0, topK);
+            
+            // Display retrieved context
+            let contextHtml = '';
+            relevantDocs.forEach((doc, index) => {
+                const originalDoc = documents[doc.id];
+                contextHtml += `
+                    <div class="mb-3 p-2 border rounded">
+                        <div class="font-semibold text-sm">${originalDoc.title} (${(doc.similarity * 100).toFixed(1)}% match)</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">${originalDoc.content.substring(0, 200)}...</div>
+                    </div>
+                `;
+            });
+            
+            retrievedContext.innerHTML = contextHtml || '<div class="text-gray-500 dark:text-gray-400 italic">No relevant context found</div>';
+            
+            updateProcessStatus('retrieval', 'complete');
+            highlightPipelineStep('step-retrieval', false);
+            
+            if (!stepMode) {
+                currentStep.textContent = 'Context retrieved';
+            }
+        }
+        
+        // Step 4: Augment Context
+        async function augmentContext() {
+            updateProcessStatus('augmentation', 'active');
+            currentStep.textContent = 'Augmenting context...';
+            
+            await sleep(stepMode ? 0 : 400);
+            
+            // This step combines the query with retrieved context
+            // In a real implementation, this would format the prompt for the LLM
+            
+            updateProcessStatus('augmentation', 'complete');
+            
+            if (!stepMode) {
+                currentStep.textContent = 'Context augmented';
+            }
+        }
+        
+        // Step 5: Generate Response
+        async function generateResponse() {
+            updateProcessStatus('generation', 'active');
+            highlightPipelineStep('step-llm', true);
+            currentStep.textContent = 'Generating response...';
+            
+            await sleep(stepMode ? 0 : 1500);
+            
+            // Generate mock response based on query type and context
+            const queryType = queryTypeSelect.value;
+            const mockResponse = generateMockResponse(currentQuery, queryType);
+            
+            // Simulate typing effect
+            await typeResponse(mockResponse);
+            
+            // Show quality metrics
+            displayQualityMetrics();
+            
+            updateProcessStatus('generation', 'complete');
+            highlightPipelineStep('step-llm', false);
+            highlightPipelineStep('step-response', true);
+            
+            setTimeout(() => {
+                highlightPipelineStep('step-response', false);
+            }, 2000);
+            
+            if (!stepMode) {
+                currentStep.textContent = 'Response generated';
+            }
+        }
+        
+        // Generate mock response
+        function generateMockResponse(query, type) {
+            const responses = {
+                factual: `Based on the retrieved documents, renewable energy offers several key benefits:
+
+1. **Environmental Impact**: Renewable energy sources significantly reduce greenhouse gas emissions and help combat climate change by providing clean alternatives to fossil fuels.
+
+2. **Economic Advantages**: The renewable energy sector creates jobs and can lead to energy independence, reducing reliance on imported fuels and price volatility.
+
+3. **Sustainability**: Unlike finite fossil fuel resources, renewable sources like solar, wind, and hydro are naturally replenished and virtually inexhaustible.
+
+4. **Grid Integration**: Modern smart grid technologies and energy storage solutions make it increasingly feasible to integrate renewable sources into existing power infrastructure.
+
+The documents indicate that battery storage and pumped hydro storage are particularly important for managing the intermittent nature of renewable energy sources.`,
+
+                analytical: `The relationship between climate change and ocean ecosystems is complex and multifaceted:
+
+**Ocean Acidification**: As atmospheric CO2 levels rise, oceans absorb more carbon dioxide, leading to acidification. This process has a pH-lowering effect that particularly threatens:
+- Coral reef ecosystems
+- Shellfish and other calcifying organisms  
+- Marine food chain stability
+
+**Temperature Changes**: Rising ocean temperatures affect:
+- Species migration patterns
+- Breeding cycles and reproduction
+- Oxygen levels in seawater
+
+**Ecosystem Disruption**: The combined effects create cascading impacts throughout marine ecosystems, with coral reefs being especially vulnerable as biodiversity hotspots.
+
+The retrieved research suggests that these changes are happening faster than many marine species can adapt, potentially leading to significant biodiversity loss.`,
+
+                comparative: `CRISPR vs Traditional Gene Therapy Approaches:
+
+**CRISPR-Cas9 Advantages:**
+- **Precision**: Enables exact DNA modifications at specific locations
+- **Efficiency**: Faster and more cost-effective than traditional methods
+- **Versatility**: Can be used for various types of genetic modifications
+- **Recent Advances**: Base editing and prime editing expand capabilities
+
+**Traditional Gene Therapy:**
+- **Established**: Longer track record with known safety profiles
+- **Delivery Methods**: Well-developed viral vector systems
+- **Regulatory**: More established regulatory pathways
+
+**Key Differences:**
+- CRISPR directly edits genes, while traditional therapy often adds new genes
+- CRISPR offers permanent modifications, traditional may require repeated treatments
+- CRISPR has broader application potential but faces unique safety considerations
+
+The research indicates that CRISPR is revolutionizing genetic medicine but both approaches have important roles in treating different types of genetic diseases.`,
+
+                creative: `**Life on Mars: A Story of Discovery**
+
+Commander Sarah Chen stepped out of the habitat dome, her boots crunching on the rust-colored regolith. The recent discoveries from the Mars missions had changed everything they thought they knew about the Red Planet.
+
+"Look at this," she called to her teammate, pointing to a formation that shimmered with an almost crystalline structure. The geological surveys had revealed water-carved channels and mineral deposits that suggested not just ancient water, but potentially complex chemistry.
+
+As she collected samples, Sarah thought about the James Webb telescope data showing atmospheric compositions of distant worlds. Here on Mars, they were finding similar signatures—organic compounds preserved in the subsurface, protected from radiation by meters of soil.
+
+The sunrise cast long shadows across the Martian landscape, painting it in hues that reminded her of Earth's deserts. But this wasn't Earth. This was a world with its own history, its own secrets, and possibly its own forms of life waiting to be discovered.
+
+Her comm crackled: "Sarah, you need to see what we found in the ice core samples..."
+
+The story of life on Mars was just beginning to be written.`,
+
+                technical: `**Quantum Error Correction: Technical Overview**
+
+Quantum error correction addresses the fundamental challenge of maintaining quantum information in the presence of decoherence and noise.
+
+**Core Principles:**
+- **Quantum Error Correction Codes**: Encode logical qubits across multiple physical qubits
+- **Syndrome Detection**: Measure error syndromes without collapsing quantum states
+- **Active Correction**: Apply corrective operations based on detected errors
+
+**Key Mechanisms:**
+
+1. **Stabilizer Codes**: Use stabilizer operators to detect errors while preserving quantum information
+   - Surface codes are particularly promising for near-term implementations
+   - Provide high threshold error rates for fault-tolerant computation
+
+2. **Error Syndrome Measurement**: 
+   - Ancilla qubits measure error patterns
+   - Maintains quantum coherence of data qubits
+   - Classical processing determines correction operations
+
+3. **Threshold Theorem**: Demonstrates that if physical error rates are below a threshold (~1%), fault-tolerant quantum computation is possible
+
+**Implementation Challenges:**
+- High overhead in terms of physical qubits required
+- Need for fast classical processing for real-time correction
+- Requirement for high-fidelity two-qubit gates
+
+Recent advances in quantum error correction bring practical quantum computing significantly closer to reality.`
+            };
+
+            return responses[type] || responses.factual;
+        }
+        
+        // Type response with animation
+        async function typeResponse(text) {
+            generatedResponse.innerHTML = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                generatedResponse.innerHTML += text[i];
+                generatedResponse.scrollTop = generatedResponse.scrollHeight;
+                
+                if (!stepMode) {
+                    await sleep(20);
+                }
+            }
+        }
+        
+        // Display quality metrics
+        function displayQualityMetrics() {
+            // Generate mock metrics
+            const relevance = (0.8 + Math.random() * 0.15).toFixed(2);
+            const faithfulness = (0.85 + Math.random() * 0.12).toFixed(2);
+            const coverage = (0.7 + Math.random() * 0.2).toFixed(2);
+            const latency = (1.0 + Math.random() * 1.5).toFixed(1);
+            
+            document.getElementById('relevance-score').textContent = relevance;
+            document.getElementById('faithfulness-score').textContent = faithfulness;
+            document.getElementById('coverage-score').textContent = coverage;
+            document.getElementById('latency-score').textContent = latency + 's';
+            
+            qualityMetrics.classList.remove('hidden');
+        }
+        
+        // Run standard LLM (without RAG)
+        async function runStandardLLM() {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            currentQuery = queryInput.value.trim();
+            
+            if (!currentQuery) {
+                alert('Please enter a query first.');
+                isProcessing = false;
+                return;
+            }
+            
+            resetProcessStatus();
+            clearResults();
+            
+            currentStep.textContent = 'Generating response (without RAG)...';
+            
+            // Show that only generation step is active
+            updateProcessStatus('generation', 'active');
+            highlightPipelineStep('step-llm', true);
+            
+            await sleep(1200);
+            
+            // Generate response without context
+            const standardResponse = `This response is generated without retrieval augmentation. While I can provide general information about your question, I don't have access to specific, up-to-date documents or specialized knowledge that might be relevant to your query.
+
+For questions about current events, specialized domains, or recent research, the response may be less accurate or comprehensive compared to a RAG-enhanced system that can access relevant external documents.
+
+Standard language models rely solely on their training data, which has a knowledge cutoff date and may not include the most recent information or domain-specific details that could improve the response quality.`;
+            
+            await typeResponse(standardResponse);
+            
+            // Show different metrics for standard LLM
+            document.getElementById('relevance-score').textContent = '0.65';
+            document.getElementById('faithfulness-score').textContent = '0.72';
+            document.getElementById('coverage-score').textContent = '0.58';
+            document.getElementById('latency-score').textContent = '0.8s';
+            
+            qualityMetrics.classList.remove('hidden');
+            
+            updateProcessStatus('generation', 'complete');
+            highlightPipelineStep('step-llm', false);
+            
+            currentStep.textContent = 'Standard response generated';
+            isProcessing = false;
+        }
+        
+        // Re-index collection
+        async function reindexCollection() {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            currentStep.textContent = 'Re-indexing collection...';
+            
+            // Show indexing animation
+            highlightPipelineStep('step-docs', true);
+            await sleep(500);
+            highlightPipelineStep('step-chunk', true);
+            await sleep(500);
+            highlightPipelineStep('step-embed', true);
+            await sleep(500);
+            highlightPipelineStep('step-vectordb', true);
+            await sleep(500);
+            
+            // Reset highlights
+            ['step-docs', 'step-chunk', 'step-embed', 'step-vectordb'].forEach(step => {
+                highlightPipelineStep(step, false);
+            });
+            
+            // Regenerate vectors and update visualization
+            generateMockVectors();
+            updateVectorVisualization();
+            
+            // Update statistics with new random values
+            document.getElementById('chunk-count').textContent = documents.length * (3 + Math.floor(Math.random() * 3));
+            document.getElementById('avg-length').textContent = Math.floor(Math.random() * 200 + 250) + ' tokens';
+            
+            currentStep.textContent = 'Re-indexing complete';
+            isProcessing = false;
+        }
+        
+        // Clear results
+        function clearResults() {
+            retrievedContext.innerHTML = '<div class="text-gray-500 dark:text-gray-400 italic">Run a query to see retrieved context...</div>';
+            generatedResponse.innerHTML = '<div class="text-gray-500 dark:text-gray-400 italic">Generated response will appear here...</div>';
+            qualityMetrics.classList.add('hidden');
+            currentQuery = '';
+            
+            // Reset vector visualization
+            documentVectors.forEach(doc => {
+                doc.similarity = 0;
+            });
+            updateVectorVisualization();
+        }
+        
+        // Utility function for delays
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Initialize the application
+        initializeApp();
+    </script>
+</body>
+</html>
